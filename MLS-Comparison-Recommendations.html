@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparison Matrix & Recommended Thesis Direction</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 { font-size: 2.4em; margin-bottom: 15px; }
+
+        nav {
+            background: #9b59b6;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover { background: #8e44ad; }
+
+        .content { padding: 40px; }
+
+        h2 {
+            color: #8e44ad;
+            border-bottom: 3px solid #9b59b6;
+            padding-bottom: 10px;
+            margin: 40px 0 20px 0;
+            font-size: 2em;
+        }
+
+        h3 {
+            color: #8e44ad;
+            margin: 30px 0 15px 0;
+            font-size: 1.5em;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 0.9em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table thead tr {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            color: white;
+            text-align: left;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .comparison-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: #f1e5f7;
+        }
+
+        .score-5 { background: #27ae60; color: white; font-weight: bold; padding: 5px 10px; border-radius: 3px; }
+        .score-4 { background: #2ecc71; color: white; font-weight: bold; padding: 5px 10px; border-radius: 3px; }
+        .score-3 { background: #f39c12; color: white; font-weight: bold; padding: 5px 10px; border-radius: 3px; }
+        .score-2 { background: #e67e22; color: white; font-weight: bold; padding: 5px 10px; border-radius: 3px; }
+        .score-1 { background: #e74c3c; color: white; font-weight: bold; padding: 5px 10px; border-radius: 3px; }
+
+        .recommended-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e9 100%);
+            border: 4px solid #27ae60;
+            border-radius: 15px;
+            padding: 35px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.2);
+        }
+
+        .recommended-box h2 {
+            color: #27ae60;
+            border-bottom: 3px solid #2ecc71;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .direction-summary {
+            background: white;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            border-left: 5px solid #9b59b6;
+        }
+
+        .direction-summary h4 {
+            color: #8e44ad;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        ul, ol { margin: 15px 0 15px 30px; }
+        li { margin-bottom: 10px; }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .workflow-quick {
+            background: #e8f5e9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 5px solid #27ae60;
+        }
+
+        footer {
+            background: #8e44ad;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        @media print {
+            body { background: white; }
+            nav { display: none; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Comparison Matrix & Recommended Thesis Direction</h1>
+            <p style="font-size: 1.2em;">Comprehensive Evaluation of Five Analytical Approaches</p>
+            <p style="margin-top: 10px; opacity: 0.95;">Ranked by Novelty • Feasibility • Management Value • Publication Potential • Data Independence</p>
+        </header>
+
+        <nav>
+            <a href="MLS-Thesis-Index.html">← Home</a>
+            <a href="#matrix">Comparison Matrix</a>
+            <a href="#directions45">Directions 4 & 5 Details</a>
+            <a href="#recommended">Recommended Direction</a>
+            <a href="MLS-Survey-Optimization.html">Survey Optimization →</a>
+        </nav>
+
+        <div class="content">
+            <h2 id="matrix">Comprehensive Comparison Matrix</h2>
+
+            <p style="margin-bottom: 30px; font-size: 1.05em;">
+                All five thesis directions are evaluated across six critical criteria. Scores range from 1 (lowest) to 5 (highest).
+                <span class="highlight">Total scores help identify the optimal direction</span>, but individual criterion scores
+                reveal specific strengths and trade-offs.
+            </p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Thesis Direction</th>
+                        <th>Novelty</th>
+                        <th>Feasibility (MLS Only)</th>
+                        <th>Management Usefulness</th>
+                        <th>Publication Potential</th>
+                        <th>Biological Data Independence</th>
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Direction 1:</strong> Beach Microtopographic Suitability Index</td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-3">3</span></td>
+                        <td><strong style="font-size: 1.2em; color: #27ae60;">21</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Direction 2:</strong> Temporal Morphological Stability Mapping</td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><strong style="font-size: 1.2em; color: #27ae60;">22</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Direction 3:</strong> Dune-Beach Vulnerability Index (DBVI)</td>
+                        <td><span class="score-3">3</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><strong style="font-size: 1.2em; color: #27ae60;">21</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Direction 4:</strong> Predictive Habitat Availability Under SLR</td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-3">3</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><strong style="font-size: 1.2em; color: #27ae60;">21</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Direction 5:</strong> Beach Morphodynamic Classification</td>
+                        <td><span class="score-3">3</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><span class="score-4">4</span></td>
+                        <td><span class="score-3">3</span></td>
+                        <td><span class="score-5">5</span></td>
+                        <td><strong style="font-size: 1.2em; color: #f39c12;">20</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Criterion Definitions and Scoring Rationale</h3>
+
+            <div class="direction-summary">
+                <h4>1. Novelty (Research Contribution)</h4>
+                <p><strong>What it measures:</strong> How original is this approach? Has it been done before for sea turtle habitat or with Mobile LiDAR?</p>
+                <ul>
+                    <li><strong>Direction 1 (Score 5):</strong> First microtopographic analysis for sea turtle nesting; completely new metrics</li>
+                    <li><strong>Direction 2 (Score 4):</strong> Multi-temporal stability mapping done for coasts but not for turtle habitat</li>
+                    <li><strong>Direction 3 (Score 3):</strong> Vulnerability indices exist; this adapts existing frameworks with habitat focus</li>
+                    <li><strong>Direction 4 (Score 4):</strong> Combines morphodynamic rates with SLR (not just static inundation) - innovative</li>
+                    <li><strong>Direction 5 (Score 3):</strong> Beach classification approaches exist; application to habitat management is novel but method isn't</li>
+                </ul>
+            </div>
+
+            <div class="direction-summary">
+                <h4>2. Feasibility Using Only MLS Data (No Additional Fieldwork)</h4>
+                <p><strong>What it measures:</strong> Can this be completed entirely with 2024-2026 MLS + available nest GPS data? No coding required?</p>
+                <ul>
+                    <li><strong>Direction 1 (Score 4):</strong> Needs historical nest GPS (available but quality variable); some advanced texture analysis may be complex</li>
+                    <li><strong>Direction 2 (Score 5):</strong> Fully achievable with MLS DEMs; straightforward temporal analysis in ArcGIS Pro</li>
+                    <li><strong>Direction 3 (Score 4):</strong> Requires some external data (NOAA SLR projections, tide data) but all publicly available</li>
+                    <li><strong>Direction 4 (Score 3):</strong> Complex extrapolation; assumes linear change rates (may require sensitivity analysis/validation)</li>
+                    <li><strong>Direction 5 (Score 5):</strong> Simple classification based on change statistics; very achievable with ArcGIS tools</li>
+                </ul>
+            </div>
+
+            <div class="direction-summary">
+                <h4>3. Management Usefulness for PAIS</h4>
+                <p><strong>What it measures:</strong> Will this produce actionable information for park managers? Can they use it for decisions?</p>
+                <ul>
+                    <li><strong>Direction 1 (Score 4):</strong> Identifies high-quality vs poor substrate zones; useful but somewhat academic</li>
+                    <li><strong>Direction 2 (Score 5):</strong> Directly identifies where to focus monitoring and protection; highly actionable priority zones</li>
+                    <li><strong>Direction 3 (Score 5):</strong> Vulnerability zones inform beach nourishment, nest relocation, dune restoration priorities</li>
+                    <li><strong>Direction 4 (Score 5):</strong> Future habitat projections critical for long-term conservation planning and adaptation strategies</li>
+                    <li><strong>Direction 5 (Score 4):</strong> Behavior classification useful but less directly actionable than vulnerability/stability maps</li>
+                </ul>
+            </div>
+
+            <div class="direction-summary">
+                <h4>4. Publication Potential</h4>
+                <p><strong>What it measures:</strong> Likelihood of acceptance in high-quality peer-reviewed journals? Conference presentation potential?</p>
+                <ul>
+                    <li><strong>Direction 1 (Score 5):</strong> Novel methods + endangered species application = strong Remote Sensing or Frontiers in Marine Science paper</li>
+                    <li><strong>Direction 2 (Score 4):</strong> Good methodological contribution; Journal of Coastal Research or Geomorphology</li>
+                    <li><strong>Direction 3 (Score 4):</strong> Applied index development; Coastal Engineering or Ocean & Coastal Management</li>
+                    <li><strong>Direction 4 (Score 5):</strong> Future projections + SLR + endangered species = high interest; Ecological Applications potential</li>
+                    <li><strong>Direction 5 (Score 3):</strong> More incremental; regional journal or conference proceedings</li>
+                </ul>
+            </div>
+
+            <div class="direction-summary">
+                <h4>5. Biological Data Independence</h4>
+                <p><strong>What it measures:</strong> Can analysis proceed even if nest GPS data is limited or poor quality?</p>
+                <ul>
+                    <li><strong>Direction 1 (Score 3):</strong> Requires nest locations for calibration and validation; dependent on biological data quality</li>
+                    <li><strong>Direction 2 (Score 4):</strong> Stability metrics don't require nest data; nest overlay for interpretation is optional</li>
+                    <li><strong>Direction 3 (Score 5):</strong> Vulnerability calculated purely from geomorphic data; biological requirements just set thresholds</li>
+                    <li><strong>Direction 4 (Score 4):</strong> Habitat suitability criteria from literature (Figlus et al.); doesn't need new nest data</li>
+                    <li><strong>Direction 5 (Score 5):</strong> Classification based entirely on morphodynamic behavior; completely independent</li>
+                </ul>
+            </div>
+
+            <h2 id="directions45">Complete Details: Directions 4 and 5</h2>
+
+            <p style="margin-bottom: 30px;">
+                Directions 1-3 were fully detailed in the previous document. Here are the complete specifications for Directions 4 and 5:
+            </p>
+
+            <!-- DIRECTION 4 FULL DETAILS -->
+            <div style="background: #f8f9fa; padding: 35px; margin: 30px 0; border-radius: 10px; border: 3px solid #9b59b6;">
+                <h3 style="margin-top: 0; color: #8e44ad; font-size: 1.8em;">
+                    Direction 4: Predictive Nesting Habitat Availability Under Sea-Level Rise Scenarios
+                </h3>
+
+                <div style="background: white; padding: 20px; margin: 20px 0; border-left: 5px solid #8e44ad; border-radius: 5px;">
+                    <p style="font-style: italic; font-size: 1.1em;"><strong>Research Question:</strong></p>
+                    <p style="margin-top: 10px;">
+                        How will suitable Kemp's ridley nesting habitat availability change at PAIS by 2030, 2040, and 2050
+                        under NOAA intermediate and high SLR scenarios when accounting for both sea-level rise AND observed
+                        morphodynamic change rates (erosion, accretion, dune migration)?
+                    </p>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Novelty & Differentiation from RA Project</h4>
+                <p><strong>RA Project Focus:</strong> Assessing current SLR vulnerability using static inundation modeling</p>
+                <p><strong>Thesis Focus:</strong> Dynamic predictive modeling integrating morphodynamic change rates with SLR to forecast future beach configurations and habitat suitability</p>
+                <p style="margin-top: 10px;"><strong>Novel Contribution:</strong> First study to combine multi-temporal LiDAR-derived morphodynamic rates with SLR projections to model future turtle nesting habitat (vs. simple inundation mapping)</p>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Datasets & Metrics</h4>
+                <ul>
+                    <li><strong>MLS DEMs:</strong> 2024, 2025, 2026 (1m resolution)</li>
+                    <li><strong>Shoreline positions:</strong> Extracted from each DEM</li>
+                    <li><strong>Beach width transects:</strong> Every 25m along shore</li>
+                    <li><strong>Elevation change rasters:</strong> DoD (2024-2025, 2025-2026)</li>
+                    <li><strong>NOAA SLR Projections:</strong> Intermediate (+0.5m by 2050) and High (+1.0m by 2050) scenarios for Texas coast</li>
+                    <li><strong>Habitat suitability thresholds:</strong> From Figlus et al. (2020) - elevation, slope, distance from water, beach width</li>
+                </ul>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Key Derived Metrics:</h4>
+                <ul>
+                    <li><strong>Annual Erosion/Accretion Rate (m/yr):</strong> Linear regression of elevation change</li>
+                    <li><strong>Shoreline Change Rate (m/yr):</strong> DSAS End Point Rate or Linear Regression Rate</li>
+                    <li><strong>Beach Width Change Rate (m/yr):</strong> Transect-based width trend</li>
+                    <li><strong>Future DEMs:</strong> Projected for 2030, 2040, 2050</li>
+                    <li><strong>Habitat Area:</strong> Hectares of suitable nesting beach for each time period</li>
+                    <li><strong>Habitat Loss Rate:</strong> % loss per decade</li>
+                </ul>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Complete Workflow</h4>
+
+                <div class="workflow-quick">
+                    <p><strong>Phase 1: Calculate Morphodynamic Change Rates</strong></p>
+                    <ol style="margin-top: 10px;">
+                        <li><strong>Elevation Change Rate:</strong> (DEM_2026 - DEM_2024) / 2 years = m/yr per pixel</li>
+                        <li><strong>Shoreline Migration Rate:</strong> DSAS tool with 2024, 2025, 2026 shorelines → LRR (m/yr) per transect</li>
+                        <li><strong>Beach Width Trend:</strong> Linear regression of width measurements across 3 years per transect</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Phase 2: Project Future Beach Morphology</strong></p>
+                    <ol style="margin-top: 10px;">
+                        <li><strong>2030 DEM:</strong> DEM_2026 + (ElevationChangeRate × 4 years)</li>
+                        <li><strong>2040 DEM:</strong> DEM_2026 + (ElevationChangeRate × 14 years)</li>
+                        <li><strong>2050 DEM:</strong> DEM_2026 + (ElevationChangeRate × 24 years)</li>
+                        <li>Use Raster Calculator for pixel-by-pixel addition</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Phase 3: Apply SLR Scenarios</strong></p>
+                    <ol style="margin-top: 10px;">
+                        <li><strong>Intermediate Scenario:</strong> Mean High Water +0.3m (2030), +0.4m (2040), +0.5m (2050)</li>
+                        <li><strong>High Scenario:</strong> MHW +0.5m (2030), +0.75m (2040), +1.0m (2050)</li>
+                        <li>Create new waterline: Con tool (Elevation < MHW + SLR = "Inundated", Elevation ≥ MHW + SLR = "Terrestrial")</li>
+                        <li>Extract new shoreline positions from inundation boundary</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Phase 4: Adjust Beach Width for Combined Effects</strong></p>
+                    <ol style="margin-top: 10px;">
+                        <li>New shore position moves landward due to SLR</li>
+                        <li>Dune position also migrates based on dune toe retreat rate (from Direction 2/3)</li>
+                        <li>Recalculate beach width = distance between new shoreline and adjusted dune toe</li>
+                        <li>Result: Future beach width accounting for both SLR inundation AND morphodynamic change</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Phase 5: Apply Habitat Suitability Criteria</strong></p>
+                    <p style="margin-top: 10px;"><strong>Kemp's Ridley Requirements (Figlus et al. 2020):</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li>Elevation: 1.5-4.0 m above MHW (adjust for SLR)</li>
+                        <li>Slope: 3.5-6.7°</li>
+                        <li>Beach Width: > 30 m (minimum)</li>
+                        <li>Distance from Shoreline: 10-100 m</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Raster Calculator Suitability Model:</strong></p>
+                    <p style="margin-top: 5px; font-family: monospace; background: #e8f5e9; padding: 10px;">
+                        Suitable = (Elevation >= 1.5 & Elevation <= 4.0) & (Slope >= 3.5 & Slope <= 6.7) &
+                        (BeachWidth > 30) & (DistToShore >= 10 & DistToShore <= 100)
+                    </p>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Phase 6: Calculate Habitat Area Changes</strong></p>
+                    <ol style="margin-top: 10px;">
+                        <li>Baseline (2026): Area of suitable habitat (ha)</li>
+                        <li>2030: Suitable area under both SLR scenarios</li>
+                        <li>2040: Suitable area under both scenarios</li>
+                        <li>2050: Suitable area under both scenarios</li>
+                        <li>Calculate % change, absolute loss (ha), loss rate (%/decade)</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Phase 7: Spatial Analysis of Habitat Shifts</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li><strong>Lost Habitat Zones:</strong> Suitable in 2026 but unsuitable in future → identify which criterion failed (inundation? width loss? slope change?)</li>
+                        <li><strong>Persistent Habitat Zones:</strong> Suitable in ALL time periods → conservation priorities</li>
+                        <li><strong>Emerging Habitat Zones:</strong> Unsuitable in 2026 but suitable in future (due to accretion/dune building) → unexpected opportunities</li>
+                    </ul>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Expected Outputs</h4>
+                <div style="background: #d4edda; padding: 20px; margin-top: 15px; border-radius: 5px; border-left: 5px solid #28a745;">
+                    <p><strong>Maps (12 total):</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li>Projected DEMs for 2030, 2040, 2050</li>
+                        <li>Habitat suitability maps for 2026 (baseline), 2030, 2040, 2050 under both SLR scenarios (6 maps)</li>
+                        <li>Habitat change maps: Lost vs. Persistent vs. Emerging zones</li>
+                        <li>Spatial vulnerability map: where/why habitat is lost (inundation, width loss, slope change)</li>
+                    </ul>
+
+                    <p style="margin-top: 20px;"><strong>Quantitative Results:</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li>Table: Habitat area (ha) for baseline and all future scenarios</li>
+                        <li>% habitat loss by 2030, 2040, 2050 (Intermediate vs. High SLR)</li>
+                        <li>Linear loss rate (ha/year, %/decade)</li>
+                        <li>Breakdown: % lost due to inundation vs. width reduction vs. other factors</li>
+                    </ul>
+
+                    <p style="margin-top: 20px;"><strong>Management Deliverables:</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li>Priority conservation zones (persistent habitat under all scenarios)</li>
+                        <li>At-risk zones requiring intervention within 5, 10, 20 years</li>
+                        <li>Recommendations for beach nourishment volumes/locations to offset projected losses</li>
+                    </ul>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">2026 MLS Data Contribution</h4>
+                <p>Completes 3-year time series essential for calculating reliable annual change rates. Two-year rates (2024-2025) alone may be anomalous; 2026 provides validation that trends are consistent.</p>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Limitations & Assumptions</h4>
+                <div style="background: #f8d7da; padding: 20px; margin-top: 15px; border-radius: 5px; border-left: 5px solid #dc3545;">
+                    <ul>
+                        <li><strong>Linear extrapolation assumption:</strong> Assumes 2024-2026 change rates continue at constant pace (may accelerate or decelerate)</li>
+                        <li><strong>No storm events modeled:</strong> Major hurricanes could cause abrupt changes not captured by linear trends</li>
+                        <li><strong>3-year baseline short:</strong> Ideally 5-10 years for robust rate calculation</li>
+                        <li><strong>Uncertainty compounds over time:</strong> 2030 projections more reliable than 2050</li>
+                        <li><strong>Mitigation:</strong> Run sensitivity analysis with ±50% rate variations; acknowledge uncertainty in discussion; present as "scenarios" not "predictions"</li>
+                    </ul>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Publication Venues</h4>
+                <ul>
+                    <li><em>Ecological Applications</em> - conservation forecasting</li>
+                    <li><em>Global Change Biology</em> - climate change impacts on biodiversity</li>
+                    <li><em>Endangered Species Research</em> - threatened species management</li>
+                    <li><em>Estuarine, Coastal and Shelf Science</em> - coastal habitat modeling</li>
+                </ul>
+            </div>
+
+            <!-- DIRECTION 5 FULL DETAILS -->
+            <div style="background: #f8f9fa; padding: 35px; margin: 30px 0; border-radius: 10px; border: 3px solid #9b59b6;">
+                <h3 style="margin-top: 0; color: #8e44ad; font-size: 1.8em;">
+                    Direction 5: Fine-Scale Beach Morphodynamic Change Classification for Conservation Prioritization
+                </h3>
+
+                <div style="background: white; padding: 20px; margin: 20px 0; border-left: 5px solid #8e44ad; border-radius: 5px;">
+                    <p style="font-style: italic; font-size: 1.1em;"><strong>Research Question:</strong></p>
+                    <p style="margin-top: 10px;">
+                        Can PAIS nesting beaches be classified into distinct morphodynamic behavior types (stable, eroding,
+                        accreting, dynamic) based on multi-temporal MLS data, and do different behavior classes support
+                        different levels of nesting activity or success?
+                    </p>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Novelty & Differentiation</h4>
+                <p><strong>RA Project:</strong> Assesses overall SLR vulnerability trends</p>
+                <p><strong>Thesis:</strong> Creates behavioral classification system for beach segments to identify heterogeneous responses and inform adaptive management</p>
+                <p style="margin-top: 10px;"><strong>Novel Contribution:</strong> First morphodynamic classification specifically designed for wildlife habitat management (vs. coastal engineering or hazard assessment)</p>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Classification System</h4>
+
+                <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+                    <tr style="background: #8e44ad; color: white;">
+                        <th style="padding: 12px; border: 1px solid #ddd;">Class</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">Characteristics</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">Management Implication</th>
+                    </tr>
+                    <tr style="background: #d4edda;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Type 1: Stable</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Minimal elevation change (< ±0.1 m), low shoreline migration (< 0.5 m/yr), consistent beach width</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Focus intensive monitoring; reliable long-term habitat</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Type 2: Accreting</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Positive elevation trend (> +0.1 m/yr), shoreline advancing, increasing width</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Improving habitat; may become optimal in future</td>
+                    </tr>
+                    <tr style="background: #fff3cd;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Type 3: Eroding</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Negative elevation trend (< -0.1 m/yr), retreating shoreline, decreasing width</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Declining habitat; consider nourishment or restoration</td>
+                    </tr>
+                    <tr style="background: #f8d7da;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Type 4: Dynamic (Cyclic)</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">High variability but no trend (alternating erosion/accretion), CV > 50%</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Unpredictable; requires adaptive nest monitoring</td>
+                    </tr>
+                    <tr style="background: #fadbd8;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Type 5: Critical Erosion</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Severe erosion (< -0.3 m/yr), rapid width loss, approaching habitat threshold failure</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Urgent intervention needed; may lose habitat within 5 years</td>
+                    </tr>
+                </table>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Workflow</h4>
+
+                <div class="workflow-quick">
+                    <p><strong>Step 1: Segment Beach into Analysis Units</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li>Divide PAIS nesting zone into 100m alongshore segments (or use existing NPS monitoring segments)</li>
+                        <li>Create segment polygons extending from shoreline to dune crest</li>
+                        <li>Result: ~500-700 segments for entire study area</li>
+                    </ul>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Step 2: Calculate Change Statistics Per Segment</strong></p>
+                    <p style="margin-top: 10px;">Use Zonal Statistics tool for each segment polygon:</p>
+                    <ul style="margin-top: 10px;">
+                        <li><strong>Mean elevation change 2024-2026:</strong> Average of DoD</li>
+                        <li><strong>Elevation trend:</strong> Linear regression if 3 time points (2024, 2025, 2026)</li>
+                        <li><strong>Elevation variability:</strong> Coefficient of Variation (CV) across 3 years</li>
+                        <li><strong>Shoreline change rate:</strong> From DSAS transects within segment</li>
+                        <li><strong>Beach width change:</strong> Mean width trend for transects in segment</li>
+                        <li><strong>Volume change:</strong> DoD × segment area = m³ erosion or accretion</li>
+                    </ul>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Step 3: Apply Classification Criteria</strong></p>
+                    <p style="margin-top: 10px;">Decision tree in segment attribute table:</p>
+                    <pre style="background: white; padding: 15px; margin-top: 10px; border-radius: 5px; overflow-x: auto;">
+IF Mean_Elev_Change > -0.05 AND Mean_Elev_Change < 0.05 AND CV_Elevation < 30%:
+    Class = "Type 1: Stable"
+
+ELIF Mean_Elev_Change > 0.1 AND Shoreline_Rate > 0:
+    Class = "Type 2: Accreting"
+
+ELIF Mean_Elev_Change < -0.1 AND Mean_Elev_Change > -0.3:
+    Class = "Type 3: Eroding"
+
+ELIF Mean_Elev_Change < -0.3 OR Beach_Width_Loss > 2 m/yr:
+    Class = "Type 5: Critical Erosion"
+
+ELSE:
+    Class = "Type 4: Dynamic"
+                    </pre>
+                    <p style="margin-top: 10px;"><em>Implement using Field Calculator or Excel, then join back to segment shapefile</em></p>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Step 4: Map Classification Results</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li>Symbology: Color-code segments by type</li>
+                        <li>Green = Stable, Blue = Accreting, Yellow = Eroding, Orange = Dynamic, Red = Critical</li>
+                        <li>Calculate area (ha) and % of total nesting zone per class</li>
+                    </ul>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Step 5: Overlay with Nest Data</strong></p>
+                    <ul style="margin-top: 10px;">
+                        <li>Spatial Join: Nest points to segment polygons</li>
+                        <li>Count nests per segment</li>
+                        <li>Calculate nest density (nests/ha) per morphodynamic class</li>
+                        <li>Statistical test: ANOVA or Kruskal-Wallis → Is nest density significantly different among classes?</li>
+                    </ul>
+                </div>
+
+                <div class="workflow-quick">
+                    <p><strong>Step 6: Develop Management Priority Matrix</strong></p>
+                    <table style="width: 100%; margin-top: 15px; font-size: 0.9em;">
+                        <tr style="background: #8e44ad; color: white;">
+                            <th style="padding: 10px;">Morphodynamic Class</th>
+                            <th style="padding: 10px;">High Nest Density</th>
+                            <th style="padding: 10px;">Low Nest Density</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Stable</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #d4edda;"><strong>Priority 1:</strong> Maintain & Protect</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Priority 3: Monitor</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Accreting</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #cce5ff;">Priority 2: Enhance Access</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Priority 4: Low</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Eroding</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #fff3cd;"><strong>Priority 1:</strong> Urgent Intervention</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Priority 3: Assess if recoverable</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Critical Erosion</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f8d7da;"><strong>Priority 1:</strong> Emergency Action</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f8d7da;">Priority 2: Stabilize or Abandon</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Expected Outputs</h4>
+                <div style="background: #d4edda; padding: 20px; margin-top: 15px; border-radius: 5px;">
+                    <ul>
+                        <li>Morphodynamic classification map (5 types, color-coded)</li>
+                        <li>Summary statistics table: area and % per class</li>
+                        <li>Nest density by class (bar chart, statistical test results)</li>
+                        <li>Management priority map (4-tier system)</li>
+                        <li>Segment-level database with all metrics for future analysis</li>
+                    </ul>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">2026 Contribution</h4>
+                <p>Completes time series for trend analysis; validates classification (do "stable" segments remain stable in 2026?)</p>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Limitations</h4>
+                <div style="background: #f8d7da; padding: 15px; margin-top: 15px; border-radius: 5px;">
+                    <ul>
+                        <li>Classification thresholds somewhat arbitrary (can run sensitivity analysis)</li>
+                        <li>3-year window captures only recent behavior (long-term cycles may differ)</li>
+                        <li>Segment size (100m) affects classification granularity</li>
+                    </ul>
+                </div>
+
+                <h4 style="color: #8e44ad; margin-top: 25px;">Publication Venues</h4>
+                <ul>
+                    <li><em>Journal of Coastal Research</em> - beach classification methods</li>
+                    <li><em>Geomorphology</em> - morphodynamic systems</li>
+                    <li><em>Marine Turtle Newsletter</em> - management application</li>
+                </ul>
+            </div>
+
+            <h2 id="recommended" style="margin-top: 60px;">🏆 RECOMMENDED THESIS DIRECTION</h2>
+
+            <div class="recommended-box">
+                <h2>Direction 2: Temporal Morphological Stability Mapping for Persistent Habitat Identification</h2>
+
+                <p style="font-size: 1.15em; margin: 20px 0; line-height: 1.8;">
+                    <strong>Total Score: 22/25</strong> — Highest ranking across all criteria
+                </p>
+
+                <h3 style="color: #27ae60;">Why This Direction is Recommended</h3>
+
+                <div style="background: white; padding: 25px; margin: 20px 0; border-radius: 8px;">
+                    <h4 style="color: #27ae60;">✓ Strongest Overall Performance</h4>
+                    <ul>
+                        <li><strong>Only 5/5 on Feasibility:</strong> Completely achievable with MLS data alone using standard ArcGIS Pro tools</li>
+                        <li><strong>5/5 on Management Usefulness:</strong> Directly identifies conservation priority zones</li>
+                        <li><strong>4/5 on Biological Data Independence:</strong> Works even with limited nest GPS data</li>
+                        <li><strong>Novel (4/5):</strong> Multi-temporal stability analysis not previously applied to sea turtle habitat</li>
+                    </ul>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">✓ Perfect Alignment with RA Project</h4>
+                    <p>
+                        Your RA project examines <span class="highlight">SLR impacts</span>. This thesis examines
+                        <span class="highlight">temporal stability of habitat characteristics</span> — complementary but distinct.
+                        Both inform PAIS management from different analytical perspectives.
+                    </p>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">✓ Matches Your Timeline Perfectly</h4>
+                    <p>
+                        Requires all three years (2024, 2025, 2026) to calculate robust stability metrics. The 2026 MLS
+                        survey is essential, not just supplementary. This ensures your thesis cannot be completed early
+                        and perfectly integrates your final RA field campaign.
+                    </p>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">✓ Produces Actionable Management Tools</h4>
+                    <p>Maps showing "stable persistent habitat zones" vs. "dynamic ephemeral zones" immediately useful for:</p>
+                    <ul>
+                        <li>Prioritizing beach segments for intensive nest monitoring</li>
+                        <li>Identifying where to focus limited protection resources</li>
+                        <li>Informing beach nourishment site selection (stabilize eroding stable zones)</li>
+                        <li>Nest relocation policy (prioritize moving nests FROM dynamic zones TO stable zones)</li>
+                    </ul>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">✓ No Coding Required</h4>
+                    <p>Entire workflow achievable in ArcGIS Pro using:</p>
+                    <ul>
+                        <li>Composite Bands (stack DEMs)</li>
+                        <li>Cell Statistics (calculate mean, std dev across time)</li>
+                        <li>Raster Calculator (compute Coefficient of Variation)</li>
+                        <li>Weighted Overlay (create Composite Stability Index)</li>
+                        <li>Zonal Statistics (analyze by beach segment)</li>
+                    </ul>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">✓ Strong Publication Potential</h4>
+                    <p>Target Journals:</p>
+                    <ul>
+                        <li><em>Geomorphology</em> - methodological novelty in morphodynamic classification</li>
+                        <li><em>Journal of Coastal Research</em> - beach stability assessment</li>
+                        <li><em>Ecological Indicators</em> - stability index development for habitat</li>
+                        <li><em>Endangered Species Research</em> - conservation application</li>
+                    </ul>
+                </div>
+
+                <h3 style="color: #27ae60;">Complete Implementation Summary</h3>
+
+                <div style="background: white; padding: 25px; margin: 20px 0; border-radius: 8px;">
+                    <h4 style="color: #27ae60;">Primary Research Question</h4>
+                    <p style="font-style: italic; padding: 15px; background: #e8f5e9; border-radius: 5px;">
+                        "Which beach segments at PAIS demonstrate temporal stability in geomorphic characteristics critical
+                        for Kemp's ridley nesting (slope, elevation, beach width), and can a Morphological Stability Index
+                        predict persistent vs. ephemeral high-quality habitat zones?"
+                    </p>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">Three Core Objectives</h4>
+                    <ol>
+                        <li><strong>Quantify temporal variability</strong> in key habitat parameters (elevation, slope, beach width) across 2024-2026 MLS time series</li>
+                        <li><strong>Develop Composite Stability Index (CSI)</strong> integrating multiple geomorphic metrics to classify beach segments by stability</li>
+                        <li><strong>Map persistent vs. ephemeral habitat zones</strong> and correlate with Kemp's ridley nest distribution patterns</li>
+                    </ol>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">Expected Deliverables</h4>
+                    <ul>
+                        <li><strong>6 maps:</strong> Individual stability metrics (elevation, slope, width, change magnitude, dune toe migration) + final CSI map</li>
+                        <li><strong>Persistent Habitat Map:</strong> Zones maintaining suitability in all 3 years vs. intermittent vs. ephemeral</li>
+                        <li><strong>Conservation Priority Map:</strong> 4-tier classification for management action</li>
+                        <li><strong>Statistical analysis:</strong> Nest density comparison across stability classes (ANOVA/Kruskal-Wallis)</li>
+                        <li><strong>Management recommendations:</strong> Segment rankings for protection priority</li>
+                    </ul>
+
+                    <h4 style="color: #27ae60; margin-top: 25px;">Timeline (within your MS program)</h4>
+                    <ul>
+                        <li><strong>Fall 2024:</strong> Literature review, methodology development, process 2024 MLS data</li>
+                        <li><strong>Spring 2025:</strong> Process 2025 MLS data, preliminary 2-year analysis</li>
+                        <li><strong>Summer 2025:</strong> Participate in 2026 RA field campaign (MLS + RTK surveys)</li>
+                        <li><strong>Fall 2025:</strong> Process 2026 MLS data, complete 3-year stability analysis</li>
+                        <li><strong>Spring 2026:</strong> Finalize analysis, thesis writing, defense</li>
+                    </ul>
+                </div>
+
+                <h3 style="color: #27ae60;">Alternative Directions Worth Considering</h3>
+
+                <p><strong>Direction 1 (Score 21)</strong> is excellent if you want maximum novelty and publication impact (microtopography is completely new). However, it requires high-quality nest GPS data and more advanced texture analysis.</p>
+
+                <p><strong>Direction 4 (Score 21)</strong> is ideal if you want to focus on climate change projections and future scenarios. Produces highly relevant SLR adaptation tools but assumes linear change rates (more uncertainty).</p>
+
+                <p style="margin-top: 20px; padding: 20px; background: white; border-radius: 8px; border-left: 5px solid #27ae60;">
+                    <strong>Final Recommendation:</strong> Direction 2 offers the best balance of novelty, feasibility, management relevance,
+                    and alignment with your RA project timeline and data. It positions you for a strong thesis defense and potential
+                    peer-reviewed publication while providing PAIS with immediately usable conservation tools.
+                </p>
+            </div>
+
+        </div>
+
+        <footer>
+            <p><strong>Comparison Matrix & Recommendations | MLS Thesis Research Analysis</strong></p>
+            <p style="margin-top: 15px;">
+                <a href="MLS-Thesis-Index.html" style="color: white; text-decoration: none;">← Return to Index</a> |
+                <a href="MLS-Thesis-Directions.html" style="color: white; text-decoration: none;">← Thesis Directions</a> |
+                <a href="MLS-Survey-Optimization.html" style="color: white; text-decoration: none;">Next: 2026 Survey Optimization →</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

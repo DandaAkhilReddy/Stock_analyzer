@@ -1,0 +1,20 @@
+{
+  "name": "call-analytics-dashboard",
+  "version": "1.0.0",
+  "description": "Interactive Call Analytics Dashboard for 5 Clinics",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site - no build needed'",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "analytics",
+    "dashboard",
+    "call-center",
+    "medical",
+    "clinics"
+  ],
+  "author": "Claude Code Analytics",
+  "license": "MIT"
+}

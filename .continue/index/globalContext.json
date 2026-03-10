@@ -1,0 +1,21 @@
+{
+  "lastSelectedProfileForWorkspace": {
+    ":::personal": "local",
+    "file:///c%3A/Users/akhil/Reddytalkwebsite-1:::personal": "local"
+  },
+  "lastSelectedOrgIdForWorkspace": {
+    "": "personal",
+    "file:///c%3A/Users/akhil/Reddytalkwebsite-1": "personal"
+  },
+  "selectedModelsByProfileId": {
+    "local": {
+      "chat": null,
+      "edit": null,
+      "apply": null,
+      "embed": "Transformers.js (Built-In)",
+      "autocomplete": null,
+      "rerank": null,
+      "summarize": null
+    }
+  }
+}

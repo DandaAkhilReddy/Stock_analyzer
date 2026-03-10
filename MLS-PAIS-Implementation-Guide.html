@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementation Guide | PAIS MLS Research</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav-back {
+            background: #e67e22;
+            padding: 15px 30px;
+            text-align: center;
+        }
+
+        .nav-back a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .quickstart {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+
+        .quickstart h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .quickstart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .quickstart-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .quickstart-item .number {
+            font-size: 3em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f39c12;
+        }
+
+        .section h3 {
+            color: #34495e;
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .code-block .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-block .formula {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .tool-panel {
+            background: #ecf0f1;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #f39c12;
+        }
+
+        .tool-panel h4 {
+            color: #f39c12;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .step-box {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .step-box h4 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning h4 {
+            color: #f39c12;
+            margin-bottom: 10px;
+        }
+
+        .tip {
+            background: #d1ecf1;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .tip h4 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .checklist {
+            background: #e8f5e9;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .checklist h4 {
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .checklist ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checklist li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .checklist li:before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+            color: #27ae60;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        ul {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        ul li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Implementation Guide</h1>
+            <p>Step-by-Step Workflows for Starting TODAY</p>
+        </header>
+
+        <div class="nav-back">
+            <a href="MLS-PAIS-Thesis-Index.html">← Back to Main Index</a>
+        </div>
+
+        <div class="content">
+            <div class="quickstart">
+                <h2>🚀 Quick Start: 90 Minutes to Your First Result</h2>
+                <p style="font-size: 1.1em; margin-bottom: 20px;">
+                    Follow this condensed workflow to generate your first management-ready map in under 2 hours using only May and August 2024 DEMs.
+                </p>
+                <div class="quickstart-grid">
+                    <div class="quickstart-item">
+                        <span class="number">15 min</span>
+                        <span>Load & verify DEMs</span>
+                    </div>
+                    <div class="quickstart-item">
+                        <span class="number">20 min</span>
+                        <span>Calculate seasonal change</span>
+                    </div>
+                    <div class="quickstart-item">
+                        <span class="number">30 min</span>
+                        <span>Extract to nest points</span>
+                    </div>
+                    <div class="quickstart-item">
+                        <span class="number">25 min</span>
+                        <span>Create stability map</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 1: Prerequisites -->
+            <div class="section">
+                <h2>1. Prerequisites and Data Preparation</h2>
+
+                <div class="checklist">
+                    <h4>✅ Before You Begin - Checklist</h4>
+                    <ul>
+                        <li>ArcGIS Pro installed with Spatial Analyst extension activated</li>
+                        <li>May 2024 MLS DEM (processed from point cloud)</li>
+                        <li>August 2024 MLS DEM (processed from point cloud)</li>
+                        <li>Nest GPS coordinates (CSV with Latitude, Longitude columns)</li>
+                        <li>At least 50GB free disk space for outputs</li>
+                        <li>Access to tide data (MHW elevation at PAIS ≈ 0.25m NAVD88)</li>
+                    </ul>
+                </div>
+
+                <h3>Step 1.1: Verify DEM Quality</h3>
+                <div class="tool-panel">
+                    <h4>🔍 Quality Check Procedure</h4>
+                    <div class="step-box">
+                        <h4>Load DEMs and inspect properties</h4>
+                        <ol>
+                            <li>Map → Add Data → Browse to DEM_May2024.tif</li>
+                            <li>Right-click layer → Properties → Source tab</li>
+                            <li>Verify:
+                                <ul>
+                                    <li><strong>Cell Size:</strong> Should be 0.1m × 0.1m (or your target resolution)</li>
+                                    <li><strong>Coordinate System:</strong> UTM Zone 14N NAD83 or equivalent</li>
+                                    <li><strong>Extent:</strong> Note the bounding coordinates</li>
+                                    <li><strong>NoData Value:</strong> Should be -9999 or similar</li>
+                                </ul>
+                            </li>
+                            <li>Repeat for DEM_Aug2024.tif</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <h4>⚠️ Common Issue: Mismatched Extents</h4>
+                    <p>If your May and August DEMs have different extents (e.g., one survey covered more area), you MUST clip both to a common extent before differencing:</p>
+                    <ol style="margin-top: 10px;">
+                        <li>Analysis → Tools → "Extract by Rectangle"</li>
+                        <li>Input: DEM_May2024</li>
+                        <li>Rectangle: Manually draw extent that overlaps both surveys</li>
+                        <li>Output: DEM_May2024_Clipped</li>
+                        <li>Repeat for August DEM using SAME rectangle coordinates</li>
+                    </ol>
+                </div>
+
+                <h3>Step 1.2: Organize Project Structure</h3>
+                <div class="code-block">
+                    <span class="comment">// Recommended folder structure:</span><br>
+                    C:\PAIS_Thesis\<br>
+                    ├── 01_Input_Data\<br>
+                    │   ├── DEMs\<br>
+                    │   │   ├── DEM_May2024.tif<br>
+                    │   │   └── DEM_Aug2024.tif<br>
+                    │   └── Nests\<br>
+                    │       └── nest_locations_2024.csv<br>
+                    ├── 02_Intermediate\<br>
+                    │   ├── SEC_2024.tif<br>
+                    │   └── nest_buffers.shp<br>
+                    ├── 03_Outputs\<br>
+                    │   ├── Maps\<br>
+                    │   └── Tables<br>
+                    └── PAIS_Thesis.aprx <span class="comment">// ArcGIS Pro project file</span>
+                </div>
+            </div>
+
+            <!-- Section 2: Seasonal Change Calculation -->
+            <div class="section">
+                <h2>2. Seasonal Elevation Change (SEC) Calculation</h2>
+
+                <h3>Step 2.1: Compute DEM of Difference</h3>
+                <div class="tool-panel">
+                    <h4>🧮 Raster Calculator Workflow</h4>
+                    <div class="step-box">
+                        <h4>Open Raster Calculator</h4>
+                        <ol>
+                            <li>Analysis tab → Tools → Search: "Raster Calculator"</li>
+                            <li>In the expression box, build this formula:</li>
+                        </ol>
+                        <div class="code-block" style="margin-top: 10px;">
+                            <span class="formula">"DEM_Aug2024" - "DEM_May2024"</span><br>
+                            <span class="comment">// Double-quotes required for raster names with spaces or special characters</span>
+                        </div>
+                        <ol start="3">
+                            <li>Output raster: <code>C:\PAIS_Thesis\02_Intermediate\SEC_2024.tif</code></li>
+                            <li>Click Run</li>
+                            <li>Processing time: ~2-5 minutes depending on extent</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <h4>💡 Interpreting SEC Values</h4>
+                    <ul>
+                        <li><strong>Negative values (red):</strong> Erosion occurred (elevation decreased)</li>
+                        <li><strong>Positive values (blue):</strong> Accretion occurred (elevation increased)</li>
+                        <li><strong>Values near zero (white/yellow):</strong> Stable (minimal change)</li>
+                        <li><strong>Typical range:</strong> -0.5m to +0.3m for seasonal changes at PAIS</li>
+                    </ul>
+                </div>
+
+                <h3>Step 2.2: Calculate Absolute Change</h3>
+                <div class="step-box">
+                    <h4>Why absolute change?</h4>
+                    <p>For nest safety, we care about magnitude of change (stability), not direction. A nest losing 0.2m or gaining 0.2m are both "unstable" compared to 0.01m change.</p>
+                    <div class="code-block" style="margin-top: 10px;">
+                        <span class="comment">// Raster Calculator expression:</span><br>
+                        <span class="formula">Abs("SEC_2024")</span><br><br>
+                        <span class="comment">// Output:</span> SEC_AbsChange_2024.tif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Nest-Scale Analysis -->
+            <div class="section">
+                <h2>3. Nest-Scale Stability Analysis</h2>
+
+                <h3>Step 3.1: Import Nest GPS Coordinates</h3>
+                <div class="tool-panel">
+                    <h4>📍 CSV to Point Layer Conversion</h4>
+                    <div class="step-box">
+                        <h4>Assuming your CSV looks like this:</h4>
+                        <table style="font-size: 0.9em; margin-top: 10px;">
+                            <tr>
+                                <th>NestID</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Date</th>
+                            </tr>
+                            <tr>
+                                <td>PAIS001</td>
+                                <td>27.1234</td>
+                                <td>-97.4567</td>
+                                <td>2024-05-15</td>
+                            </tr>
+                            <tr>
+                                <td>PAIS002</td>
+                                <td>27.1245</td>
+                                <td>-97.4580</td>
+                                <td>2024-05-18</td>
+                            </tr>
+                        </table>
+
+                        <h4 style="margin-top: 20px;">Import Process:</h4>
+                        <ol>
+                            <li>Map → Add Data → Browse to nest_locations_2024.csv</li>
+                            <li>Right-click CSV in Contents → Display XY Data</li>
+                            <li>Settings:
+                                <ul>
+                                    <li>X Field: Longitude</li>
+                                    <li>Y Field: Latitude</li>
+                                    <li>Z Field: (leave empty)</li>
+                                    <li>Coordinate System: WGS84 (EPSG:4326)</li>
+                                </ul>
+                            </li>
+                            <li>Click OK → Points appear on map</li>
+                            <li><strong>CRITICAL:</strong> Right-click point layer → Data → Export Features</li>
+                            <li>Save as: <code>nest_locations.shp</code> (permanent shapefile)</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <h4>⚠️ Coordinate System Mismatch</h4>
+                    <p>Your nest GPS is in WGS84 (lat/lon), but your DEMs are likely in UTM Zone 14N. You MUST project the nest points to match the DEM:</p>
+                    <ol style="margin-top: 10px;">
+                        <li>Analysis → Tools → "Project"</li>
+                        <li>Input: nest_locations.shp</li>
+                        <li>Output Coordinate System: Same as DEM (UTM Zone 14N NAD83)</li>
+                        <li>Output: nest_locations_UTM.shp</li>
+                        <li><strong>Use this projected version for all subsequent analysis</strong></li>
+                    </ol>
+                </div>
+
+                <h3>Step 3.2: Extract SEC Values to Nest Points</h3>
+                <div class="step-box">
+                    <h4>Extract Values to Points Tool</h4>
+                    <ol>
+                        <li>Analysis → Tools → "Extract Values to Points"</li>
+                        <li>Input point features: nest_locations_UTM</li>
+                        <li>Input raster: SEC_2024</li>
+                        <li>Output: nests_with_SEC.shp</li>
+                        <li>Check "Interpolate values at point locations" (uses bilinear interpolation)</li>
+                        <li>Click Run</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Result:</strong> Each nest point now has a "RASTERVALU" field containing the seasonal elevation change (meters) at that exact location.</p>
+                </div>
+
+                <h3>Step 3.3: Create 50m Buffers Around Nests</h3>
+                <div class="step-box">
+                    <h4>Buffer Tool - Nest-Scale Context</h4>
+                    <ol>
+                        <li>Analysis → Tools → "Buffer"</li>
+                        <li>Input features: nest_locations_UTM</li>
+                        <li>Distance: 50 Meters (linear unit)</li>
+                        <li>Dissolve Type: None (keep individual buffers)</li>
+                        <li>Output: nest_buffers_50m.shp</li>
+                        <li>Click Run</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Why 50m?</strong> Literature suggests nesting females assess habitat quality within ~50m radius. Hatchling dispersal also occurs at this scale.</p>
+                </div>
+
+                <h3>Step 3.4: Calculate Zonal Statistics</h3>
+                <div class="tool-panel">
+                    <h4>📊 Zonal Statistics as Table</h4>
+                    <div class="step-box">
+                        <h4>Extracting summary statistics within each buffer</h4>
+                        <ol>
+                            <li>Analysis → Tools → "Zonal Statistics as Table"</li>
+                            <li>Input zone data: nest_buffers_50m.shp</li>
+                            <li>Zone field: FID (or NestID if available)</li>
+                            <li>Input value raster: SEC_AbsChange_2024</li>
+                            <li>Output table: nest_stability_stats.dbf</li>
+                            <li>Statistics type: Check ALL:
+                                <ul>
+                                    <li>MEAN - Average absolute change within 50m</li>
+                                    <li>STD - Variability (higher = more patchy erosion)</li>
+                                    <li>MIN - Most stable pixel within buffer</li>
+                                    <li>MAX - Most dynamic pixel within buffer</li>
+                                    <li>RANGE - MAX - MIN</li>
+                                </ul>
+                            </li>
+                            <li>Click Run</li>
+                        </ol>
+
+                        <h4 style="margin-top: 20px;">Interpreting Results:</h4>
+                        <table>
+                            <tr>
+                                <th>MEAN Value</th>
+                                <th>Interpretation</th>
+                                <th>Recommendation</th>
+                            </tr>
+                            <tr>
+                                <td>&lt; 0.05m</td>
+                                <td>Highly Stable</td>
+                                <td>✅ Safe for in-situ incubation</td>
+                            </tr>
+                            <tr>
+                                <td>0.05 - 0.10m</td>
+                                <td>Moderately Stable</td>
+                                <td>⚠️ Monitor, consider pilot in-situ</td>
+                            </tr>
+                            <tr>
+                                <td>0.10 - 0.20m</td>
+                                <td>Dynamic</td>
+                                <td>🔶 Risky - recommend ex-situ</td>
+                            </tr>
+                            <tr>
+                                <td>&gt; 0.20m</td>
+                                <td>Highly Dynamic</td>
+                                <td>❌ Relocate eggs to laboratory</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Creating Maps -->
+            <div class="section">
+                <h2>4. Creating Management-Ready Maps</h2>
+
+                <h3>Step 4.1: Stability Classification Map</h3>
+                <div class="tool-panel">
+                    <h4>🗺️ Reclassify Tool for Categorical Zones</h4>
+                    <div class="step-box">
+                        <h4>Converting continuous SEC to discrete stability classes</h4>
+                        <ol>
+                            <li>Analysis → Tools → "Reclassify"</li>
+                            <li>Input raster: SEC_AbsChange_2024</li>
+                            <li>Reclass field: VALUE</li>
+                            <li>Click "Classify" button</li>
+                            <li>Method: Manual → Enter these breaks:
+                                <ul>
+                                    <li>0 to 0.05 → New value: 1</li>
+                                    <li>0.05 to 0.10 → New value: 2</li>
+                                    <li>0.10 to 0.20 → New value: 3</li>
+                                    <li>0.20 to 9999 → New value: 4</li>
+                                </ul>
+                            </li>
+                            <li>Output raster: Stability_Classes_2024.tif</li>
+                            <li>Click Run</li>
+                        </ol>
+
+                        <h4 style="margin-top: 20px;">Apply Professional Symbology:</h4>
+                        <ol>
+                            <li>Right-click Stability_Classes_2024 → Symbology</li>
+                            <li>Primary symbology: Unique Values</li>
+                            <li>Value Field: VALUE</li>
+                            <li>Click "Add All Values"</li>
+                            <li>Customize colors and labels:
+                                <table style="font-size: 0.9em; margin-top: 10px;">
+                                    <tr>
+                                        <th>Value</th>
+                                        <th>Label</th>
+                                        <th>Color (RGB)</th>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Highly Stable (&lt;0.05m)</td>
+                                        <td>Green (56, 168, 0)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Moderately Stable (0.05-0.10m)</td>
+                                        <td>Yellow (255, 255, 0)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Dynamic (0.10-0.20m)</td>
+                                        <td>Orange (255, 170, 0)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>Highly Dynamic (&gt;0.20m)</td>
+                                        <td>Red (255, 0, 0)</td>
+                                    </tr>
+                                </table>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>Step 4.2: Add Nest Locations as Overlay</h3>
+                <div class="step-box">
+                    <h4>Symbolize nests by their local stability</h4>
+                    <ol>
+                        <li>Right-click nests_with_SEC → Joins and Relates → Join</li>
+                        <li>Join nest_stability_stats table using FID/NestID</li>
+                        <li>Right-click joined layer → Symbology</li>
+                        <li>Graduated symbols based on MEAN field (from zonal stats)</li>
+                        <li>Classification: Natural Breaks, 4 classes</li>
+                        <li>Symbol: Circle, size varies 6-18 points</li>
+                        <li>Color scheme: Green → Yellow → Orange → Red (matches stability map)</li>
+                    </ol>
+                </div>
+
+                <h3>Step 4.3: Export Publication-Quality Map</h3>
+                <div class="step-box">
+                    <h4>Layout and Export</h4>
+                    <ol>
+                        <li>Insert → New Layout → Letter size (8.5" × 11")</li>
+                        <li>Insert map frame → Drag rectangle to fill layout</li>
+                        <li>Add essential map elements:
+                            <ul>
+                                <li>North arrow (Insert → North Arrow)</li>
+                                <li>Scale bar (Insert → Scale Bar → Metric, km)</li>
+                                <li>Legend (Insert → Legend → Remove clutter, keep only Stability_Classes and Nest_Locations)</li>
+                                <li>Title text: "Seasonal Morphological Stability | May-August 2024 | PAIS"</li>
+                            </ul>
+                        </li>
+                        <li>Share → Export Layout → PDF or PNG (300 DPI minimum)</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Section 5: Data Export -->
+            <div class="section">
+                <h2>5. Exporting Data for Statistical Analysis</h2>
+
+                <h3>Step 5.1: Export Attribute Tables to CSV</h3>
+                <div class="step-box">
+                    <h4>For Excel/R analysis</h4>
+                    <ol>
+                        <li>Right-click nest_stability_stats table → Data → Export</li>
+                        <li>Output format: CSV (Comma Delimited)</li>
+                        <li>Output location: <code>C:\PAIS_Thesis\03_Outputs\Tables\nest_stability_summary.csv</code></li>
+                        <li>Open in Excel to create summary statistics:
+                            <ul>
+                                <li>Percentage of nests in each stability class</li>
+                                <li>Mean absolute change across all nests</li>
+                                <li>Comparison by site (A, B, C, D)</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <h3>Step 5.2: Calculate Area Statistics</h3>
+                <div class="tool-panel">
+                    <h4>📐 How much area falls in each stability class?</h4>
+                    <div class="step-box">
+                        <h4>Using Raster Properties</h4>
+                        <ol>
+                            <li>Right-click Stability_Classes_2024 → Properties → Symbology</li>
+                            <li>Note the "Count" column (number of pixels per class)</li>
+                            <li>Calculate area:
+                                <div class="code-block" style="margin-top: 10px;">
+                                    <span class="comment">// If cell size = 0.1m × 0.1m:</span><br>
+                                    <span class="formula">Area (m²) = Count × (0.1 × 0.1) = Count × 0.01</span><br>
+                                    <span class="formula">Area (hectares) = Area (m²) / 10,000</span>
+                                </div>
+                            </li>
+                            <li>Example calculation:</li>
+                        </ol>
+                        <table style="margin-top: 10px;">
+                            <tr>
+                                <th>Class</th>
+                                <th>Count (pixels)</th>
+                                <th>Area (m²)</th>
+                                <th>Area (hectares)</th>
+                                <th>Percentage</th>
+                            </tr>
+                            <tr>
+                                <td>1 (Highly Stable)</td>
+                                <td>1,250,000</td>
+                                <td>12,500</td>
+                                <td>1.25</td>
+                                <td>42%</td>
+                            </tr>
+                            <tr>
+                                <td>2 (Moderately Stable)</td>
+                                <td>850,000</td>
+                                <td>8,500</td>
+                                <td>0.85</td>
+                                <td>28%</td>
+                            </tr>
+                            <tr>
+                                <td>3 (Dynamic)</td>
+                                <td>600,000</td>
+                                <td>6,000</td>
+                                <td>0.60</td>
+                                <td>20%</td>
+                            </tr>
+                            <tr>
+                                <td>4 (Highly Dynamic)</td>
+                                <td>300,000</td>
+                                <td>3,000</td>
+                                <td>0.30</td>
+                                <td>10%</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: Troubleshooting -->
+            <div class="section">
+                <h2>6. Common Issues and Solutions</h2>
+
+                <div class="warning">
+                    <h4>❌ Error: "Input rasters must have the same extent"</h4>
+                    <p><strong>Solution:</strong></p>
+                    <ol>
+                        <li>Use Extract by Rectangle to clip both DEMs to a common extent (see Step 1.1)</li>
+                        <li>OR use Mosaic to New Raster with "Match to Extent Of: First Of" option</li>
+                    </ol>
+                </div>
+
+                <div class="warning">
+                    <h4>❌ Error: "The tool failed to execute"</h4>
+                    <p><strong>Common causes:</strong></p>
+                    <ul>
+                        <li>Output file path contains spaces → Use underscores instead</li>
+                        <li>Output file already exists and is locked → Delete or rename existing file</li>
+                        <li>Insufficient disk space → Free up space or change output location</li>
+                    </ul>
+                </div>
+
+                <div class="warning">
+                    <h4>❌ SEC values seem unrealistic (e.g., ±10 meters)</h4>
+                    <p><strong>Likely causes:</strong></p>
+                    <ul>
+                        <li>DEMs have different vertical datums → Ensure both are NAVD88 or same datum</li>
+                        <li>One DEM has incorrect Z-units → Check if one is in feet vs. meters</li>
+                        <li>Point cloud processing error → Review raw LAS files for anomalies</li>
+                    </ul>
+                </div>
+
+                <div class="tip">
+                    <h4>💡 Pro Tip: Batch Processing for Multiple Years</h4>
+                    <p>Once you have 2025 and 2026 data, use Model Builder to automate:</p>
+                    <ol>
+                        <li>Analysis → ModelBuilder → Create new model</li>
+                        <li>Drag in: Raster Calculator → Extract Values to Points → Zonal Statistics</li>
+                        <li>Set up parameters once</li>
+                        <li>Right-click model → Batch → Run for all year combinations</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Section 7: Next Steps -->
+            <div class="section">
+                <h2>7. Next Steps After Initial Analysis</h2>
+
+                <div class="checklist">
+                    <h4>✅ Immediate Next Steps (This Week)</h4>
+                    <ul>
+                        <li>Generate stability map for Site A (test workflow)</li>
+                        <li>Compare results with field observations (do "highly stable" zones match your visual assessment?)</li>
+                        <li>Calculate summary statistics in Excel</li>
+                        <li>Create 1-page summary with map + table for Dr. Shaver</li>
+                    </ul>
+                </div>
+
+                <div class="checklist" style="background: #fff3cd;">
+                    <h4>📅 Medium-Term Goals (This Month)</h4>
+                    <ul>
+                        <li>Expand analysis to all 3-4 sites</li>
+                        <li>Implement vehicle access comparison (Thesis Idea 2)</li>
+                        <li>Add elevation preference analysis (Thesis Idea 3)</li>
+                        <li>Draft methods section for thesis (you have the complete workflow now!)</li>
+                    </ul>
+                </div>
+
+                <div class="checklist" style="background: #d1ecf1;">
+                    <h4>🎯 Long-Term Integration (Next Semester)</h4>
+                    <ul>
+                        <li>Incorporate 2025 survey data when available (repeat SEC workflow)</li>
+                        <li>Implement multi-year persistence index (Thesis Idea 4)</li>
+                        <li>Run SLR scenario modeling (Thesis Idea 5)</li>
+                        <li>Validate predictions: Do 2025 nests correlate with "highly stable" zones from 2024?</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <p><strong>Final Step:</strong> <a href="MLS-PAIS-Expected-Outputs.html" style="color: #3498db;">View Expected Outputs & Deliverables →</a></p>
+            <p style="margin-top: 10px;"><a href="MLS-PAIS-Thesis-Index.html" style="color: #3498db;">← Back to Main Index</a></p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literature Review - MLS Coastal Monitoring 2018-2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        nav {
+            background: #34495e;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover {
+            background: #2c3e50;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin: 40px 0 20px 0;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #34495e;
+            margin: 30px 0 15px 0;
+            font-size: 1.4em;
+            padding-left: 15px;
+            border-left: 4px solid #3498db;
+        }
+
+        h4 {
+            color: #555;
+            margin: 20px 0 10px 0;
+            font-size: 1.15em;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin: 15px 0 15px 40px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .key-finding {
+            background: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .key-finding h4 {
+            color: #2980b9;
+            margin-top: 0;
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .citation {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .stat {
+            background: #d4edda;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #155724;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #34495e;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+            border-left: none;
+            padding-left: 0;
+            color: #2c3e50;
+        }
+
+        .toc ul {
+            list-style-type: none;
+            margin: 15px 0 0 0;
+        }
+
+        .toc ul li {
+            margin-bottom: 8px;
+        }
+
+        .toc a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            nav {
+                display: none;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Literature Review</h1>
+            <p>Mobile LiDAR Applications in Coastal Monitoring and Sea Turtle Habitat Assessment</p>
+            <p><strong>Coverage Period:</strong> 2018-2025 | <strong>Focus Area:</strong> Padre Island National Seashore, Texas</p>
+        </header>
+
+        <nav>
+            <a href="MLS-Thesis-Index.html">← Home</a>
+            <a href="#section1">Mobile LiDAR</a>
+            <a href="#section2">Sea Turtle Habitat</a>
+            <a href="#section3">Multi-Temporal Analysis</a>
+            <a href="#section4">Beach Morphology</a>
+            <a href="#section5">Emerging Methods</a>
+        </nav>
+
+        <div class="content">
+            <div class="toc">
+                <h3>Table of Contents</h3>
+                <ul>
+                    <li><a href="#section1">1. Mobile LiDAR in Coastal Geomorphology (2020-2025)</a></li>
+                    <li><a href="#section2">2. LiDAR for Sea Turtle Nesting Habitat Monitoring</a></li>
+                    <li><a href="#section3">3. Multi-Temporal LiDAR Erosion Mapping and Change Detection</a></li>
+                    <li><a href="#section4">4. Beach Morphology and Nesting Behavior Relationships</a></li>
+                    <li><a href="#section5">5. Emerging Methods and Advanced Applications</a></li>
+                    <li><a href="#section6">6. Synthesis and Research Context</a></li>
+                </ul>
+            </div>
+
+            <h2 id="section1">1. Mobile LiDAR in Coastal Geomorphology (2020-2025)</h2>
+
+            <h3>1.1 Technology and Platform Capabilities</h3>
+
+            <div class="key-finding">
+                <h4>Mobile LiDAR Performance Characteristics</h4>
+                <p>
+                    Mobile LiDAR systems integrated with GPS and IMU hardware can scan approximately <span class="stat">10 km of beach and cliff</span>
+                    with high spatial resolution (~1000 pts/m²) in just a few hours. UAV LiDAR systems achieve vertical accuracy of
+                    approximately <span class="stat">5 cm</span>, while ground-based mobile systems demonstrate <span class="stat">±2 cm accuracy at 25 m</span>
+                    collecting about <span class="stat">700,000 points per second</span>.
+                </p>
+            </div>
+
+            <p>
+                The Coastal Processes Group uses LiDAR scanners mounted on trucks, drones, all-terrain vehicles, buildings,
+                and towers to measure waves, beach erosion, and cliff erosion. This multi-platform approach enables
+                comprehensive coastal monitoring across different scales and environments.
+            </p>
+
+            <h3>1.2 Accuracy Assessment at Padre Island</h3>
+
+            <div class="citation">
+                USGS Accuracy Assessment Study (Padre Island National Seashore): Final point cloud accuracy of
+                <strong>0.060 m (east), 0.095 m (north), and 0.053 m (height)</strong>. Mobile terrestrial LiDAR proven
+                useful for mapping complex features like dunes and monitoring geomorphic changes.
+            </div>
+
+            <p>
+                A recent Hurricane Hanna impact assessment study (2020) utilized a Velodyne mobile LiDAR system integrated
+                with a 360-degree spherical camera along North Padre Island beach. This rapid assessment approach detected
+                elevation change following the storm, demonstrating the value of mobile systems for emergency response and
+                post-disaster monitoring.
+            </p>
+
+            <h3>1.3 Monitoring Applications</h3>
+
+            <p>Studies of LiDAR in coastal areas have expanded to include:</p>
+            <ul>
+                <li><strong>Topographic mapping</strong> of beaches with millimetric precision</li>
+                <li><strong>Assessment of vegetation canopies</strong> in coastal dune systems</li>
+                <li><strong>Assessment of coral reefs</strong> using topobathymetric systems</li>
+                <li><strong>Assessment of landslides and subsidence</strong> in coastal bluffs</li>
+                <li><strong>Study of geomorphic changes</strong> caused by storms and sedimentation</li>
+            </ul>
+
+            <div class="key-finding">
+                <h4>Latest Development (2025)</h4>
+                <p>
+                    A fusion system combining 3D LiDAR with video cameras, capable of simultaneously capturing 3D coordinates
+                    and surface colors of beaches and nearshore waves, was tested at two coastal sites in Japan. This system
+                    enables minutely monitoring of swash zone processes, demonstrating high potential for fine-scale coastal
+                    dynamics research.
+                </p>
+            </div>
+
+            <h2 id="section2">2. LiDAR for Sea Turtle Nesting Habitat Monitoring</h2>
+
+            <h3>2.1 Padre Island Kemp's Ridley Study (2020)</h3>
+
+            <div class="citation">
+                <strong>Key Study:</strong> Figlus et al. (2020), "Using Lidar Data to Assess the Relationship Between Beach
+                Geomorphology and Kemp's Ridley (Lepidochelys kempii) Nest Site Selection Along Padre Island, TX, United States."
+                <em>Frontiers in Marine Science</em>, 7:214.
+            </div>
+
+            <div class="key-finding">
+                <h4>Major Findings for Kemp's Ridley at PAIS</h4>
+                <ul>
+                    <li>Beach geomorphology characteristics (width and slope) were extracted from LiDAR-derived digital elevation models and successfully associated with Kemp's nest coordinates</li>
+                    <li>Most important variables in nest presence models: <strong>elevation, distance from shoreline, maximum dune slope, and average beach slope</strong></li>
+                    <li>Study successfully modeled Kemp's ridley nest presence using beach geomorphology characteristics alone</li>
+                    <li>Demonstrated that LiDAR-derived metrics can predict nesting habitat suitability without requiring biological surveys</li>
+                </ul>
+            </div>
+
+            <p>
+                This research provides the direct precedent for using MLS data to analyze Kemp's ridley habitat at PAIS.
+                However, the 2020 study used single-date LiDAR data. The opportunity exists to build on this work with
+                multi-temporal MLS datasets to examine temporal stability and change.
+            </p>
+
+            <h3>2.2 Mississippi Barrier Islands Assessment</h3>
+
+            <p>
+                A USGS project identified potential sea turtle nesting habitat on Cat and Ship Islands using digital elevation
+                models developed from LiDAR data and dune toes from LiDAR-derived beach morphology. While focused on different
+                species, this study demonstrates methodology for habitat potential mapping that could be adapted for Kemp's ridley.
+            </p>
+
+            <h3>2.3 Conservation Context for Kemp's Ridley</h3>
+
+            <div class="key-finding">
+                <h4>2023-2024 Nesting Activity at PAIS</h4>
+                <ul>
+                    <li>More Kemp's ridley nests are found at PAIS than any other location in the U.S.</li>
+                    <li><strong>Record year (2017):</strong> 353 nests documented at PAIS</li>
+                    <li><strong>2024 first nest:</strong> Mid-April discovery with 81 eggs</li>
+                    <li>Species status: <strong>Critically Endangered</strong> (IUCN)</li>
+                    <li>Recovery program ongoing since 1978</li>
+                    <li>Primary threat: Bycatch in commercial and recreational fishing gear</li>
+                </ul>
+            </div>
+
+            <h2 id="section3">3. Multi-Temporal LiDAR Erosion Mapping and Change Detection</h2>
+
+            <h3>3.1 DEMs of Difference (DoD) Methodology</h3>
+
+            <p>
+                The standard approach for multi-temporal LiDAR analysis involves computing <span class="highlight">DEMs of Difference (DoD)</span>,
+                resulting in segregated maps of erosion and deposition and sediment budgets. To account for LiDAR dataset accuracy,
+                a probabilistic approach at a <span class="stat">95% confidence interval</span> is used as a threshold for Geomorphic
+                Change Detection, showing more reliable results than simple differencing.
+            </p>
+
+            <h3>3.2 Volume Change Analysis</h3>
+
+            <p>
+                LiDAR-based digital elevation models are widely used for quantification of beach and dune volume change, particularly
+                for studying storm impacts. Four LiDAR datasets from Ship Island, Mississippi (2004, 2007, 2010, 2012) capturing
+                complete topography revealed erosional/depositional patterns and geomorphologic changes, investigating sediment
+                volume changes at depths up to 8 m.
+            </p>
+
+            <h3>3.3 French Coast Multi-Temporal Study (5-Year Series)</h3>
+
+            <div class="citation">
+                <strong>Benchmark Study:</strong> Three beach and dune systems in the Bay of Biscay, France, monitored over
+                5 years with three airborne LiDAR datasets. Reproducible monitoring solutions adapted to basic and complex
+                beach and dune morphologies were investigated.
+            </div>
+
+            <div class="key-finding">
+                <h4>Key Methodological Contributions</h4>
+                <ul>
+                    <li>Developed shoreline mobility indicators combining horizontal and vertical migrations of the dune base</li>
+                    <li>Created reproducible workflows for simple and complex beach morphologies</li>
+                    <li>Demonstrated importance of multi-period analysis (not just two-date comparisons)</li>
+                    <li>Established protocols for probabilistic change detection at 95% confidence</li>
+                </ul>
+            </div>
+
+            <h3>3.4 Advanced 4D Geospatial Analysis</h3>
+
+            <p>
+                Recent developments (2019-2024) in spatiotemporal segmentation enable <span class="highlight">4D objects-by-change</span>
+                analysis from LiDAR time series. Geographic observation benefits from increasing availability of 3D geospatial
+                data time series, allowing analysis of change processes at high temporal detail over extensive periods.
+            </p>
+
+            <h3>3.5 Machine Learning Integration</h3>
+
+            <div class="key-finding">
+                <h4>Machine Learning for Shoreline Change (2024-2025)</h4>
+                <p>
+                    Machine learning techniques integrated with remote sensing and GIS improve predictive accuracy of shoreline
+                    change models, with <span class="stat">Random Forest classifiers achieving ~90% accuracy</span> for detecting
+                    coastal degradation zones when applied to LiDAR and orthophoto data. Algorithms analyze historical shoreline
+                    data to recognize patterns and generate future predictions.
+                </p>
+            </div>
+
+            <h2 id="section4">4. Beach Morphology and Nesting Behavior Relationships</h2>
+
+            <h3>4.1 Beach Slope as a Selection Factor</h3>
+
+            <div class="key-finding">
+                <h4>Cross-Species Slope Preferences</h4>
+                <p>
+                    Beach slope is a key environmental factor explaining nest site selection:
+                </p>
+                <ul>
+                    <li><strong>Green and Loggerhead turtles (Australia):</strong> Successful nests on beaches sloped between <span class="stat">3.5° and 6.7°</span></li>
+                    <li><strong>Low slope beaches:</strong> Smaller numbers of nests</li>
+                    <li><strong>Mid-level slope:</strong> High nest density (Brazil study)</li>
+                    <li><strong>Loggerheads:</strong> Slope has largest impact, correlated with nest elevation</li>
+                    <li><strong>Green turtles:</strong> Prefer steeper slopes and steeper berm slopes</li>
+                    <li><strong>Leatherbacks:</strong> Actively select sites not undergoing erosion; slope used as cue</li>
+                </ul>
+            </div>
+
+            <h3>4.2 Multi-Factor Habitat Assessment</h3>
+
+            <p>
+                A 2016 study demonstrated that marine turtles are "not fussy nesters" when examined at small spatial scales,
+                but geomorphology (elevation, slope), temperature, humidity, hydrodynamics, and human activity all influence
+                nesting suitability at larger scales. Specific nest placement in terms of distance from high water line,
+                vegetation, slope, and elevation varies by species and location.
+            </p>
+
+            <h3>4.3 Future Sea Level Rise Impacts</h3>
+
+            <div class="citation">
+                <strong>SLR Impact Assessment (2020):</strong> Study quantified impacts of future sea level rise on nesting
+                sea turtles in the southeastern United States. Analysis showed that beach morphology changes under SLR
+                scenarios will significantly alter nesting habitat availability and suitability.
+            </div>
+
+            <h2 id="section5">5. Emerging Methods and Advanced Applications</h2>
+
+            <h3>5.1 Terrain Roughness and Texture Analysis</h3>
+
+            <p>
+                LiDAR terrain data characterization of surface roughness and microtopography has advanced significantly.
+                A 2019 method for estimating multiscale surface roughness based on standard deviation of surface normals
+                utilizes scale partitioning and integral image processing. As fine-resolution LiDAR DEMs become increasingly
+                common, multiscale analysis has potential for improving mapping and classification applications.
+            </p>
+
+            <div class="key-finding">
+                <h4>Coastal Habitat Classification (2022)</h4>
+                <p>
+                    Topobathymetric LiDAR relevance for coastal and estuarine habitat mapping demonstrated by classifying
+                    bispectral data to produce 3D maps of <span class="stat">21 land and sea covers</span> at very high resolution.
+                    Research showed possibilities for exploiting spatial information through addition of geometrical features
+                    such as roughness or local density.
+                </p>
+            </div>
+
+            <h3>5.2 Dune Toe Migration Detection</h3>
+
+            <p>
+                A <span class="highlight">Toe Line Tracking (TLT) method</span> enables automated measurement of dune migration
+                rate and direction using multi-temporal DEMs. The method automatically extracts the base level of a dune field
+                and toe lines of individual dunes based on simple parameters.
+            </p>
+
+            <h4>Technical Implementation:</h4>
+            <ul>
+                <li>Multi-temporal LiDAR point clouds processed using IDW interpolation (1×1 m cell size)</li>
+                <li>Toe line polygons derived from two DEMs processed using logical operators and spatial analysis</li>
+                <li>Thousands of random sampling points generated along source toe lines to calculate migration</li>
+                <li>Demonstrated on 9 km × 2.4 km area with three time periods</li>
+            </ul>
+
+            <h3>5.3 Habitat Suitability Modeling with LiDAR Metrics</h3>
+
+            <p>
+                LiDAR metrics can be harmonized into five morphological traits: <strong>canopy height, canopy cover, canopy
+                vertical distribution, understory/shrubland, and terrain topography</strong>. Studies demonstrate valuable
+                contribution of LiDAR altimetry and topographically-derived features in coastal habitat mapping, with synergy
+                between LiDAR and visible/near-infrared bands enabling discrimination of specific communities.
+            </p>
+
+            <h3>5.4 Sea Level Rise Vulnerability Assessment</h3>
+
+            <div class="key-finding">
+                <h4>LiDAR-Enhanced SLR Vulnerability (2023)</h4>
+                <p>
+                    New LiDAR-based elevation models show greatest increase in global coastal exposure to flooding from
+                    early-stage SLR. CoastalDEM utilizing neural networks to reduce SRTM error shows <span class="stat">190 million people</span>
+                    currently occupy global land below projected high tide lines for 2100, tripling SRTM-based values.
+                </p>
+            </div>
+
+            <p>
+                LiDAR-derived elevation data provide significantly better spatial resolution and vertical accuracy
+                (<span class="stat">25 cm at 95% confidence</span>) for delineating lands vulnerable to sea level rise,
+                making them much more appropriate than previous DEMs for meter-range SLR projections.
+            </p>
+
+            <h3>5.5 Beach Microtopography Analysis</h3>
+
+            <p>
+                Terrestrial laser scanning (TLS) provides highly detailed microtopography with <span class="stat">millimetric
+                measurement precision</span>. High-resolution 1 cm microtopographic surface models demonstrate
+                <span class="stat">RMSE = 3.67 ± 1 cm</span> precision and <span class="stat">bias = 1.26 ± 0.1 cm</span>
+                accuracy across study sites. This level of detail enables characterization of fine-scale beach surface
+                variability potentially relevant to sea turtle nesting substrate quality.
+            </p>
+
+            <h3>5.6 Beach Vulnerability Indices</h3>
+
+            <div class="citation">
+                <strong>Beach Vulnerability Index (BVI):</strong> Newer vulnerability assessment approach combining simplicity
+                in calculations, easily obtainable data, and low processing capacity. Provides results not only for different
+                beaches but also for different sectors of the same beach.
+            </div>
+
+            <p>
+                Recent frameworks integrate Bayesian Networks with modern coastal vulnerability frameworks, achieving
+                <span class="stat">&gt;90% accuracy</span> in correlating beach types with vulnerability factors, significantly
+                outperforming traditional Coastal Vulnerability Index (CVI) applications.
+            </p>
+
+            <h3>5.7 CloudCompare and LAStools Workflows</h3>
+
+            <p>
+                Practical workflows for coastal DEM analysis using CloudCompare and LAStools have been documented:
+            </p>
+            <ul>
+                <li><strong>LASnoise:</strong> Classify noise points into class 7</li>
+                <li><strong>las2dem:</strong> Generate raster with heights while excluding noise class</li>
+                <li><strong>CloudCompare:</strong> Create contour lines, DEM, DTM, DSM from point clouds</li>
+                <li><strong>Coastal applications:</strong> Shoreline change mapping using citizen science approaches</li>
+            </ul>
+
+            <h2 id="section6">6. Synthesis and Research Context</h2>
+
+            <h3>6.1 Padre Island Monitoring Programs</h3>
+
+            <p>
+                The Gulf Coast Network (GULN) conducts geomorphology monitoring at PAIS every other year as part of the NPS
+                Vital Signs Monitoring Program. Beach width is defined using LiDAR DEMs (e.g., 2018 LiDAR DEM). Since the
+                2021 survey, there has been overall seaward advance in shoreline position accompanied by increase in dune
+                profile area.
+            </p>
+
+            <h4>Long-term Shoreline Change Trends:</h4>
+            <ul>
+                <li><strong>South Padre Island and Brazos Island:</strong> Average retreat rate <span class="stat">2.2 m/yr (1937-2013)</span></li>
+                <li><strong>Recent period (2000-2013):</strong> Decreased to <span class="stat">1.1 m/yr</span> retreat</li>
+                <li><strong>PAIS (since 2021):</strong> Seaward advance and dune area increase</li>
+            </ul>
+
+            <h3>6.2 Predictive Modeling Advances</h3>
+
+            <p>
+                Computer models now predict shoreline change due to waves and sea-level rise, with projections estimating
+                <span class="stat">24-75% of California beaches</span> may become completely eroded by 2100 under different
+                SLR scenarios. ShoreShop2.0, a blind benchmarking workshop, stress-tested current generation shoreline models
+                with 34 teams worldwide.
+            </p>
+
+            <h3>6.3 Climate Change Adaptation Framework</h3>
+
+            <p>
+                Coastal regions face increasing threats from climate change-induced hazards, necessitating accurate and
+                comprehensive vulnerability assessment tools. Integration of machine learning with multi-dimensional datasets
+                collected over extended periods offers advantages for filling data gaps, predicting in data-scarce regions,
+                and analyzing long-term trends.
+            </p>
+
+            <div class="key-finding">
+                <h4>Critical Research Needs Identified</h4>
+                <ul>
+                    <li>Multi-temporal Mobile LiDAR applications for habitat monitoring remain limited</li>
+                    <li>Fine-scale morphological variability within nesting beaches poorly characterized</li>
+                    <li>Temporal stability of habitat characteristics largely unknown</li>
+                    <li>Integration of SLR projections with species-specific habitat requirements underdeveloped</li>
+                    <li>Predictive habitat models based on morphodynamic change patterns needed</li>
+                    <li>Management-ready vulnerability metrics and decision tools lacking</li>
+                </ul>
+            </div>
+
+            <h3>6.4 Implications for Thesis Research</h3>
+
+            <p>
+                This literature review demonstrates that while Mobile LiDAR technology is proven for coastal monitoring and
+                habitat characterization, several critical opportunities exist for novel research using the PAIS 2024-2026
+                MLS datasets:
+            </p>
+
+            <ol>
+                <li><strong>Multi-temporal perspective:</strong> Most studies use single-date or limited temporal data; three-year MLS time series enables new temporal analyses</li>
+                <li><strong>Fine-scale focus:</strong> MLS provides detail (cm-level) exceeding most published coastal LiDAR studies</li>
+                <li><strong>Species-specific application:</strong> Kemp's ridley focus for critically endangered species at primary nesting site</li>
+                <li><strong>Predictive capacity:</strong> Integration of change detection with future habitat projection largely unexplored</li>
+                <li><strong>Management orientation:</strong> Opportunity to develop practical tools for PAIS conservation decisions</li>
+            </ol>
+
+        </div>
+
+        <footer>
+            <p><strong>Literature Review | MLS Thesis Research Analysis</strong></p>
+            <p>Padre Island National Seashore Mobile LiDAR Monitoring 2024-2026</p>
+            <p style="margin-top: 10px;">
+                <a href="MLS-Thesis-Index.html" style="color: white; text-decoration: none;">← Return to Index</a> |
+                <a href="MLS-Knowledge-Gaps.html" style="color: white; text-decoration: none;">Next: Knowledge Gaps Analysis →</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- PWA Configuration -->
+    <title>ReddyFit Ultimate - Social Fitness Transformation</title>
+    <meta name="description" content="The ultimate social fitness transformation platform. Track progress, connect with fitness enthusiasts, find workout partners, and achieve your transformation goals." />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="background-color" content="#0f172a" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ReddyFit" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    
+    <!-- Windows PWA Support -->
+    <meta name="msapplication-TileColor" content="#3b82f6" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    
+    <!-- Open Graph for Social Sharing -->
+    <meta property="og:title" content="ReddyFit Ultimate - Social Fitness Transformation" />
+    <meta property="og:description" content="Connect with fitness enthusiasts, track your transformation, and find workout partners." />
+    <meta property="og:image" content="/icons/icon-512x512.png" />
+    <meta property="og:url" content="https://agreeable-water-04e942910-preview.centralus.1.azurestaticapps.net" />
+    <meta property="og:type" content="website" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ReddyFit Ultimate" />
+    <meta name="twitter:description" content="Social fitness transformation platform" />
+    <meta name="twitter:image" content="/icons/icon-512x512.png" />
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+  <body>
+    <!-- Install PWA Banner -->
+    <div id="install-banner" class="hidden fixed top-0 left-0 right-0 bg-blue-600 text-white p-4 z-50 shadow-lg">
+      <div class="flex items-center justify-between max-w-md mx-auto">
+        <div class="flex items-center space-x-3">
+          <span class="text-2xl">📱</span>
+          <div>
+            <p class="font-semibold text-sm">Install ReddyFit App</p>
+            <p class="text-xs opacity-90">Get the full experience</p>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button id="install-button" class="bg-white text-blue-600 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100 transition-colors">
+            Install
+          </button>
+          <button id="dismiss-install" class="text-white hover:text-gray-200 transition-colors">
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Network Status Indicator -->
+    <div id="network-status" class="hidden fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium z-40 transition-all duration-300">
+      <span id="network-text">🌐 Online</span>
+    </div>
+    
+    <!-- App Root -->
+    <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      // Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', async () => {
+          try {
+            const registration = await navigator.serviceWorker.register('/sw.js', {
+              scope: '/'
+            });
+            
+            console.log('🚀 Service Worker registered successfully:', registration.scope);
+            
+            // Background sync registration
+            if ('sync' in window.ServiceWorkerRegistration.prototype) {
+              await registration.sync.register('reddyfit-sync');
+              console.log('📤 Background sync registered');
+            }
+            
+            // Periodic sync for premium features
+            if ('periodicSync' in window.ServiceWorkerRegistration.prototype) {
+              await registration.periodicSync.register('reddyfit-daily-sync', {
+                minInterval: 24 * 60 * 60 * 1000 // 24 hours
+              });
+              console.log('⏰ Periodic sync registered');
+            }
+            
+          } catch (error) {
+            console.error('❌ Service Worker registration failed:', error);
+          }
+        });
+      }
+      
+      // PWA Installation Prompt
+      let deferredPrompt;
+      const installBanner = document.getElementById('install-banner');
+      const installButton = document.getElementById('install-button');
+      const dismissButton = document.getElementById('dismiss-install');
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show install banner if not already installed
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          installBanner.classList.remove('hidden');
+        }
+      });
+      
+      installButton?.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('PWA install outcome:', outcome);
+          deferredPrompt = null;
+          installBanner.classList.add('hidden');
+        }
+      });
+      
+      dismissButton?.addEventListener('click', () => {
+        installBanner.classList.add('hidden');
+        localStorage.setItem('install-dismissed', Date.now().toString());
+      });
+      
+      // Network Status Monitoring
+      const networkStatus = document.getElementById('network-status');
+      const networkText = document.getElementById('network-text');
+      
+      function updateNetworkStatus() {
+        if (navigator.onLine) {
+          networkStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium z-40 transition-all duration-300 bg-green-100 text-green-800 border border-green-200';
+          networkText.textContent = '🌐 Online';
+        } else {
+          networkStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium z-40 transition-all duration-300 bg-red-100 text-red-800 border border-red-200';
+          networkText.textContent = '📡 Offline';
+          networkStatus.classList.remove('hidden');
+        }
+      }
+      
+      window.addEventListener('online', () => {
+        updateNetworkStatus();
+        setTimeout(() => networkStatus.classList.add('hidden'), 3000);
+      });
+      
+      window.addEventListener('offline', updateNetworkStatus);
+      
+      // Initialize network status
+      if (!navigator.onLine) {
+        updateNetworkStatus();
+      }
+      
+      // Performance Monitoring
+      window.addEventListener('load', () => {
+        if ('performance' in window) {
+          const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+          console.log('📊 Page load time:', loadTime + 'ms');
+          
+          // Track Core Web Vitals
+          if ('web-vitals' in window) {
+            import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+              getCLS(console.log);
+              getFID(console.log);
+              getFCP(console.log);
+              getLCP(console.log);
+              getTTFB(console.log);
+            });
+          }
+        }
+      });
+    </script>
+    
+    <!-- Main Application Script -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

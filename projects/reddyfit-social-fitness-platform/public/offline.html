@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReddyFit - You're Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .offline-container {
+      max-width: 500px;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .offline-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.8;
+    }
+
+    .offline-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(45deg, #fff, #f0f9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .offline-message {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .offline-features {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .offline-features h3 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: #fbbf24;
+    }
+
+    .feature-list {
+      list-style: none;
+      text-align: left;
+    }
+
+    .feature-list li {
+      padding: 0.5rem 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .feature-list li::before {
+      content: "✅";
+      margin-right: 0.75rem;
+      font-size: 1.1rem;
+    }
+
+    .retry-button {
+      background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .retry-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .sync-status {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(34, 197, 94, 0.2);
+      border-radius: 10px;
+      border-left: 4px solid #22c55e;
+      display: none;
+    }
+
+    .sync-status.show {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .network-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 0.5rem 1rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .network-indicator.offline {
+      background: #ef4444;
+      color: white;
+    }
+
+    .network-indicator.online {
+      background: #22c55e;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .offline-title {
+        font-size: 2rem;
+      }
+
+      .offline-message {
+        font-size: 1rem;
+      }
+
+      .offline-features {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="network-indicator offline" id="networkStatus">
+    📡 Offline
+  </div>
+
+  <div class="offline-container">
+    <div class="offline-icon">🏋️‍♂️</div>
+
+    <h1 class="offline-title">You're Offline</h1>
+
+    <p class="offline-message">
+      Don't worry! ReddyFit works offline too. Your workout data is safe and will sync when you're back online.
+    </p>
+
+    <div class="offline-features">
+      <h3>Available Offline:</h3>
+      <ul class="feature-list">
+        <li>View your workout history</li>
+        <li>Log workouts and meals</li>
+        <li>Check your progress</li>
+        <li>Browse saved recipes</li>
+        <li>Review your achievements</li>
+        <li>Plan your next workout</li>
+      </ul>
+    </div>
+
+    <button class="retry-button" onclick="retryConnection()">
+      🔄 Retry Connection
+    </button>
+
+    <div class="sync-status" id="syncStatus">
+      <strong>📤 Syncing your data...</strong>
+      <p>Your offline activities will be synchronized automatically.</p>
+    </div>
+  </div>
+
+  <script>
+    // Network status monitoring
+    function updateNetworkStatus() {
+      const networkStatus = document.getElementById('networkStatus');
+      const syncStatus = document.getElementById('syncStatus');
+
+      if (navigator.onLine) {
+        networkStatus.textContent = '🌐 Online';
+        networkStatus.className = 'network-indicator online';
+        syncStatus.classList.add('show');
+
+        // Auto-redirect to main app when back online
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      } else {
+        networkStatus.textContent = '📡 Offline';
+        networkStatus.className = 'network-indicator offline';
+        syncStatus.classList.remove('show');
+      }
+    }
+
+    // Retry connection
+    function retryConnection() {
+      if (navigator.onLine) {
+        window.location.href = '/';
+      } else {
+        // Visual feedback for retry attempt
+        const button = document.querySelector('.retry-button');
+        const originalText = button.innerHTML;
+
+        button.innerHTML = '⏳ Checking...';
+        button.disabled = true;
+
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.disabled = false;
+
+          if (!navigator.onLine) {
+            button.innerHTML = '❌ Still offline';
+            setTimeout(() => {
+              button.innerHTML = originalText;
+            }, 2000);
+          }
+        }, 1500);
+      }
+    }
+
+    // Listen for network status changes
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // Initialize network status
+    updateNetworkStatus();
+
+    // Service Worker message handling
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'SYNC_SUCCESS') {
+          const syncStatus = document.getElementById('syncStatus');
+          syncStatus.innerHTML = `
+            <strong>✅ Sync completed!</strong>
+            <p>Your data has been synchronized successfully.</p>
+          `;
+        }
+      });
+    }
+
+    // Auto-retry every 30 seconds
+    setInterval(() => {
+      if (navigator.onLine) {
+        updateNetworkStatus();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>

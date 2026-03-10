@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 MLS Survey Optimization - Technical Recommendations</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 { font-size: 2.3em; margin-bottom: 15px; }
+
+        nav {
+            background: #f39c12;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover { background: #e67e22; }
+
+        .content { padding: 40px; }
+
+        h2 {
+            color: #e67e22;
+            border-bottom: 3px solid #f39c12;
+            padding-bottom: 10px;
+            margin: 40px 0 20px 0;
+            font-size: 1.9em;
+        }
+
+        h3 {
+            color: #e67e22;
+            margin: 30px 0 15px 0;
+            font-size: 1.4em;
+        }
+
+        .rec-box {
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .rec-box h4 {
+            color: #e67e22;
+            margin-bottom: 10px;
+        }
+
+        .critical-box {
+            background: #f8d7da;
+            border: 3px solid #dc3545;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .critical-box h3 {
+            color: #dc3545;
+            margin-top: 0;
+        }
+
+        .checklist {
+            background: #d4edda;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            border-left: 5px solid #28a745;
+        }
+
+        .checklist h3 {
+            color: #28a745;
+            margin-top: 0;
+        }
+
+        .checklist ul {
+            margin: 15px 0 0 25px;
+        }
+
+        .checklist li {
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .checklist input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #e67e22;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        ul, ol { margin: 15px 0 15px 30px; }
+        li { margin-bottom: 10px; }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .spec {
+            background: #d1ecf1;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #0c5460;
+        }
+
+        footer {
+            background: #e67e22;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        @media print {
+            body { background: white; }
+            nav { display: none; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>2026 MLS Survey Optimization</h1>
+            <p style="font-size: 1.2em;">Technical Recommendations for Maximizing Thesis Data Quality</p>
+            <p style="margin-top: 10px; opacity: 0.95;">Optimizing Field Campaign Planning • Data Collection Protocols • Quality Assurance</p>
+        </header>
+
+        <nav>
+            <a href="MLS-Thesis-Index.html">← Home</a>
+            <a href="#timing">Survey Timing</a>
+            <a href="#coverage">Coverage & Patterns</a>
+            <a href="#qa">Quality Assurance</a>
+            <a href="#checklist">Field Checklist</a>
+        </nav>
+
+        <div class="content">
+            <h2>Introduction: Why 2026 Survey Optimization Matters</h2>
+
+            <p style="font-size: 1.05em; margin-bottom: 20px;">
+                The 2026 MLS survey is <span class="highlight">critical for your thesis</span> because it:
+            </p>
+
+            <ul>
+                <li><strong>Completes the 3-year time series</strong> necessary for robust temporal stability analysis (Direction 2)</li>
+                <li><strong>Provides validation dataset</strong> for suitability models developed from 2024-2025 data (Direction 1)</li>
+                <li><strong>Improves change rate calculations</strong> by adding third data point for trend analysis (Directions 3, 4, 5)</li>
+                <li><strong>Captures inter-annual variability</strong> - distinguishes persistent patterns from anomalies</li>
+            </ul>
+
+            <div class="critical-box">
+                <h3>⚠️ Critical: Ensure Temporal Consistency</h3>
+                <p>
+                    For multi-temporal analysis, the 2026 survey <strong>must closely match 2024 and 2025 survey parameters</strong>:
+                    timing, tide conditions, lane positioning, and instrument settings. Inconsistency introduces confounding
+                    variables that complicate change detection.
+                </p>
+            </div>
+
+            <h2 id="timing">1. Survey Timing Optimization</h2>
+
+            <h3>1.1 Seasonal Timing</h3>
+
+            <div class="rec-box">
+                <h4>Recommendation: Match 2024/2025 Survey Months</h4>
+                <ul>
+                    <li><strong>Verify:</strong> What months were 2024 and 2025 surveys conducted? (e.g., April? July? October?)</li>
+                    <li><strong>Schedule 2026:</strong> Within same 2-week window as previous years if possible</li>
+                    <li><strong>Rationale:</strong> Seasonal beach morphology varies (winter vs. summer profiles); consistent timing reduces seasonal signal in change detection</li>
+                    <li><strong>If exact timing impossible:</strong> Document offset and consider seasonal correction factors in analysis</li>
+                </ul>
+            </div>
+
+            <h3>1.2 Tidal Window Optimization</h3>
+
+            <div class="rec-box">
+                <h4>Recommendation: Low Tide Window ± 1 Hour for Maximum Beach Exposure</h4>
+                <table style="margin-top: 15px;">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Target Specification</th>
+                        <th>Rationale</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Tidal Stage</strong></td>
+                        <td>Low tide ± 1 hour</td>
+                        <td>Maximizes exposed beach width; ensures consistent waterline position across years</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tide Height</strong></td>
+                        <td>Within 0.2 m of 2024/2025 tide levels</td>
+                        <td>Minimizes horizontal waterline shift between surveys (~10m for 1:20 slope)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Avoid</strong></td>
+                        <td>Spring tides (new/full moon ±2 days)</td>
+                        <td>Extreme highs/lows complicate comparison; neap tides preferable for consistency</td>
+                    </tr>
+                </table>
+
+                <p style="margin-top: 15px;"><strong>Action Item:</strong></p>
+                <ul>
+                    <li>Obtain NOAA tide predictions for PAIS (Port Aransas or Bob Hall Pier station)</li>
+                    <li>Identify 3-5 candidate survey dates in target month with optimal tide windows</li>
+                    <li>Build 2-day buffer for weather contingency</li>
+                </ul>
+            </div>
+
+            <h3>1.3 Weather and Environmental Conditions</h3>
+
+            <div class="rec-box">
+                <h4>Optimal Conditions for High-Quality MLS Data</h4>
+                <ul>
+                    <li><strong>Wind:</strong> < 10 mph ideal; < 15 mph acceptable (reduces sand drift obscuring surface)</li>
+                    <li><strong>Precipitation:</strong> No rain during survey or previous 24 hours (wet sand alters surface reflectivity)</li>
+                    <li><strong>Recent Storms:</strong> Avoid surveys immediately after major storms (allow 2+ weeks for beach stabilization unless intentionally capturing storm response)</li>
+                    <li><strong>Visibility:</strong> Clear to partly cloudy (improves georeferencing if using camera; not critical for LiDAR alone)</li>
+                </ul>
+            </div>
+
+            <h2 id="coverage">2. Survey Coverage and Lane Positioning</h2>
+
+            <h3>2.1 Alongshore Coverage</h3>
+
+            <div class="rec-box">
+                <h4>Recommendation: Match or Exceed 2024/2025 Extent + 500m Overlap</h4>
+                <ul>
+                    <li><strong>Minimum:</strong> Survey exact same beach segments as 2024/2025 (critical for change detection)</li>
+                    <li><strong>Preferred:</strong> Extend 250-500m beyond previous endpoints each direction
+                        <ul>
+                            <li>Rationale: Captures shoreline migration that may have shifted optimal nesting zones</li>
+                            <li>Ensures no loss of coverage if endpoints have eroded</li>
+                        </ul>
+                    </li>
+                    <li><strong>Documentation:</strong> Record GPS coordinates of survey start/end points for future surveys</li>
+                </ul>
+            </div>
+
+            <h3>2.2 Cross-Shore Lane Coverage</h3>
+
+            <div class="critical-box">
+                <h3>Critical: Consistent Lane Positioning</h3>
+                <p>For temporal analysis, each year's survey should cover same cross-shore zone:</p>
+                <ul style="margin-top: 15px;">
+                    <li><strong>Seaward Extent:</strong> To waterline at time of survey (tide-dependent)</li>
+                    <li><strong>Landward Extent:</strong> To dune crest or vegetation line (whichever is farther)</li>
+                    <li><strong>Number of Passes:</strong> Match 2024/2025 (e.g., 3 passes: waterline, mid-beach, dune toe?)</li>
+                </ul>
+
+                <p style="margin-top: 15px;"><strong>Why this matters for your thesis:</strong></p>
+                <p>
+                    Missing dune toe in one year but not others → cannot calculate dune migration (Direction 2, 3).<br>
+                    Waterline coverage inconsistent → beach width calculations unreliable (Direction 2, 4).
+                </p>
+            </div>
+
+            <h3>2.3 Lane Overlap for Seamless Coverage</h3>
+
+            <div class="rec-box">
+                <h4>Recommendation: 30-50% Sidelap Between Adjacent Lanes</h4>
+                <table style="margin-top: 15px;">
+                    <tr>
+                        <th>Overlap %</th>
+                        <th>Pros</th>
+                        <th>Cons</th>
+                        <th>Recommendation</th>
+                    </tr>
+                    <tr>
+                        <td>< 20%</td>
+                        <td>Faster survey</td>
+                        <td>Gaps in coverage, irregular point density</td>
+                        <td style="color: #dc3545;"><strong>Avoid</strong></td>
+                    </tr>
+                    <tr>
+                        <td>30-50%</td>
+                        <td>Seamless coverage, uniform density, some redundancy for QA</td>
+                        <td>Moderate time investment</td>
+                        <td style="color: #28a745;"><strong>Optimal</strong></td>
+                    </tr>
+                    <tr>
+                        <td>> 60%</td>
+                        <td>Excellent redundancy</td>
+                        <td>Inefficient; excessive data processing</td>
+                        <td style="color: #f39c12;">Only if needed for complex topography</td>
+                    </tr>
+                </table>
+
+                <p style="margin-top: 15px;"><strong>Implementation:</strong></p>
+                <ul>
+                    <li>Velodyne VLP-16 typical swath width ~40m at 25m range</li>
+                    <li>Lane spacing for 40% overlap = 24m between lane centerlines</li>
+                    <li>Use GPS tracks from previous years as guides; pre-load into navigation system</li>
+                </ul>
+            </div>
+
+            <h3>2.4 Repeat Passes for Quality Assurance</h3>
+
+            <div class="rec-box">
+                <h4>Recommendation: Bi-Directional Passes + One Repeat Section</h4>
+                <p><strong>Strategy:</strong></p>
+                <ol>
+                    <li><strong>Primary survey:</strong> South-to-north alongshore lanes</li>
+                    <li><strong>Return pass:</strong> North-to-south (captures any missed gaps)</li>
+                    <li><strong>QA repeat:</strong> Re-survey one 500m test section in opposite direction
+                        <ul>
+                            <li>Compare point clouds from both passes</li>
+                            <li>Quantify precision: compute elevation RMSE between passes</li>
+                            <li>If RMSE > 5cm → investigate instrument calibration or georeferencing issues</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <h2 id="qa">3. Data Quality Assurance Protocols</h2>
+
+            <h3>3.1 Real-Time Quality Checks During Survey</h3>
+
+            <div class="rec-box">
+                <h4>In-Field QA Checklist (Check After Each Lane)</h4>
+                <ul>
+                    <li>✓ GPS positional accuracy: HDOP < 2.0, > 8 satellites</li>
+                    <li>✓ IMU data recording properly (pitch, roll, yaw)</li>
+                    <li>✓ LiDAR points being collected (real-time display if available)</li>
+                    <li>✓ Point density appears consistent (no obvious gaps)</li>
+                    <li>✓ Lane coverage extends to planned seaward and landward limits</li>
+                    <li>✓ Timestamp synchronization between GPS, IMU, and LiDAR</li>
+                </ul>
+            </div>
+
+            <h3>3.2 Base Station Setup for RTK/PPK Accuracy</h3>
+
+            <div class="critical-box">
+                <h3>Critical: Consistent Base Station Location</h3>
+                <p><strong>Recommendation:</strong> Use same base station location as 2024/2025 surveys</p>
+                <ul style="margin-top: 15px;">
+                    <li><strong>Why:</strong> Minimizes relative horizontal/vertical errors between years</li>
+                    <li><strong>Specification:</strong>
+                        <ul>
+                            <li>Base station on known benchmark (same as previous years)</li>
+                            <li>Occupation time: ≥ 2 hours for static baseline</li>
+                            <li>Distance to survey area: < 10 km preferred (accuracy degrades with distance)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Documentation:</strong> Record base station coordinates, antenna height, occupation duration</li>
+                </ul>
+
+                <p style="margin-top: 15px;"><strong>Alternative if RTK unavailable:</strong></p>
+                <p>
+                    Post-Processed Kinematic (PPK) using CORS stations (continuously operating reference stations).
+                    NOAA CORS network has stations along Texas coast (nearest: TXPR, TXCI). Download RINEX data for
+                    survey day and post-process trajectories.
+                </p>
+            </div>
+
+            <h3>3.3 Instrument Calibration and Settings</h3>
+
+            <div class="rec-box">
+                <h4>Pre-Survey Calibration Checklist</h4>
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Calibration Task</th>
+                        <th>Frequency</th>
+                    </tr>
+                    <tr>
+                        <td><strong>LiDAR Scanner</strong></td>
+                        <td>Range calibration against known targets</td>
+                        <td>Before each field campaign</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GPS/IMU Boresight</strong></td>
+                        <td>Lever-arm offsets and angular alignment</td>
+                        <td>After any equipment remounting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GPS Antenna</strong></td>
+                        <td>Antenna height measurement (to ARP)</td>
+                        <td>Each survey day</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IMU</strong></td>
+                        <td>Static alignment (level platform, 5+ min)</td>
+                        <td>Each survey day before first line</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: 25px;">Recommended Instrument Settings (Velodyne VLP-16 or Similar)</h4>
+                <ul style="margin-top: 10px;">
+                    <li><strong>Rotation Rate:</strong> 10-20 Hz (higher = denser cross-track spacing)</li>
+                    <li><strong>Dual Return Mode:</strong> Enable (captures ground through vegetation)</li>
+                    <li><strong>GPS Update Rate:</strong> 1-10 Hz (match or exceed LiDAR scan rate)</li>
+                    <li><strong>Vehicle Speed:</strong> 15-25 mph (slower = higher point density but longer survey time)</li>
+                </ul>
+            </div>
+
+            <h3>3.4 Post-Survey Data Validation</h3>
+
+            <div class="rec-box">
+                <h4>Same-Day QA/QC (Before Leaving Field Site)</h4>
+                <ol>
+                    <li><strong>Data Transfer:</strong> Copy raw LiDAR, GPS, IMU files to backup drive (redundancy!)</li>
+                    <li><strong>File Integrity:</strong> Verify all files complete, no corruption</li>
+                    <li><strong>Coverage Check:</strong> Load point cloud in CloudCompare or viewer → visual inspection for gaps</li>
+                    <li><strong>Trajectory Quality:</strong> Plot GPS tracks; check for positional jumps or dropouts</li>
+                    <li><strong>Benchmark Checks:</strong> If time permits, survey 2-3 stable ground control points (GCPs)
+                        <ul>
+                            <li>Examples: Building corners, road intersections, permanent markers</li>
+                            <li>Compare 2026 elevation to 2024/2025 values → should be identical (± 5cm)</li>
+                            <li>Significant differences indicate georeferencing error</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <h2>4. Special Considerations for Thesis Objectives</h2>
+
+            <h3>4.1 For Microtopography Analysis (Direction 1)</h3>
+
+            <div class="rec-box">
+                <ul>
+                    <li><strong>Slow down in nesting zones:</strong> Reduce vehicle speed to 10-15 mph in known high-density nest areas → increases point density for fine-scale texture</li>
+                    <li><strong>Multiple passes at different angles:</strong> If time permits, one cross-shore pass in addition to alongshore → improves surface normal calculations</li>
+                    <li><strong>Avoid disturbing nests:</strong> Survey before or after peak nesting season if microtopography is priority (no vehicle tracks altering surface)</li>
+                </ul>
+            </div>
+
+            <h3>4.2 For Temporal Stability Analysis (Direction 2 - RECOMMENDED)</h3>
+
+            <div class="critical-box">
+                <h3>Highest Priority: Temporal Consistency</h3>
+                <ul style="margin-top: 15px;">
+                    <li>✓ Survey same calendar month as 2024/2025 (± 2 weeks max)</li>
+                    <li>✓ Match tide stage (low tide ± 1 hr) to within 0.2m of previous years</li>
+                    <li>✓ Same lane pattern (waterline, mid-beach, dune toe)</li>
+                    <li>✓ Same vehicle/instrument mounting to avoid lever-arm differences</li>
+                    <li>✓ Document any deviations from previous protocol → adjust analysis accordingly</li>
+                </ul>
+            </div>
+
+            <h3>4.3 For Dune Monitoring (Directions 2, 3, 5)</h3>
+
+            <div class="rec-box">
+                <ul>
+                    <li><strong>Ensure dune crest and toe coverage:</strong> Landward extent must reach beyond dune crest into back-dune swale</li>
+                    <li><strong>Vegetation penetration:</strong> Dual-return mode critical for ground detection under dune vegetation</li>
+                    <li><strong>Supplement with RTK transects:</strong> Hand-held RTK survey of dune toe and crest features (5-10 transects) for validation</li>
+                </ul>
+            </div>
+
+            <h3>4.4 For Predictive Modeling (Direction 4)</h3>
+
+            <div class="rec-box">
+                <ul>
+                    <li><strong>Accuracy over coverage:</strong> Prioritize georeferencing precision (RTK/PPK) over areal extent</li>
+                    <li><strong>Document survey conditions:</strong> Tide level, recent storm history, nourishment activities → these affect rate calculations</li>
+                    <li><strong>Include stable reference surfaces:</strong> Survey parking lots, roads, building pads → use as QA checkpoints (should show zero change)</li>
+                </ul>
+            </div>
+
+            <h2 id="checklist">5. Field Campaign Checklist</h2>
+
+            <div class="checklist">
+                <h3>Pre-Survey (1 Week Before)</h3>
+                <ul>
+                    <li><input type="checkbox"> Confirm survey date matches seasonal timing of 2024/2025 surveys</li>
+                    <li><input type="checkbox"> Download NOAA tide predictions; identify optimal low tide windows</li>
+                    <li><input type="checkbox"> Check weather forecast; have backup date planned</li>
+                    <li><input type="checkbox"> Instrument calibration completed (boresight, range check)</li>
+                    <li><input type="checkbox"> GPS base station location identified (same as previous years)</li>
+                    <li><input type="checkbox"> Load previous survey GPS tracks into navigation system</li>
+                    <li><input type="checkbox"> PAIS permits/permissions confirmed</li>
+                    <li><input type="checkbox"> Field team briefed on QA protocols</li>
+                </ul>
+            </div>
+
+            <div class="checklist">
+                <h3>Day of Survey</h3>
+                <ul>
+                    <li><input type="checkbox"> Base station setup on benchmark; 2+ hour occupation initiated</li>
+                    <li><input type="checkbox"> Mobile system powered; IMU static alignment (5 min)</li>
+                    <li><input type="checkbox"> GPS showing HDOP < 2.0, > 8 satellites</li>
+                    <li><input type="checkbox"> Real-time data logging verified (LiDAR, GPS, IMU all recording)</li>
+                    <li><input type="checkbox"> Tide stage confirmed within target window (predicted ± actual)</li>
+                    <li><input type="checkbox"> Weather conditions acceptable (wind < 15 mph, no rain)</li>
+                    <li><input type="checkbox"> Survey lanes cover waterline to dune crest</li>
+                    <li><input type="checkbox"> 30-50% sidelap maintained between lanes</li>
+                    <li><input type="checkbox"> After each lane: verify GPS/IMU quality, point cloud density</li>
+                    <li><input type="checkbox"> Repeat pass of 500m test section completed</li>
+                    <li><input type="checkbox"> RTK transects at dune toe/crest (if supplementing MLS)</li>
+                    <li><input type="checkbox"> Stable GCP checkpoints surveyed (2-3 points minimum)</li>
+                    <li><input type="checkbox"> Data copied to backup drive before leaving field</li>
+                    <li><input type="checkbox"> Coverage gaps identified → re-survey if time permits</li>
+                </ul>
+            </div>
+
+            <div class="checklist">
+                <h3>Post-Survey (Same Day)</h3>
+                <ul>
+                    <li><input type="checkbox"> File integrity check (no corruption)</li>
+                    <li><input type="checkbox"> Point cloud preview in CloudCompare (coverage, density)</li>
+                    <li><input type="checkbox"> GPS trajectory quality review (no major jumps/gaps)</li>
+                    <li><input type="checkbox"> Base station data downloaded; occupation time documented</li>
+                    <li><input type="checkbox"> Survey metadata log completed (tide, weather, deviations from plan)</li>
+                    <li><input type="checkbox"> All data backed up to 2+ locations (field drive + lab server)</li>
+                </ul>
+            </div>
+
+            <div class="checklist">
+                <h3>Data Processing (Within 1 Week)</h3>
+                <ul>
+                    <li><input type="checkbox"> GPS/IMU trajectory post-processed (PPK if using CORS)</li>
+                    <li><input type="checkbox"> Point cloud georeferenced and classified (ground vs. vegetation)</li>
+                    <li><input type="checkbox"> GCP comparison: 2026 elevations vs. 2024/2025 (RMSE < 5cm target)</li>
+                    <li><input type="checkbox"> Repeat pass comparison: precision assessment (self-consistency RMSE)</li>
+                    <li><input type="checkbox"> DEM generation (1m resolution) for immediate comparison to previous years</li>
+                    <li><input type="checkbox"> Preliminary change detection (visual DoD) to verify data quality</li>
+                    <li><input type="checkbox"> If major issues detected → plan re-survey while field window still open</li>
+                </ul>
+            </div>
+
+            <h2>6. Data Deliverables for Thesis Analysis</h2>
+
+            <div class="rec-box">
+                <h4>Essential Products from 2026 Survey</h4>
+                <table>
+                    <tr>
+                        <th>Product</th>
+                        <th>Specification</th>
+                        <th>Thesis Use</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Classified Point Cloud</strong></td>
+                        <td>Ground class separated; LAS 1.4 format</td>
+                        <td>CloudCompare analysis, roughness metrics</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DEM (1m resolution)</strong></td>
+                        <td>NAD83 UTM Zone 14N, NAVD88 vertical</td>
+                        <td>All thesis directions; primary analysis raster</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DEM (0.25m resolution)</strong></td>
+                        <td>Same projection</td>
+                        <td>Microtopography analysis (Direction 1)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shoreline Polyline</strong></td>
+                        <td>Mean high water extracted from DEM</td>
+                        <td>DSAS change analysis</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dune Toe Polyline</strong></td>
+                        <td>Breakpoint or slope threshold method</td>
+                        <td>Dune migration (Directions 2, 3, 5)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Accuracy Report</strong></td>
+                        <td>GCP RMSE, repeat pass RMSE</td>
+                        <td>Error propagation in change detection</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Metadata</strong></td>
+                        <td>Survey date/time, tide, weather, deviations</td>
+                        <td>Interpretation of anomalies</td>
+                    </tr>
+                </table>
+            </div>
+
+            <h2>7. Contingency Planning</h2>
+
+            <div class="rec-box">
+                <h4>What If... Scenarios</h4>
+
+                <p><strong>Weather forces survey delay beyond optimal window?</strong></p>
+                <ul>
+                    <li>Proceed with survey; document offset from 2024/2025 timing</li>
+                    <li>Acknowledge seasonal differences in thesis discussion</li>
+                    <li>Focus analysis on metrics less affected by season (e.g., dune migration vs. beach width)</li>
+                </ul>
+
+                <p style="margin-top: 20px;"><strong>Equipment malfunction prevents full coverage?</strong></p>
+                <ul>
+                    <li>Prioritize core nesting zone (central 60% of study area)</li>
+                    <li>Ensure dune and shoreline features captured even if mid-beach gaps exist</li>
+                    <li>Use 2025 data to interpolate missing 2026 zones if necessary</li>
+                </ul>
+
+                <p style="margin-top: 20px;"><strong>Point density lower than expected?</strong></p>
+                <ul>
+                    <li>Acceptable for most objectives as long as > 10 pts/m² achieved</li>
+                    <li>May limit microtopography analysis (Direction 1) but other directions unaffected</li>
+                </ul>
+
+                <p style="margin-top: 20px;"><strong>Georeferencing errors detected in post-processing?</strong></p>
+                <ul>
+                    <li>Use GCPs for manual bias correction if errors systematic (uniform shift)</li>
+                    <li>If errors non-systematic → may require re-survey or reduce precision claims in thesis</li>
+                </ul>
+            </div>
+
+            <h2>8. Communication with RA Project Team</h2>
+
+            <div class="critical-box">
+                <h3>Coordinate with Dr. Starek and Field Team</h3>
+                <p><strong>Items to discuss BEFORE 2026 survey:</strong></p>
+                <ul style="margin-top: 15px;">
+                    <li>Share this optimization document; align on priorities</li>
+                    <li>Confirm thesis needs don't conflict with RA project objectives</li>
+                    <li>Clarify data ownership and access (thesis use of RA data)</li>
+                    <li>Request any specific products needed (e.g., higher resolution DEM in key zones)</li>
+                    <li>Offer to assist with field campaign (great learning + ensures your needs met)</li>
+                </ul>
+
+                <p style="margin-top: 20px;"><strong>Items to document DURING survey:</strong></p>
+                <ul>
+                    <li>Any deviations from 2024/2025 protocol</li>
+                    <li>Conditions that may affect data (recent storms, beach nourishment, unusual tides)</li>
+                    <li>Equipment changes (different LiDAR unit? Different GPS receiver?)</li>
+                </ul>
+            </div>
+
+            <h2>9. Summary: Key Priorities for 2026 Survey</h2>
+
+            <div style="background: #d4edda; padding: 30px; margin: 30px 0; border-radius: 10px; border: 3px solid #28a745;">
+                <h3 style="color: #28a745; margin-top: 0;">Top 5 Priorities (in Order)</h3>
+                <ol style="font-size: 1.1em; line-height: 2;">
+                    <li><strong>Temporal Consistency:</strong> Match 2024/2025 timing, tide, lane pattern, and extent</li>
+                    <li><strong>Complete Coverage:</strong> No gaps in alongshore or cross-shore coverage relative to previous years</li>
+                    <li><strong>Georeferencing Accuracy:</strong> RTK/PPK with ≤ 5cm horizontal/vertical error</li>
+                    <li><strong>Quality Assurance:</strong> Real-time checks, repeat passes, GCP validation</li>
+                    <li><strong>Comprehensive Documentation:</strong> Metadata for interpreting any anomalies in change detection</li>
+                </ol>
+
+                <p style="margin-top: 30px; padding: 20px; background: white; border-radius: 5px;">
+                    <strong>Final Note:</strong> The 2026 survey is your opportunity to ensure high-quality thesis data.
+                    Active participation in planning and execution will improve data utility and provide valuable field
+                    experience. Communicate your needs early and often with the RA project team.
+                </p>
+            </div>
+
+        </div>
+
+        <footer>
+            <p><strong>2026 MLS Survey Optimization | Technical Recommendations for Thesis Success</strong></p>
+            <p style="margin-top: 15px;">
+                <a href="MLS-Thesis-Index.html" style="color: white; text-decoration: none;">← Return to Index</a> |
+                <a href="MLS-Comparison-Recommendations.html" style="color: white; text-decoration: none;">← Comparison & Recommendations</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

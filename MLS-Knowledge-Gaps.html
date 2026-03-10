@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Gaps Analysis - MLS Thesis Research</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        nav {
+            background: #e74c3c;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover {
+            background: #c0392b;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        h2 {
+            color: #c0392b;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+            margin: 40px 0 20px 0;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #c0392b;
+            margin: 30px 0 15px 0;
+            font-size: 1.3em;
+        }
+
+        .gap-card {
+            background: #fff;
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.1);
+        }
+
+        .gap-card h3 {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            color: white;
+            padding: 15px;
+            margin: -25px -25px 20px -25px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.4em;
+        }
+
+        .gap-number {
+            display: inline-block;
+            background: white;
+            color: #c0392b;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .subsection {
+            margin: 20px 0;
+        }
+
+        .subsection h4 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            padding-left: 10px;
+            border-left: 3px solid #e74c3c;
+        }
+
+        .subsection ul {
+            margin-left: 30px;
+        }
+
+        .subsection li {
+            margin-bottom: 10px;
+        }
+
+        .opportunity-box {
+            background: #fef5e7;
+            border-left: 5px solid #f39c12;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .opportunity-box h4 {
+            color: #d68910;
+            margin-bottom: 10px;
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .limitation-box {
+            background: #fadbd8;
+            border-left: 5px solid #c0392b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .limitation-box h4 {
+            color: #a93226;
+            margin-bottom: 10px;
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .summary-section {
+            background: #e8f8f5;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+            border: 2px solid #1abc9c;
+        }
+
+        .summary-section h2 {
+            color: #16a085;
+            border-bottom: 3px solid #1abc9c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #c0392b;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .emphasis {
+            background: #d1ecf1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #0c5460;
+        }
+
+        footer {
+            background: #c0392b;
+            color: white;
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            nav {
+                display: none;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            .gap-card {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Knowledge Gaps Analysis</h1>
+            <p>Research Opportunities for MLS-Based Thesis at Padre Island National Seashore</p>
+        </header>
+
+        <nav>
+            <a href="MLS-Thesis-Index.html">← Home</a>
+            <a href="MLS-Literature-Review.html">← Literature Review</a>
+            <a href="MLS-Thesis-Directions.html">Thesis Directions →</a>
+        </nav>
+
+        <div class="content">
+            <h2>Introduction</h2>
+            <p>
+                Based on the comprehensive literature review (2018-2025), eight critical knowledge gaps have been identified
+                that your MLS thesis can address. These gaps represent areas where the <span class="highlight">2024-2026 PAIS
+                Mobile LiDAR dataset</span> can make novel contributions to coastal science and conservation management,
+                particularly for <span class="emphasis">Kemp's ridley sea turtle habitat monitoring</span>.
+            </p>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">1</span> Temporal Stability of Nesting Habitat Characteristics</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        The 2020 Figlus et al. study at PAIS successfully linked beach geomorphology to Kemp's ridley nest site
+                        selection using LiDAR-derived metrics (elevation, beach slope, dune slope, distance from shoreline).
+                        However, this analysis used <strong>single-date LiDAR data</strong>. No studies have examined how
+                        temporal variability in these geomorphic characteristics affects habitat suitability or nest site
+                        persistence over multiple years.
+                    </p>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Your 3-year MLS time series (2024, 2025, 2026) enables assessment of:
+                    </p>
+                    <ul>
+                        <li>Which beach segments maintain stable geomorphic characteristics favorable for nesting</li>
+                        <li>How slope, elevation, and beach width variability correlates with nest site reuse patterns</li>
+                        <li>Temporal persistence vs. ephemerality of optimal nesting zones</li>
+                        <li>Seasonal and annual morphodynamic changes affecting habitat quality</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Potential Metrics to Develop:</h4>
+                    <ul>
+                        <li><strong>Morphological Stability Index (MSI):</strong> Quantifies consistency of key habitat parameters over time</li>
+                        <li><strong>Habitat Persistence Mapping:</strong> Identifies zones maintaining suitability thresholds across all surveys</li>
+                        <li><strong>Change Magnitude Classification:</strong> Low/moderate/high change zones relative to nesting requirements</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">2</span> Fine-Scale Microtopographic Variability and Nesting Substrate Quality</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        Existing sea turtle habitat studies focus on macro-scale parameters (beach width, slope, elevation).
+                        Literature on wetland and agricultural microtopography demonstrates LiDAR can capture <span class="emphasis">
+                        millimetric to centimetric surface variability</span>, but this has not been applied to sea turtle
+                        nesting beaches. Surface roughness, texture, and micro-elevation patterns may influence:
+                    </p>
+                    <ul>
+                        <li>Substrate compaction and digging effort required</li>
+                        <li>Micro-drainage patterns affecting egg chamber moisture</li>
+                        <li>Surface stability during nest construction</li>
+                    </ul>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Mobile LiDAR's high point density (~700,000 pts/sec) at cm-level accuracy enables novel analysis of:
+                    </p>
+                    <ul>
+                        <li><strong>Surface roughness metrics</strong> (standard deviation of surface normals, terrain ruggedness index)</li>
+                        <li><strong>Micro-slope variability</strong> within nesting zones vs. non-nesting zones</li>
+                        <li><strong>Texture analysis</strong> using moving window statistics</li>
+                        <li><strong>Micro-drainage patterns</strong> from high-resolution DEMs</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Feasibility with MLS Data:</h4>
+                    <p>
+                        CloudCompare enables calculation of roughness and surface normal variation. ArcGIS Pro's Spatial Analyst
+                        provides terrain ruggedness, curvature, and focal statistics tools. No coding required.
+                    </p>
+                </div>
+            </div>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">3</span> Dune-Beach System Vulnerability at Habitat Scale</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        Beach Vulnerability Index (BVI) and Coastal Vulnerability Index (CVI) approaches assess erosion risk
+                        and SLR susceptibility, but these frameworks are not tailored to <span class="emphasis">wildlife habitat
+                        resilience</span>. They lack integration of:
+                    </p>
+                    <ul>
+                        <li>Species-specific habitat requirements</li>
+                        <li>Habitat availability thresholds</li>
+                        <li>Recovery potential of suitable nesting zones post-disturbance</li>
+                    </ul>
+                    <p>
+                        General vulnerability assessments don't address whether "vulnerable" beaches still provide functional
+                        habitat or how long habitat suitability persists under change.
+                    </p>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Develop a <strong>Habitat-Specific Vulnerability Index</strong> for Kemp's ridley nesting beaches
+                        integrating:
+                    </p>
+                    <ul>
+                        <li>Traditional geomorphic vulnerability parameters (slope, erosion rate, beach width change)</li>
+                        <li>Kemp's ridley habitat suitability thresholds from Figlus et al. (2020)</li>
+                        <li>Temporal stability metrics from multi-year MLS</li>
+                        <li>Dune toe migration and protective capacity</li>
+                        <li>NOAA SLR projections for PAIS</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Management Value:</h4>
+                    <p>
+                        Maps showing "vulnerable habitat zones" vs. "resilient habitat zones" provide actionable information
+                        for PAIS prioritizing conservation interventions, beach nourishment decisions, and nest relocation policies.
+                    </p>
+                </div>
+            </div>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">4</span> Predictive Habitat Availability Under Sea-Level Rise Scenarios</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        Studies quantifying SLR impacts on sea turtle nesting (e.g., 2020 study on southeastern U.S.) use
+                        <span class="emphasis">static inundation modeling</span>—simply overlaying future sea levels on current
+                        topography. This approach ignores:
+                    </p>
+                    <ul>
+                        <li>Active morphodynamic processes (erosion, accretion, dune migration)</li>
+                        <li>Beach response to SLR varying by location</li>
+                        <li>Habitat suitability changes beyond simple inundation</li>
+                    </ul>
+                    <p>
+                        No studies use multi-temporal LiDAR change rates to <strong>project future beach morphology</strong>
+                        and then assess habitat under combined morphodynamic + SLR scenarios.
+                    </p>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Use 2024-2026 MLS change detection to derive annual change rates, then:
+                    </p>
+                    <ol>
+                        <li><strong>Extrapolate</strong> observed erosion/accretion trends to 2030, 2040, 2050</li>
+                        <li><strong>Integrate</strong> NOAA SLR intermediate and high scenarios</li>
+                        <li><strong>Model</strong> future DEMs combining morphodynamic change + SLR</li>
+                        <li><strong>Apply</strong> Kemp's ridley suitability criteria to future beach configurations</li>
+                        <li><strong>Quantify</strong> habitat loss, shift, and potential gain areas</li>
+                    </ol>
+                </div>
+
+                <div class="subsection">
+                    <h4>Workflow (ArcGIS Pro - No Coding):</h4>
+                    <ul>
+                        <li>Raster Calculator: DEM₂₀₂₆ - DEM₂₀₂₄ = change over 2 years</li>
+                        <li>Derive annual change rate raster</li>
+                        <li>Multiply by projection years and add to 2026 DEM</li>
+                        <li>Add SLR scenarios to shoreline elevation</li>
+                        <li>Apply suitability thresholds as conditional rasters</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">5</span> Automated Dune Toe Detection and Migration for Habitat Protection Assessment</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        Dune toe position is critical for defining landward extent of nesting beach and protective buffering
+                        from overwash. While Toe Line Tracking (TLT) methods exist for desert dunes, coastal applications
+                        are limited. Most coastal studies manually digitize dune toes—time-consuming and subjective.
+                    </p>
+                    <p>
+                        No studies have linked <span class="emphasis">dune toe migration patterns</span> to changes in available
+                        nesting habitat area or habitat quality metrics.
+                    </p>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Develop semi-automated dune toe extraction workflow using CloudCompare/ArcGIS Pro:
+                    </p>
+                    <ul>
+                        <li><strong>Slope threshold method:</strong> Identify dune toe where slope exceeds threshold (e.g., 15°-20°)</li>
+                        <li><strong>Profile-based extraction:</strong> Cross-shore transects identify inflection point at dune base</li>
+                        <li><strong>Time-series analysis:</strong> Quantify dune toe migration 2024-2026</li>
+                        <li><strong>Habitat impact assessment:</strong> Correlate dune toe retreat with loss of back-beach nesting zones</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Management Application:</h4>
+                    <p>
+                        Map zones where dune toe erosion threatens to eliminate high-suitability nesting habitat. Inform
+                        dune restoration and beach nourishment prioritization.
+                    </p>
+                </div>
+            </div>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">6</span> Beach Morphodynamic Classification for Habitat Forecasting</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        Beaches exhibit different morphodynamic behaviors: some are erosional, some accreting, some stable,
+                        some highly dynamic. Literature on machine learning for coastal change (achieving 90% accuracy) focuses
+                        on predicting <em>where</em> change occurs, not <span class="emphasis">how different behavior types
+                        affect habitat persistence</span>.
+                    </p>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Classify PAIS beach segments into morphodynamic behavior types using multi-temporal MLS:
+                    </p>
+                    <ul>
+                        <li><strong>Type 1 - Stable:</strong> Minimal change in elevation, slope, beach width</li>
+                        <li><strong>Type 2 - Accreting:</strong> Increasing elevation and/or width</li>
+                        <li><strong>Type 3 - Eroding:</strong> Decreasing elevation and/or width</li>
+                        <li><strong>Type 4 - Dynamic:</strong> High variability but no directional trend</li>
+                        <li><strong>Type 5 - Critical:</strong> Rapid erosion threatening habitat thresholds</li>
+                    </ul>
+                    <p>Then overlay with nest locations to determine which behavior types support successful nesting.</p>
+                </div>
+
+                <div class="subsection">
+                    <h4>Feasibility (No Coding):</h4>
+                    <p>
+                        ArcGIS Pro's Image Classification tools or manual classification based on DoD statistics within segments.
+                        Spatial Analyst's Zonal Statistics calculates change metrics per segment.
+                    </p>
+                </div>
+            </div>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">7</span> Multi-Scale Habitat Assessment Framework</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        Habitat suitability studies analyze features at single spatial scales (e.g., 1-m resolution DEMs).
+                        However, geomorphic processes and biological responses operate across multiple scales:
+                    </p>
+                    <ul>
+                        <li><strong>Micro-scale (cm):</strong> Surface texture, substrate quality</li>
+                        <li><strong>Meso-scale (m to 10s of m):</strong> Slope, elevation, beach width</li>
+                        <li><strong>Macro-scale (100s of m to km):</strong> Beach segment behavior, regional patterns</li>
+                    </ul>
+                    <p>No studies integrate suitability assessments across these nested scales.</p>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Develop hierarchical habitat suitability framework:
+                    </p>
+                    <ol>
+                        <li><strong>Macro-scale:</strong> Segment-level morphodynamic classification</li>
+                        <li><strong>Meso-scale:</strong> Slope, elevation, beach width suitability (Figlus et al. criteria)</li>
+                        <li><strong>Micro-scale:</strong> Surface roughness and texture quality</li>
+                        <li><strong>Integration:</strong> Composite suitability score combining all scales</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="gap-card">
+                <h3><span class="gap-number">8</span> Operational Monitoring Framework for Adaptive Management</h3>
+
+                <div class="limitation-box">
+                    <h4>Current Knowledge Limitation</h4>
+                    <p>
+                        Most LiDAR coastal studies are research-focused, producing scientific publications but not
+                        <span class="emphasis">operational tools for park managers</span>. PAIS staff need:
+                    </p>
+                    <ul>
+                        <li>Simple, interpretable habitat quality maps</li>
+                        <li>Change detection alerts for critical areas</li>
+                        <li>Decision support for nest relocation priorities</li>
+                        <li>Repeatable workflows for future MLS surveys (2027, 2028, etc.)</li>
+                    </ul>
+                    <p>Gap exists between sophisticated geospatial analysis and management-ready tools.</p>
+                </div>
+
+                <div class="opportunity-box">
+                    <h4>Research Opportunity</h4>
+                    <p>
+                        Create management-oriented monitoring framework deliverables:
+                    </p>
+                    <ul>
+                        <li><strong>Standardized habitat quality maps</strong> with color-coded zones (excellent/good/fair/poor/unsuitable)</li>
+                        <li><strong>Change alert system:</strong> Flags for areas exceeding critical erosion thresholds</li>
+                        <li><strong>Priority matrices:</strong> Rankings of beach segments for intervention</li>
+                        <li><strong>Workflow documentation:</strong> Step-by-step ArcGIS Pro procedures for future surveys</li>
+                        <li><strong>Dashboard-style summary reports:</strong> Key metrics tracking over time</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <h2>Summary: How These Gaps Align with Thesis Requirements</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Thesis Requirement</th>
+                            <th>How Knowledge Gaps Address It</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Uses only MLS 2024-2026 data</strong></td>
+                            <td>All 8 gaps specifically utilize multi-temporal MLS datasets; no additional field data required</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Incorporates 2026 fieldwork</strong></td>
+                            <td>All temporal analyses require 2026 data for complete time series; 2026 provides validation dataset</td>
+                        </tr>
+                        <tr>
+                            <td><strong>No independent fieldwork</strong></td>
+                            <td>All gaps addressable through LiDAR processing and GIS analysis alone</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Different from main RA project</strong></td>
+                            <td>RA project focuses on SLR vulnerability; these gaps explore habitat stability, microtopography, predictive modeling, classification—complementary but distinct</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Management-ready outcomes</strong></td>
+                            <td>Gaps 3, 5, and 8 explicitly designed to produce actionable tools for PAIS; others have clear conservation applications</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Feasible with ArcGIS/CloudCompare/LAStools</strong></td>
+                            <td>All proposed analyses achievable using these platforms without coding; workflows documented in literature</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Next Steps</h2>
+            <p>
+                Based on these eight knowledge gaps, <strong>five detailed thesis directions</strong> have been developed.
+                Each direction addresses one or more gaps and provides complete methodology, expected outputs, and
+                implementation guidance.
+            </p>
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="MLS-Thesis-Directions.html" style="background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 1.1em;">View Five Thesis Directions →</a>
+            </p>
+        </div>
+
+        <footer>
+            <p><strong>Knowledge Gaps Analysis | MLS Thesis Research</strong></p>
+            <p>
+                <a href="MLS-Thesis-Index.html" style="color: white; text-decoration: none;">← Return to Index</a> |
+                <a href="MLS-Literature-Review.html" style="color: white; text-decoration: none;">← Literature Review</a> |
+                <a href="MLS-Thesis-Directions.html" style="color: white; text-decoration: none;">Next: Thesis Directions →</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

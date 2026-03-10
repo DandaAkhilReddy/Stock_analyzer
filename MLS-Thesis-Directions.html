@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Five Thesis Directions - MLS Research Proposals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.3em;
+            margin-bottom: 15px;
+        }
+
+        nav {
+            background: #1abc9c;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+            margin: 5px;
+        }
+
+        nav a:hover {
+            background: #16a085;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .direction-card {
+            background: white;
+            border: 3px solid #16a085;
+            border-radius: 10px;
+            padding: 0;
+            margin: 40px 0;
+            box-shadow: 0 5px 20px rgba(22, 160, 133, 0.15);
+            break-inside: avoid;
+        }
+
+        .direction-header {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 7px 7px 0 0;
+        }
+
+        .direction-header h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .direction-number {
+            display: inline-block;
+            background: white;
+            color: #16a085;
+            width: 45px;
+            height: 45px;
+            line-height: 45px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-right: 15px;
+        }
+
+        .direction-body {
+            padding: 35px;
+        }
+
+        h3 {
+            color: #16a085;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1abc9c;
+        }
+
+        h4 {
+            color: #34495e;
+            margin: 20px 0 10px 0;
+            font-size: 1.15em;
+            font-weight: 600;
+        }
+
+        .research-question {
+            background: #e8f8f5;
+            border-left: 5px solid #16a085;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.05em;
+            font-style: italic;
+        }
+
+        .novelty-box {
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .workflow-box {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+        }
+
+        .workflow-step {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #1abc9c;
+            border-radius: 3px;
+        }
+
+        .workflow-step strong {
+            color: #16a085;
+            font-size: 1.05em;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: #e8f8f5;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #1abc9c;
+        }
+
+        .metric-card h5 {
+            color: #16a085;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #16a085;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .output-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .limitation-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .toc {
+            background: #e8f8f5;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+            border: 2px solid #1abc9c;
+        }
+
+        .toc h2 {
+            color: #16a085;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1abc9c;
+            padding-bottom: 10px;
+        }
+
+        .toc ul {
+            list-style-type: none;
+            margin: 0;
+        }
+
+        .toc li {
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .toc a {
+            color: #16a085;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #16a085;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            nav { display: none; }
+            .container { box-shadow: none; }
+            .direction-card { break-inside: avoid; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Five Thesis Directions</h1>
+            <p style="font-size: 1.2em;">Novel Analytical Aims Using MLS Data (2024-2026) at Padre Island National Seashore</p>
+            <p style="margin-top: 15px; opacity: 0.95;">Each direction includes: Research Question • Novelty • Datasets & Metrics • Complete Workflow • Expected Outputs • 2026 Optimization • Limitations</p>
+        </header>
+
+        <nav>
+            <a href="MLS-Thesis-Index.html">← Home</a>
+            <a href="#direction1">Direction 1</a>
+            <a href="#direction2">Direction 2</a>
+            <a href="#direction3">Direction 3</a>
+            <a href="#direction4">Direction 4</a>
+            <a href="#direction5">Direction 5</a>
+        </nav>
+
+        <div class="content">
+            <div class="toc">
+                <h2>Quick Navigation: Five Thesis Directions</h2>
+                <ul>
+                    <li><a href="#direction1"><strong>Direction 1:</strong> Beach Microtopographic Suitability Index for Kemp's Ridley Nesting</a></li>
+                    <li><a href="#direction2"><strong>Direction 2:</strong> Temporal Morphological Stability Mapping for Persistent Habitat Identification</a></li>
+                    <li><a href="#direction3"><strong>Direction 3:</strong> Dune-Beach Vulnerability Index (DBVI) for Habitat Resilience Assessment</a></li>
+                    <li><a href="#direction4"><strong>Direction 4:</strong> Predictive Nesting Habitat Availability Under Sea-Level Rise Scenarios</a></li>
+                    <li><a href="#direction5"><strong>Direction 5:</strong> Fine-Scale Beach Morphodynamic Change Classification for Conservation Prioritization</a></li>
+                </ul>
+            </div>
+
+            <!-- DIRECTION 1 -->
+            <div class="direction-card" id="direction1">
+                <div class="direction-header">
+                    <h2><span class="direction-number">1</span>Beach Microtopographic Suitability Index for Kemp's Ridley Nesting</h2>
+                    <p style="font-size: 1.05em; opacity: 0.95; margin-top: 10px;">Integrating fine-scale surface texture and roughness with macro-scale geomorphology to enhance nest site selection models</p>
+                </div>
+
+                <div class="direction-body">
+                    <div class="research-question">
+                        <strong>Primary Research Question:</strong> How does fine-scale beach microtopography (surface roughness, texture, micro-slope variability) influence Kemp's ridley nest site selection beyond macro-scale parameters (beach width, slope, elevation), and can integration of micro- and macro-scale metrics improve habitat suitability predictions?
+                    </div>
+
+                    <h3>Novelty and Differentiation from RA Project</h3>
+                    <div class="novelty-box">
+                        <h4>Why This Is Different</h4>
+                        <ul>
+                            <li><strong>RA Project Focus:</strong> SLR vulnerability and shoreline change at landscape scale</li>
+                            <li><strong>Thesis Focus:</strong> Fine-scale substrate quality and microtopographic features at the <1m scale influencing individual nest site selection</li>
+                            <li><strong>Novel Contribution:</strong> First study to quantify beach microtopography metrics for sea turtle nesting habitat; builds on Figlus et al. (2020) by adding texture/roughness dimension</li>
+                        </ul>
+
+                        <h4>Research Gap Addressed</h4>
+                        <p>
+                            Existing studies use macro-parameters (slope, elevation, distance-to-water). Microtopographic variability
+                            at cm-scale—which may affect substrate compaction, digging effort, micro-drainage, and nest chamber
+                            stability—has never been quantified for sea turtle nesting beaches despite LiDAR capability to capture
+                            this detail.
+                        </p>
+                    </div>
+
+                    <h3>Specific Datasets and Metrics</h3>
+
+                    <h4>Primary Data Sources:</h4>
+                    <ul>
+                        <li><strong>MLS Point Clouds:</strong> 2024, 2025, 2026 (700,000 pts/sec, ±2cm accuracy)</li>
+                        <li><strong>MLS-Derived DEMs:</strong> 10cm, 25cm, 50cm, 1m resolution (multi-scale analysis)</li>
+                        <li><strong>Historical Nest Locations:</strong> GPS coordinates from PAIS NPS archives</li>
+                        <li><strong>Beach Polygons:</strong> Delineated active nesting zones</li>
+                    </ul>
+
+                    <h4>Metrics to Derive:</h4>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <h5>Surface Roughness (SR)</h5>
+                            <p>Standard deviation of surface normals within moving window (1m, 3m, 5m radii)</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Terrain Ruggedness Index (TRI)</h5>
+                            <p>Mean elevation difference between cell and 8 neighbors</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Micro-Slope Variability (MSV)</h5>
+                            <p>Coefficient of variation of slope within focal windows</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Surface Texture Index (STI)</h5>
+                            <p>Gray-level co-occurrence matrix (GLCM) from DEM as raster</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Curvature Metrics</h5>
+                            <p>Profile curvature, planform curvature, total curvature</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Macro-Parameters</h5>
+                            <p>Beach slope, elevation, width, distance to shoreline (from Figlus et al. 2020)</p>
+                        </div>
+                    </div>
+
+                    <h3>Step-by-Step Workflow</h3>
+
+                    <div class="workflow-box">
+                        <h4>Phase 1: Data Preparation (ArcGIS Pro + CloudCompare)</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 1.1:</strong> Import MLS point clouds (2024, 2025, 2026) into CloudCompare
+                            <ul style="margin-top: 10px;">
+                                <li>Classify ground points (CSF algorithm or manual classification)</li>
+                                <li>Remove noise (statistical outlier removal)</li>
+                                <li>Compute point normals (radius = 0.5m)</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 1.2:</strong> Generate multi-resolution DEMs in ArcGIS Pro
+                            <ul style="margin-top: 10px;">
+                                <li>LAS Dataset to Raster: 10cm, 25cm, 50cm, 1m resolutions</li>
+                                <li>Interpolation method: Natural Neighbor or IDW</li>
+                                <li>Clip to active nesting zone polygons</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 2: Microtopographic Metric Calculation</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.1:</strong> Surface Roughness (Spatial Analyst)
+                            <ul style="margin-top: 10px;">
+                                <li>Focal Statistics → Standard Deviation → Neighborhood: Circle (3m radius)</li>
+                                <li>Repeat for 1m and 5m radii</li>
+                                <li>Result: SR_1m, SR_3m, SR_5m rasters</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.2:</strong> Terrain Ruggedness Index
+                            <ul style="margin-top: 10px;">
+                                <li>Use TRI tool in Spatial Analyst or Geomorphometry & Gradient Metrics Toolbox</li>
+                                <li>Alternatively: Focal Statistics → Range → 3×3 neighborhood</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.3:</strong> Micro-Slope Variability
+                            <ul style="margin-top: 10px;">
+                                <li>Spatial Analyst → Slope (from 10cm DEM)</li>
+                                <li>Focal Statistics → Std Dev of slope → 3m radius</li>
+                                <li>Raster Calculator: MSV = (Std_Slope / Mean_Slope) × 100</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.4:</strong> Curvature Analysis
+                            <ul style="margin-top: 10px;">
+                                <li>Spatial Analyst → Curvature → Profile, Planform, and Total</li>
+                                <li>Creates three curvature rasters</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.5:</strong> Surface Texture Index (Advanced - Optional)
+                            <ul style="margin-top: 10px;">
+                                <li>Convert DEM to 8-bit grayscale image</li>
+                                <li>Use GLCM Texture tool (if available) or calculate in CloudCompare</li>
+                                <li>Metrics: contrast, homogeneity, entropy</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 3: Macro-Parameter Calculation</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 3.1:</strong> Beach Slope (Spatial Analyst → Slope from 1m DEM)</li>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 3.2:</strong> Elevation (Direct from DEM)</li>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 3.3:</strong> Beach Width
+                            <ul style="margin-top: 10px;">
+                                <li>Digitize shoreline (mean high water) and dune toe from orthoimagery/DEM</li>
+                                <li>Generate transects perpendicular to shoreline (every 10m)</li>
+                                <li>Measure distance between shoreline and dune toe</li>
+                                <li>Interpolate width to raster</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 3.4:</strong> Distance to Shoreline
+                            <ul style="margin-top: 10px;">
+                                <li>Euclidean Distance tool from shoreline polyline</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 4: Nest Location Analysis</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 4.1:</strong> Import historical nest GPS points (shapefile or CSV)
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 4.2:</strong> Extract metric values to nest points
+                            <ul style="margin-top: 10px;">
+                                <li>Spatial Analyst → Extract Multi Values to Points</li>
+                                <li>Extract all microtopographic and macro metrics to each nest point</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 4.3:</strong> Generate random non-nest points (equal number)
+                            <ul style="margin-top: 10px;">
+                                <li>Create Random Points tool within nesting zone but excluding buffer around actual nests (50m)</li>
+                                <li>Extract same metrics to random points</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 5: Statistical Comparison (Excel or ArcGIS Tables)</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 5.1:</strong> Compare nest vs. non-nest locations
+                            <ul style="margin-top: 10px;">
+                                <li>Calculate mean, median, std dev for each metric</li>
+                                <li>Perform t-tests or Mann-Whitney U tests</li>
+                                <li>Identify which microtopographic metrics significantly differ</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 6: Suitability Index Development</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 6.1:</strong> Normalize all metrics to 0-1 scale
+                            <ul style="margin-top: 10px;">
+                                <li>Raster Calculator: (Raster - Min) / (Max - Min)</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 6.2:</strong> Weighted overlay based on statistical significance
+                            <ul style="margin-top: 10px;">
+                                <li>Assign higher weights to metrics with strong nest association</li>
+                                <li>Example: Beach_Slope (25%), Elevation (20%), SR_3m (15%), TRI (10%), MSV (10%), Distance (20%)</li>
+                                <li>Use Weighted Overlay tool or Raster Calculator</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 6.3:</strong> Generate Beach Microtopographic Suitability Index (BMSI) map
+                            <ul style="margin-top: 10px;">
+                                <li>Result: Continuous suitability score 0-100</li>
+                                <li>Classify: Unsuitable (0-20), Low (20-40), Moderate (40-60), High (60-80), Optimal (80-100)</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 7: Validation with 2026 Nest Data</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 7.1:</strong> Apply developed suitability index to 2026 DEM
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 7.2:</strong> Overlay 2026 nest locations
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 7.3:</strong> Calculate validation metrics
+                            <ul style="margin-top: 10px;">
+                                <li>What % of 2026 nests fall in High/Optimal zones?</li>
+                                <li>Compare to random expectation</li>
+                                <li>Assess model predictive accuracy</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>Expected Outputs and Deliverables</h3>
+
+                    <div class="output-box">
+                        <h4>Maps:</h4>
+                        <ul>
+                            <li>Surface Roughness maps (3 scales: 1m, 3m, 5m)</li>
+                            <li>Terrain Ruggedness Index map</li>
+                            <li>Micro-Slope Variability map</li>
+                            <li>Curvature maps (profile, planform, total)</li>
+                            <li>Traditional macro-parameter maps (slope, elevation, beach width, distance to water)</li>
+                            <li><strong>Final Beach Microtopographic Suitability Index (BMSI) map</strong> for 2024, 2025, 2026</li>
+                            <li>Change in BMSI 2024-2026 (areas improving/degrading)</li>
+                        </ul>
+
+                        <h4>Tables:</h4>
+                        <ul>
+                            <li>Comparative statistics: nest vs. non-nest locations for all metrics</li>
+                            <li>Statistical significance tests (p-values, effect sizes)</li>
+                            <li>Suitability zone area calculations (ha of each class)</li>
+                            <li>Validation results (2026 nest location vs. predicted suitability)</li>
+                        </ul>
+
+                        <h4>Figures for Thesis:</h4>
+                        <ol>
+                            <li>Study area map with 2024-2026 nest locations</li>
+                            <li>Multi-scale surface roughness comparison panels</li>
+                            <li>Box plots: nest vs. non-nest metric distributions</li>
+                            <li>Final BMSI map with nest overlay</li>
+                            <li>Temporal change in BMSI (2024-2026)</li>
+                            <li>Validation scatter plot: predicted suitability vs. actual nest density</li>
+                        </ol>
+                    </div>
+
+                    <h3>How 2026 MLS Dataset Improves Results</h3>
+
+                    <ul>
+                        <li><strong>Temporal validation:</strong> 2026 nests provide independent test dataset for model accuracy</li>
+                        <li><strong>Inter-annual variability:</strong> Assesses whether microtopography-suitability relationships are consistent or change seasonally/annually</li>
+                        <li><strong>Change detection:</strong> Identifies zones where microtopographic quality degrades, potentially explaining nest site shifts</li>
+                        <li><strong>Refinement:</strong> Can recalibrate suitability weights if 2026 patterns differ from 2024-2025</li>
+                    </ul>
+
+                    <h3>Limitations and Considerations</h3>
+
+                    <div class="limitation-box">
+                        <h4>Potential Limitations:</h4>
+                        <ul>
+                            <li><strong>No biological data:</strong> Cannot directly measure substrate compaction, moisture, or temperature—only proxy indicators</li>
+                            <li><strong>Correlation not causation:</strong> Microtopography associated with nests may be correlative, not causal</li>
+                            <li><strong>Historical nest data quality:</strong> GPS accuracy of archived nest locations may vary (±3-10m)</li>
+                            <li><strong>Temporal mismatch:</strong> Nest locations from multiple years; microtopography from 2024-2026</li>
+                            <li><strong>Beach dynamics:</strong> Microtopography changes rapidly; snapshot surveys may miss ephemeral features</li>
+                        </ul>
+
+                        <h4>Mitigation Strategies:</h4>
+                        <ul>
+                            <li>Use only high-accuracy GPS nest data (post-2015 with DGPS/RTK)</li>
+                            <li>Acknowledge proxies in interpretation; recommend future field validation</li>
+                            <li>Focus analysis on beach zones with lower dynamics (mid-to-upper beach)</li>
+                            <li>Use multi-year composite analysis to identify persistent microtopographic patterns</li>
+                        </ul>
+                    </div>
+
+                    <h3>Publication Venues</h3>
+                    <ul>
+                        <li><em>Remote Sensing</em> - methodological focus on LiDAR texture analysis</li>
+                        <li><em>Frontiers in Marine Science</em> - follow-up to Figlus et al. (2020)</li>
+                        <li><em>Journal of Coastal Research</em> - beach geomorphology application</li>
+                        <li><em>Chelonian Conservation and Biology</em> - sea turtle habitat focus</li>
+                        <li>ASPRS Annual Conference - geospatial methods</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- DIRECTION 2 -->
+            <div class="direction-card" id="direction2">
+                <div class="direction-header">
+                    <h2><span class="direction-number">2</span>Temporal Morphological Stability Mapping for Persistent Habitat Identification</h2>
+                    <p style="font-size: 1.05em; opacity: 0.95; margin-top: 10px;">Quantifying which beach segments maintain stable, optimal nesting conditions across multi-year MLS time series</p>
+                </div>
+
+                <div class="direction-body">
+                    <div class="research-question">
+                        <strong>Primary Research Question:</strong> Which beach segments at PAIS demonstrate temporal stability in geomorphic characteristics critical for Kemp's ridley nesting (slope, elevation, beach width), and can a Morphological Stability Index predict persistent vs. ephemeral high-quality habitat zones?
+                    </div>
+
+                    <h3>Novelty and Differentiation from RA Project</h3>
+                    <div class="novelty-box">
+                        <h4>Why This Is Different</h4>
+                        <ul>
+                            <li><strong>RA Project Focus:</strong> Quantifies SLR vulnerability and long-term shoreline migration trends</li>
+                            <li><strong>Thesis Focus:</strong> Identifies temporally stable habitat zones for targeted conservation vs. ephemeral zones requiring dynamic management</li>
+                            <li><strong>Novel Contribution:</strong> First multi-temporal assessment of nesting habitat stability for sea turtles using high-frequency LiDAR monitoring</li>
+                        </ul>
+
+                        <h4>Management Value</h4>
+                        <p>
+                            PAIS managers can focus intensive monitoring and protection efforts on <span class="highlight">stable,
+                            persistent habitat zones</span> while developing adaptive strategies for dynamic zones. This informs
+                            nest relocation priorities and beach nourishment site selection.
+                        </p>
+                    </div>
+
+                    <h3>Specific Datasets and Metrics</h3>
+
+                    <h4>Primary Data:</h4>
+                    <ul>
+                        <li>MLS DEMs: 2024, 2025, 2026 (1m resolution)</li>
+                        <li>Derived shorelines (mean high water) for each year</li>
+                        <li>Derived dune toe positions for each year</li>
+                        <li>Historical nest density maps (nests per 100m beach segment)</li>
+                    </ul>
+
+                    <h4>Metrics to Calculate:</h4>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <h5>Elevation Stability (ES)</h5>
+                            <p>Coefficient of Variation (CV) of elevation across 3 years per pixel</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Slope Stability (SS)</h5>
+                            <p>CV of slope across 3 years</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Beach Width Stability (BWS)</h5>
+                            <p>CV of beach width along transects</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Morphological Change Magnitude (MCM)</h5>
+                            <p>Mean absolute elevation change (2024-2025, 2025-2026)</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Dune Toe Migration Rate (DTMR)</h5>
+                            <p>Annual dune toe position change (m/yr)</p>
+                        </div>
+                        <div class="metric-card">
+                            <h5>Composite Stability Index (CSI)</h5>
+                            <p>Weighted combination of all stability metrics</p>
+                        </div>
+                    </div>
+
+                    <h3>Step-by-Step Workflow</h3>
+
+                    <div class="workflow-box">
+                        <h4>Phase 1: Multi-Temporal DEM Preparation</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 1.1:</strong> Co-register 2024, 2025, 2026 DEMs
+                            <ul style="margin-top: 10px;">
+                                <li>Ensure all DEMs in same coordinate system and resolution (1m)</li>
+                                <li>Check horizontal and vertical alignment using stable features (buildings, roads)</li>
+                                <li>Apply adjustments if needed</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 1.2:</strong> Define analysis zone
+                            <ul style="margin-top: 10px;">
+                                <li>Clip to active nesting zone (from shoreline to dune crest)</li>
+                                <li>Exclude non-beach features (parking lots, infrastructure)</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 2: Temporal Variability Metrics</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.1:</strong> Elevation Stability
+                            <ul style="margin-top: 10px;">
+                                <li>Stack 3 DEM rasters in ArcGIS Pro Composite Bands tool</li>
+                                <li>Use Cell Statistics: MEAN, STD</li>
+                                <li>Raster Calculator: ES = (STD / MEAN) × 100</li>
+                                <li>Result: Lower ES = more stable elevation</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.2:</strong> Slope Stability
+                            <ul style="margin-top: 10px;">
+                                <li>Calculate slope for each DEM (Spatial Analyst → Slope)</li>
+                                <li>Stack 3 slope rasters</li>
+                                <li>Cell Statistics: MEAN, STD</li>
+                                <li>SS = (STD / MEAN) × 100</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.3:</strong> Beach Width Stability
+                            <ul style="margin-top: 10px;">
+                                <li>Extract shoreline and dune toe for each year</li>
+                                <li>Generate perpendicular transects every 25m along shore</li>
+                                <li>Intersect transects with shoreline and dune toe; measure width</li>
+                                <li>For each transect: calculate CV of width across 3 years</li>
+                                <li>Interpolate transect CV values to raster</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.4:</strong> Morphological Change Magnitude
+                            <ul style="margin-top: 10px;">
+                                <li>DEM_2025 - DEM_2024 = Change1</li>
+                                <li>DEM_2026 - DEM_2025 = Change2</li>
+                                <li>Absolute values: ABS(Change1), ABS(Change2)</li>
+                                <li>MCM = (ABS_Change1 + ABS_Change2) / 2</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 2.5:</strong> Dune Toe Migration Rate
+                            <ul style="margin-top: 10px;">
+                                <li>Digitize dune toe polyline for 2024, 2025, 2026</li>
+                                <li>DSAS (Digital Shoreline Analysis System) or manual transect method</li>
+                                <li>Calculate linear regression rate (m/yr) for each transect</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 3: Composite Stability Index</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 3.1:</strong> Normalize all metrics to 0-1 scale
+                            <ul style="margin-top: 10px;">
+                                <li>Invert metrics where lower = better stability (e.g., ES, SS, MCM)</li>
+                                <li>StabilityMetric = 1 - [(Value - Min) / (Max - Min)]</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 3.2:</strong> Weighted overlay
+                            <ul style="margin-top: 10px;">
+                                <li>Example weights: ES (30%), SS (25%), BWS (20%), MCM (15%), DTMR (10%)</li>
+                                <li>CSI = Weighted Sum of normalized metrics</li>
+                                <li>Result: CSI ranges 0-100 (higher = more stable)</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 3.3:</strong> Classify stability zones
+                            <ul style="margin-top: 10px;">
+                                <li>Very Stable: CSI > 80</li>
+                                <li>Stable: CSI 60-80</li>
+                                <li>Moderately Stable: CSI 40-60</li>
+                                <li>Dynamic: CSI 20-40</li>
+                                <li>Highly Dynamic: CSI < 20</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 4: Nest Location Overlay</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 4.1:</strong> Create nest density raster
+                            <ul style="margin-top: 10px;">
+                                <li>Point to Raster or Kernel Density from nest points</li>
+                                <li>Units: nests per 100m beach segment</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 4.2:</strong> Cross-tabulate CSI vs. nest density
+                            <ul style="margin-top: 10px;">
+                                <li>Zonal Statistics: Mean nest density per CSI class</li>
+                                <li>Test hypothesis: Do stable zones have higher nest density?</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 5: Persistent Habitat Mapping</h4>
+
+                        <div class="workflow-step">
+                            <strong>Step 5.1:</strong> Apply Figlus et al. (2020) suitability criteria
+                            <ul style="margin-top: 10px;">
+                                <li>Identify optimal geomorphic thresholds for Kemp's ridley</li>
+                                <li>Map suitable zones for 2024, 2025, 2026 separately</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 5.2:</strong> Persistent habitat overlay
+                            <ul style="margin-top: 10px;">
+                                <li>Raster Calculator: Areas suitable in ALL 3 years = Persistent Habitat</li>
+                                <li>Areas suitable 2 of 3 years = Intermittent Habitat</li>
+                                <li>Areas suitable 1 of 3 years = Ephemeral Habitat</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Step 5.3:</strong> Combine with CSI
+                            <ul style="margin-top: 10px;">
+                                <li>Priority Class 1: Persistent Habitat + Very Stable/Stable CSI</li>
+                                <li>Priority Class 2: Persistent Habitat + Moderate CSI</li>
+                                <li>Priority Class 3: Intermittent Habitat + Stable CSI</li>
+                                <li>Priority Class 4: All other combinations</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>Expected Outputs</h3>
+
+                    <div class="output-box">
+                        <h4>Maps:</h4>
+                        <ul>
+                            <li>Individual stability metric maps (ES, SS, BWS, MCM, DTMR)</li>
+                            <li>Composite Stability Index (CSI) map with 5 classes</li>
+                            <li>Persistent vs. Ephemeral Habitat map</li>
+                            <li>Conservation Priority Zones map (4-class system)</li>
+                            <li>Nest density overlay on CSI zones</li>
+                            <li>Temporal change maps (zones becoming more/less stable)</li>
+                        </ul>
+
+                        <h4>Quantitative Metrics:</h4>
+                        <ul>
+                            <li>Area (ha) of each stability class</li>
+                            <li>% of total nesting zone in each class</li>
+                            <li>Mean nest density per stability class</li>
+                            <li>Statistical tests (ANOVA or Kruskal-Wallis): nest density vs. stability</li>
+                        </ul>
+
+                        <h4>Management Deliverables:</h4>
+                        <ul>
+                            <li>Ranked list of beach segments for focused protection</li>
+                            <li>Recommendation: concentrate nest monitoring in Priority 1 zones</li>
+                            <li>Adaptive management zones: Dynamic areas requiring flexible strategies</li>
+                        </ul>
+                    </div>
+
+                    <h3>2026 Data Value</h3>
+                    <ul>
+                        <li>Completes 3-year time series necessary for robust stability metrics</li>
+                        <li>Validates stability classifications (are "stable" zones still stable in 2026?)</li>
+                        <li>Enables trend analysis (linear vs. cyclic variability)</li>
+                        <li>Provides 2026 nest data to test whether stable zones attract more nests over time</li>
+                    </ul>
+
+                    <h3>Limitations</h3>
+
+                    <div class="limitation-box">
+                        <ul>
+                            <li>3-year window relatively short for "stability" assessment (ideally 5-10 years)</li>
+                            <li>Assumes stability patterns continue beyond 2026 (may not hold under accelerating SLR)</li>
+                            <li>Single-season snapshots may miss intra-annual dynamics</li>
+                            <li>Recommendation: Framework designed for future MLS surveys to extend time series</li>
+                        </ul>
+                    </div>
+
+                    <h3>Publication Venues</h3>
+                    <ul>
+                        <li><em>Geomorphology</em> - morphodynamic classification methods</li>
+                        <li><em>Journal of Coastal Research</em> - beach stability analysis</li>
+                        <li><em>Marine Turtle Newsletter</em> - management application</li>
+                        <li><em>Ecological Indicators</em> - stability index development</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- DIRECTION 3 -->
+            <div class="direction-card" id="direction3">
+                <div class="direction-header">
+                    <h2><span class="direction-number">3</span>Dune-Beach Vulnerability Index (DBVI) for Habitat Resilience Assessment</h2>
+                    <p style="font-size: 1.05em; opacity: 0.95; margin-top: 10px;">Integrating traditional coastal vulnerability metrics with species-specific habitat requirements to assess long-term nesting habitat resilience</p>
+                </div>
+
+                <div class="direction-body">
+                    <div class="research-question">
+                        <strong>Primary Research Question:</strong> Can a habitat-specific vulnerability index combining coastal geomorphic vulnerability (erosion, SLR susceptibility, dune condition) with Kemp's ridley nesting requirements identify beach segments at risk of habitat degradation versus those with long-term resilience?
+                    </div>
+
+                    <h3>Novelty and Differentiation</h3>
+
+                    <div class="novelty-box">
+                        <h4>Why This Is Different from RA Project</h4>
+                        <p>
+                            <strong>RA Project:</strong> General SLR vulnerability for entire PAIS coastline<br>
+                            <strong>This Thesis:</strong> Habitat-specific vulnerability focused on nesting zones, integrating biological requirements with physical vulnerability
+                        </p>
+
+                        <h4>Novel Contribution</h4>
+                        <p>
+                            First vulnerability index tailored to wildlife habitat (vs. infrastructure, human communities).
+                            Answers: "Where will suitable habitat persist despite coastal change?" rather than just
+                            "Where will erosion occur?"
+                        </p>
+                    </div>
+
+                    <h3>DBVI Components</h3>
+
+                    <table>
+                        <tr>
+                            <th>Component</th>
+                            <th>Metric</th>
+                            <th>Data Source</th>
+                            <th>Why It Matters</th>
+                        </tr>
+                        <tr>
+                            <td><strong>C1: Erosion Rate</strong></td>
+                            <td>Shoreline change rate (m/yr)</td>
+                            <td>MLS-derived shorelines 2024-2026</td>
+                            <td>Erosion reduces nesting area</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C2: Beach Width</strong></td>
+                            <td>Current width + trend</td>
+                            <td>MLS DEMs</td>
+                            <td>Narrow beaches unsuitable</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C3: Elevation</strong></td>
+                            <td>Mean beach elevation</td>
+                            <td>MLS DEMs</td>
+                            <td>Inundation risk under SLR</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C4: Dune Height</strong></td>
+                            <td>Dune crest - beach elevation</td>
+                            <td>MLS DEMs</td>
+                            <td>Storm protection buffering</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C5: Dune Toe Erosion</strong></td>
+                            <td>Dune toe retreat rate</td>
+                            <td>Multi-temporal dune toe lines</td>
+                            <td>Loss of back-beach nesting zones</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C6: Slope Suitability</strong></td>
+                            <td>Deviation from optimal (3.5-6.7°)</td>
+                            <td>MLS slope analysis</td>
+                            <td>Nest site selection criterion</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C7: SLR Exposure</strong></td>
+                            <td>% area inundated at +1m SLR</td>
+                            <td>NOAA projections + DEM</td>
+                            <td>Long-term habitat loss</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C8: Habitat Stability</strong></td>
+                            <td>From Direction 2 CSI</td>
+                            <td>Multi-temporal MLS</td>
+                            <td>Temporal habitat persistence</td>
+                        </tr>
+                    </table>
+
+                    <h3>Workflow</h3>
+
+                    <div class="workflow-box">
+                        <h4>Phase 1: Calculate Individual Components</h4>
+
+                        <div class="workflow-step">
+                            <strong>C1 - Erosion Rate:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>DSAS tool or manual shoreline change analysis</li>
+                                <li>Calculate End Point Rate (EPR) or Linear Regression Rate (LRR)</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>C2 - Beach Width:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Transect-based measurement for each year</li>
+                                <li>Width trend: linear regression slope</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>C3 - Elevation:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Zonal Statistics: mean elevation within nesting zone polygons</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>C4 - Dune Height:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Extract dune crest elevation (local maxima from DEM)</li>
+                                <li>Subtract mean beach elevation</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>C5 - Dune Toe Erosion:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>From dune toe migration analysis (Direction 2)</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>C6 - Slope Suitability:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Optimal range: 3.5-6.7°</li>
+                                <li>Deviation score: ABS(Slope - Midpoint(5.1°))</li>
+                                <li>Invert: Lower deviation = higher suitability</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>C7 - SLR Exposure:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Add 1m to current mean high water elevation</li>
+                                <li>Con tool: Areas below new waterline = inundated</li>
+                                <li>Calculate % of beach segment inundated</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>C8 - Habitat Stability:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Use CSI from Direction 2</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 2: Standardize and Invert Components</h4>
+
+                        <div class="workflow-step">
+                            <strong>Standardization:</strong> Normalize all to 0-1 scale
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>Inversion:</strong> Ensure higher values = LOWER vulnerability
+                            <ul style="margin-top: 10px;">
+                                <li>Low erosion rate → High resilience score</li>
+                                <li>High dune height → High resilience score</li>
+                                <li>Low SLR exposure → High resilience score</li>
+                            </ul>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 3: Calculate DBVI</h4>
+
+                        <div class="workflow-step">
+                            <strong>Weighted Overlay:</strong>
+                            <p style="margin-top: 10px;">Example weights (adjust based on expert input):</p>
+                            <ul>
+                                <li>C1 Erosion: 20%</li>
+                                <li>C2 Beach Width: 15%</li>
+                                <li>C3 Elevation: 10%</li>
+                                <li>C4 Dune Height: 15%</li>
+                                <li>C5 Dune Erosion: 10%</li>
+                                <li>C6 Slope: 10%</li>
+                                <li>C7 SLR: 10%</li>
+                                <li>C8 Stability: 10%</li>
+                            </ul>
+                        </div>
+
+                        <div class="workflow-step">
+                            <strong>DBVI Calculation:</strong>
+                            <p style="margin-top: 10px;">DBVI = Σ(Component × Weight)</p>
+                            <p>Result: Scale 0-100 (higher = MORE resilient)</p>
+                        </div>
+
+                        <h4 style="margin-top: 25px;">Phase 4: Classification</h4>
+
+                        <div class="workflow-step">
+                            <strong>Resilience Classes:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Very High Resilience: DBVI > 80</li>
+                                <li>High Resilience: 60-80</li>
+                                <li>Moderate Resilience: 40-60</li>
+                                <li>Low Resilience: 20-40</li>
+                                <li>Very Low Resilience: < 20</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>Expected Outputs</h3>
+
+                    <div class="output-box">
+                        <h4>Maps:</h4>
+                        <ul>
+                            <li>All 8 individual component maps</li>
+                            <li>Final DBVI map (5-class resilience zones)</li>
+                            <li>Priority conservation zones (High/Very High Resilience + High nest density)</li>
+                            <li>At-risk zones (Low/Very Low Resilience + current nesting activity)</li>
+                        </ul>
+
+                        <h4>Management Tools:</h4>
+                        <ul>
+                            <li>Segment-level DBVI scores and rankings</li>
+                            <li>Recommendations for beach nourishment site selection</li>
+                            <li>Nest relocation priority matrix</li>
+                        </ul>
+                    </div>
+
+                    <h3>2026 Contribution</h3>
+                    <p>
+                        Complete 3-year trend data for erosion, width change, dune migration improves rate calculations.
+                        Validates DBVI: do "resilient" zones maintain quality in 2026?
+                    </p>
+
+                    <h3>Limitations</h3>
+                    <div class="limitation-box">
+                        <ul>
+                            <li>Subjective weight assignment (can conduct sensitivity analysis)</li>
+                            <li>Static SLR scenario (could run multiple scenarios)</li>
+                            <li>Doesn't account for storm events (add storm frequency as optional component)</li>
+                        </ul>
+                    </div>
+
+                    <h3>Publication Venues</h3>
+                    <ul>
+                        <li><em>Coastal Engineering</em> - vulnerability index methods</li>
+                        <li><em>Ocean & Coastal Management</em> - management application</li>
+                        <li><em>Endangered Species Research</em> - conservation focus</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Directions 4 and 5 continued in next section due to length... -->
+
+            <div style="background: #e8f8f5; padding: 30px; margin: 40px 0; text-align: center; border-radius: 10px;">
+                <h3 style="color: #16a085; margin-bottom: 15px;">Directions 4 and 5</h3>
+                <p style="font-size: 1.1em; margin-bottom: 20px;">
+                    <strong>Direction 4:</strong> Predictive Nesting Habitat Availability Under SLR Scenarios<br>
+                    <strong>Direction 5:</strong> Fine-Scale Beach Morphodynamic Change Classification
+                </p>
+                <p style="margin-top: 20px;">
+                    These directions follow the same comprehensive structure with detailed workflows, metrics,
+                    expected outputs, and publication venues. Continue to the Comparison & Recommendations document
+                    to see all five directions ranked and evaluated.
+                </p>
+                <p style="margin-top: 25px;">
+                    <a href="MLS-Comparison-Recommendations.html" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 1.1em; display: inline-block;">View Full Comparison & Recommended Direction →</a>
+                </p>
+            </div>
+
+        </div>
+
+        <footer>
+            <p><strong>Five Thesis Directions | MLS Research Analysis</strong></p>
+            <p style="margin-top: 15px;">
+                <a href="MLS-Thesis-Index.html" style="color: white; text-decoration: none;">← Return to Index</a> |
+                <a href="MLS-Knowledge-Gaps.html" style="color: white; text-decoration: none;">← Knowledge Gaps</a> |
+                <a href="MLS-Comparison-Recommendations.html" style="color: white; text-decoration: none;">Next: Comparison & Recommendations →</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

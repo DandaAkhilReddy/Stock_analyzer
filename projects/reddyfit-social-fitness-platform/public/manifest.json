@@ -1,0 +1,152 @@
+{
+  "name": "ReddyFit Ultimate - Social Fitness Transformation",
+  "short_name": "ReddyFit",
+  "description": "The ultimate social fitness transformation platform. Track progress, connect with fitness enthusiasts, find workout partners, and achieve your transformation goals.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["fitness", "health", "social", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Track Workout",
+      "short_name": "Workout",
+      "description": "Quick access to workout tracking",
+      "url": "/workouts",
+      "icons": [
+        {
+          "src": "/icons/workout-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Log Meal",
+      "short_name": "Meal",
+      "description": "Quick access to meal logging",
+      "url": "/meals",
+      "icons": [
+        {
+          "src": "/icons/meal-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "short_name": "Progress",
+      "description": "View your transformation progress",
+      "url": "/progress",
+      "icons": [
+        {
+          "src": "/icons/progress-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Community",
+      "short_name": "Community",
+      "description": "Connect with fitness community",
+      "url": "/community",
+      "icons": [
+        {
+          "src": "/icons/community-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "ReddyFit Dashboard - Track your fitness journey"
+    },
+    {
+      "src": "/screenshots/community-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Community Feed - Connect with fitness enthusiasts"
+    },
+    {
+      "src": "/screenshots/progress-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Progress Tracking - Visualize your transformation"
+    },
+    {
+      "src": "/screenshots/dashboard-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "ReddyFit Desktop Dashboard"
+    }
+  ],
+  "features": [
+    "offline-capable",
+    "background-sync",
+    "push-notifications",
+    "cross-platform"
+  ]
+}

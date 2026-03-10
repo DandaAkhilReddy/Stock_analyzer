@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5 Concrete Thesis Ideas | PAIS MLS Research</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav-back {
+            background: #229954;
+            padding: 15px 30px;
+            text-align: center;
+        }
+
+        .nav-back a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .intro {
+            background: #e8f5e9;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            border-left: 6px solid #27ae60;
+        }
+
+        .intro h2 {
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .thesis-idea {
+            background: #f8f9fa;
+            padding: 40px;
+            margin-bottom: 40px;
+            border-radius: 12px;
+            border: 3px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .thesis-idea:hover {
+            border-color: #3498db;
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.2);
+        }
+
+        .idea-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 25px;
+            margin: -40px -40px 30px -40px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .idea-header h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .idea-header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .badges {
+            margin-top: 15px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-right: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .workflow {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+        }
+
+        .workflow h4 {
+            color: #3498db;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .step {
+            background: #ecf0f1;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .step-number {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .tool-box {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .tool-box h4 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .tool-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .tool-box ul li {
+            padding: 5px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .tool-box ul li:before {
+            content: "⚙️";
+            position: absolute;
+            left: 0;
+        }
+
+        .time-estimate {
+            background: #27ae60;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .output-preview {
+            background: white;
+            padding: 20px;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .output-preview h4 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        ul li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .recommended {
+            position: relative;
+        }
+
+        .recommended::before {
+            content: "⭐ RECOMMENDED";
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💡 5 Concrete Thesis Ideas</h1>
+            <p>Ready-to-Start Analyses with Existing MLS Data</p>
+        </header>
+
+        <div class="nav-back">
+            <a href="MLS-PAIS-Thesis-Index.html">← Back to Main Index</a>
+        </div>
+
+        <div class="content">
+            <div class="intro">
+                <h2>🎯 Action-Ready Research</h2>
+                <p>Each thesis idea below includes:</p>
+                <ul>
+                    <li><strong>Complete ArcGIS Pro workflow</strong> you can execute TODAY</li>
+                    <li><strong>Specific tools and parameters</strong> (no guessing required)</li>
+                    <li><strong>Time estimates</strong> for each analysis phase</li>
+                    <li><strong>Expected outputs</strong> for PAIS management</li>
+                    <li><strong>No additional approvals needed</strong> - uses your existing MLS data</li>
+                </ul>
+            </div>
+
+            <!-- THESIS IDEA 1 -->
+            <div class="thesis-idea recommended">
+                <div class="idea-header">
+                    <h2>THESIS IDEA 1: Seasonal Stability Mapping for In-Situ Nest Safety</h2>
+                    <div class="subtitle">Quantifying May→August Morphological Changes During Incubation</div>
+                    <div class="badges">
+                        <span class="badge">⏱️ 2-4 hours</span>
+                        <span class="badge">🔧 No coding</span>
+                        <span class="badge">📊 Management-ready</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Research Question</h3>
+                    <p><strong>"Which beach segments maintain stable morphology from nesting season (May-June) through hatching season (August-September), making them safe for in-situ egg incubation?"</strong></p>
+                </div>
+
+                <div class="section">
+                    <h3>Why This Matters</h3>
+                    <p>PAIS currently relocates all Kemp's ridley eggs to laboratories due to erosion, flooding, and vehicle threats. Identifying naturally stable zones enables a transition to in-situ incubation, reducing costs and improving hatchling fitness (literature shows 74-85% in-situ success when erosion is controlled vs. 34-58% in hatcheries).</p>
+                </div>
+
+                <div class="section">
+                    <h3>Complete Workflow</h3>
+
+                    <div class="workflow">
+                        <h4>📁 Data Preparation (15 minutes)</h4>
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <strong>Load your May and August 2024 DEMs</strong><br>
+                            File → Add Data → Navigate to your processed DEMs<br>
+                            Ensure both have same spatial extent and 0.1m resolution
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <strong>Verify coordinate systems match</strong><br>
+                            Right-click DEM → Properties → Source → Check spatial reference<br>
+                            If different: Use Project Raster tool to align
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>🧮 Calculate Seasonal Elevation Change (30 minutes)</h4>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <strong>Open Raster Calculator</strong><br>
+                            Analysis → Tools → Search "Raster Calculator"
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <strong>Compute DEM of Difference (DoD)</strong><br>
+                            Expression: <code>"DEM_Aug2024" - "DEM_May2024"</code><br>
+                            Output: <code>SEC_2024</code> (Seasonal Elevation Change)<br>
+                            Interpretation: Negative = erosion, Positive = accretion
+                        </div>
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <strong>Calculate absolute change</strong><br>
+                            Expression: <code>Abs("SEC_2024")</code><br>
+                            Output: <code>SEC_AbsChange_2024</code>
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>🎯 Extract Values at Nest Locations (45 minutes)</h4>
+                        <div class="step">
+                            <div class="step-number">6</div>
+                            <strong>Import nest GPS points</strong><br>
+                            Map → Add Data → Select nest_locations_2024.csv<br>
+                            Display XY Data: X field = Longitude, Y field = Latitude<br>
+                            Coordinate System: WGS84 → Project to match DEM CRS
+                        </div>
+                        <div class="step">
+                            <div class="step-number">7</div>
+                            <strong>Extract SEC values to points</strong><br>
+                            Analysis → Tools → "Extract Values to Points"<br>
+                            Input: nest_locations<br>
+                            Raster: SEC_2024<br>
+                            Output: nests_with_SEC
+                        </div>
+                        <div class="step">
+                            <div class="step-number">8</div>
+                            <strong>Create 50m buffers around each nest</strong><br>
+                            Analysis → Tools → "Buffer"<br>
+                            Input: nest_locations<br>
+                            Distance: 50 meters<br>
+                            Output: nest_buffers_50m
+                        </div>
+                        <div class="step">
+                            <div class="step-number">9</div>
+                            <strong>Calculate nest-scale stability</strong><br>
+                            Analysis → Tools → "Zonal Statistics as Table"<br>
+                            Input: nest_buffers_50m<br>
+                            Value Raster: SEC_AbsChange_2024<br>
+                            Statistics: MEAN, STD, MAX<br>
+                            Output: nest_stability_stats
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>🗺️ Create Stability Classification Map (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">10</div>
+                            <strong>Reclassify SEC into stability zones</strong><br>
+                            Analysis → Tools → "Reclassify"<br>
+                            Input: SEC_AbsChange_2024<br>
+                            Reclassification:
+                            <ul style="margin-top: 8px;">
+                                <li>0 - 0.05m → 1 (Highly Stable - Safe for in-situ)</li>
+                                <li>0.05 - 0.10m → 2 (Moderately Stable - Monitor)</li>
+                                <li>0.10 - 0.20m → 3 (Dynamic - Risky)</li>
+                                <li>&gt; 0.20m → 4 (Highly Dynamic - Relocate eggs)</li>
+                            </ul>
+                            Output: Stability_Classes_2024
+                        </div>
+                        <div class="step">
+                            <div class="step-number">11</div>
+                            <strong>Apply professional symbology</strong><br>
+                            Symbology → Unique Values<br>
+                            Color scheme: Green (1) → Yellow (2) → Orange (3) → Red (4)
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>📊 Statistical Summary (30 minutes)</h4>
+                        <div class="step">
+                            <div class="step-number">12</div>
+                            <strong>Export attribute table</strong><br>
+                            Right-click nest_stability_stats → Data → Export Table<br>
+                            Format: CSV for Excel analysis
+                        </div>
+                        <div class="step">
+                            <div class="step-number">13</div>
+                            <strong>Calculate summary statistics in Excel:</strong><br>
+                            • How many nests experienced &lt;0.05m change? (Safe zones)<br>
+                            • What's the mean absolute change across all nests?<br>
+                            • Which site (A, B, C, D) has the lowest mean change?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tool-box">
+                    <h4>🛠️ ArcGIS Pro Tools Used</h4>
+                    <ul>
+                        <li>Raster Calculator (Spatial Analyst)</li>
+                        <li>Extract Values to Points</li>
+                        <li>Buffer (Analysis)</li>
+                        <li>Zonal Statistics as Table</li>
+                        <li>Reclassify (Spatial Analyst)</li>
+                    </ul>
+                </div>
+
+                <div class="output-preview">
+                    <h4>📋 Expected Outputs</h4>
+                    <ul>
+                        <li><strong>Map 1:</strong> Seasonal Stability Classification (4 zones: Highly Stable → Highly Dynamic)</li>
+                        <li><strong>Map 2:</strong> Nest locations color-coded by local stability (50m buffer mean change)</li>
+                        <li><strong>Table 1:</strong> Per-nest statistics (mean, std dev, max change within 50m)</li>
+                        <li><strong>Summary:</strong> "X% of 2024 nests were in zones with &lt;0.05m seasonal change (safe for in-situ)"</li>
+                    </ul>
+                </div>
+
+                <div class="time-estimate">⏱️ Total Time: 2.5-4 hours (complete thesis-quality analysis)</div>
+            </div>
+
+            <!-- THESIS IDEA 2 -->
+            <div class="thesis-idea">
+                <div class="idea-header" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">
+                    <h2>THESIS IDEA 2: Vehicle Access Impact Analysis</h2>
+                    <div class="subtitle">Quantifying Erosion Differences Between Protected and Unprotected Zones</div>
+                    <div class="badges">
+                        <span class="badge">⏱️ 3-5 hours</span>
+                        <span class="badge">🔧 No coding</span>
+                        <span class="badge">📈 Statistical testing</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Research Question</h3>
+                    <p><strong>"Do vehicle-access zones experience significantly higher seasonal erosion rates compared to no-vehicle-access zones at PAIS?"</strong></p>
+                </div>
+
+                <div class="section">
+                    <h3>Why This Matters</h3>
+                    <p>Your RA project explicitly classified sites as vehicle-access vs. no-vehicle-access. Literature shows beach driving decreases hatching success by 15-25% and increases false crawls by 2-3x. Quantifying the morphological impact provides evidence for vehicle restriction policies.</p>
+                </div>
+
+                <div class="section">
+                    <h3>Complete Workflow</h3>
+
+                    <div class="workflow">
+                        <h4>🗺️ Delineate Vehicle Corridors (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <strong>Load MLS intensity raster or orthophoto</strong><br>
+                            Tire tracks visible as linear features in intensity data
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <strong>Manually digitize vehicle corridors</strong><br>
+                            Edit → Create → Polygon Features<br>
+                            Trace parallel tire tracks (typically 2-3m wide corridors)
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <strong>Create distance raster from vehicle corridors</strong><br>
+                            Analysis → Tools → "Euclidean Distance"<br>
+                            Input: vehicle_corridors polygon<br>
+                            Output: distance_to_vehicles
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>📊 Define Comparison Zones (45 minutes)</h4>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <strong>Create site classification polygons</strong><br>
+                            Draw polygons for each site in your project:<br>
+                            • Site A: Vehicle-Access<br>
+                            • Site B: No-Vehicle-Access<br>
+                            • Site C: Vehicle-Access<br>
+                            • Site D: No-Vehicle-Access
+                        </div>
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <strong>Clip SEC_2024 to each site</strong><br>
+                            Analysis → Tools → "Extract by Mask"<br>
+                            Repeat for Sites A, B, C, D<br>
+                            Outputs: SEC_SiteA, SEC_SiteB, SEC_SiteC, SEC_SiteD
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>🧮 Extract Erosion Statistics (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">6</div>
+                            <strong>Calculate summary statistics per site</strong><br>
+                            Analysis → Tools → "Zonal Statistics as Table"<br>
+                            Zones: site_polygons<br>
+                            Values: SEC_2024<br>
+                            Statistics: MEAN, STD, MIN, MAX<br>
+                            Output: site_erosion_stats
+                        </div>
+                        <div class="step">
+                            <div class="step-number">7</div>
+                            <strong>Generate random sample points (for t-test)</strong><br>
+                            Data Management → "Create Random Points"<br>
+                            Number: 500 per site (2000 total)<br>
+                            Constrain to site polygons
+                        </div>
+                        <div class="step">
+                            <div class="step-number">8</div>
+                            <strong>Extract SEC values to sample points</strong><br>
+                            Analysis → Tools → "Extract Multi Values to Points"<br>
+                            Input: random_sample_points<br>
+                            Rasters: SEC_2024, distance_to_vehicles
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>📈 Statistical Testing in Excel/R (1.5 hours)</h4>
+                        <div class="step">
+                            <div class="step-number">9</div>
+                            <strong>Export to CSV and load into Excel</strong><br>
+                            Right-click sample points → Data → Export → CSV
+                        </div>
+                        <div class="step">
+                            <div class="step-number">10</div>
+                            <strong>Separate into two groups:</strong><br>
+                            Group 1: All points from Vehicle-Access sites (A, C)<br>
+                            Group 2: All points from No-Vehicle-Access sites (B, D)
+                        </div>
+                        <div class="step">
+                            <div class="step-number">11</div>
+                            <strong>Run two-sample t-test in Excel</strong><br>
+                            Data → Data Analysis → t-Test: Two-Sample Assuming Unequal Variances<br>
+                            Variable 1: SEC values from Vehicle-Access<br>
+                            Variable 2: SEC values from No-Vehicle-Access<br>
+                            Alpha: 0.05
+                        </div>
+                        <div class="step">
+                            <div class="step-number">12</div>
+                            <strong>Interpret results:</strong><br>
+                            • If p &lt; 0.05: Significant difference exists<br>
+                            • Compare means: Which group has higher erosion?<br>
+                            • Calculate effect size: (Mean1 - Mean2) / Pooled SD
+                        </div>
+                    </div>
+                </div>
+
+                <div class="output-preview">
+                    <h4>📋 Expected Outputs</h4>
+                    <ul>
+                        <li><strong>Map 1:</strong> Vehicle corridor delineation with 50m, 100m, 150m buffer zones</li>
+                        <li><strong>Map 2:</strong> Seasonal erosion (SEC) for vehicle-access vs. no-vehicle sites</li>
+                        <li><strong>Table 1:</strong> T-test results showing p-value and mean difference</li>
+                        <li><strong>Chart:</strong> Box plot comparing erosion distributions between site types</li>
+                        <li><strong>Finding:</strong> "Vehicle-access zones experienced X% higher mean erosion (p=0.XXX)"</li>
+                    </ul>
+                </div>
+
+                <div class="time-estimate">⏱️ Total Time: 3-5 hours</div>
+            </div>
+
+            <!-- THESIS IDEA 3 -->
+            <div class="thesis-idea">
+                <div class="idea-header" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                    <h2>THESIS IDEA 3: Nest Elevation Preference Analysis</h2>
+                    <div class="subtitle">Validating Kemp's Ridley Optimal Nesting Zone at PAIS</div>
+                    <div class="badges">
+                        <span class="badge">⏱️ 2-3 hours</span>
+                        <span class="badge">🔧 Simple workflow</span>
+                        <span class="badge">🐢 Species-specific</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Research Question</h3>
+                    <p><strong>"Do Kemp's ridley sea turtles at PAIS select nest sites within the literature-documented optimal elevation range (1.5-4.0m above MHW) and slope range (3.5-6.7°)?"</strong></p>
+                </div>
+
+                <div class="section">
+                    <h3>Complete Workflow</h3>
+
+                    <div class="workflow">
+                        <h4>🧮 Create Elevation and Slope Layers (30 minutes)</h4>
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <strong>Calculate elevation above MHW</strong><br>
+                            Raster Calculator: <code>"DEM_May2024" - MHW_value</code><br>
+                            (MHW at PAIS ≈ 0.25m NAVD88 - verify with your RTK-GPS base)<br>
+                            Output: Elevation_AboveMHW
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <strong>Generate slope raster</strong><br>
+                            Analysis → Tools → "Slope"<br>
+                            Input: DEM_May2024<br>
+                            Output: Slope_Degrees<br>
+                            Units: Degrees (not percent)
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>🎯 Extract Values at Nest Locations (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <strong>Load nest GPS points and extract elevation</strong><br>
+                            Extract Multi Values to Points:<br>
+                            • Elevation_AboveMHW<br>
+                            • Slope_Degrees
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <strong>Export to Excel for analysis</strong><br>
+                            Right-click → Export → CSV
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>📊 Statistical Analysis in Excel (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <strong>Create histogram of nest elevations</strong><br>
+                            Data → Data Analysis → Histogram<br>
+                            Bins: 0.5m increments (0-0.5, 0.5-1.0, 1.0-1.5, ..., 4.5-5.0)
+                        </div>
+                        <div class="step">
+                            <div class="step-number">6</div>
+                            <strong>Calculate percentage within optimal range:</strong><br>
+                            =COUNTIFS(Elevation, "&gt;=1.5", Elevation, "&lt;=4.0") / COUNTA(Elevation)<br>
+                            Same for slope: 3.5-6.7°
+                        </div>
+                        <div class="step">
+                            <div class="step-number">7</div>
+                            <strong>Compare to random points (habitat availability):</strong><br>
+                            Generate 500 random points across beach<br>
+                            Extract elevation/slope to random points<br>
+                            Chi-square test: Are nests selecting habitat non-randomly?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="output-preview">
+                    <h4>📋 Expected Outputs</h4>
+                    <ul>
+                        <li><strong>Chart 1:</strong> Histogram of nest elevations with optimal zone (1.5-4.0m) highlighted</li>
+                        <li><strong>Chart 2:</strong> Scatter plot of elevation vs. slope at nest locations</li>
+                        <li><strong>Map:</strong> Elevation zones overlaid with nest locations</li>
+                        <li><strong>Finding:</strong> "XX% of nests fall within optimal 1.5-4.0m elevation range"</li>
+                    </ul>
+                </div>
+
+                <div class="time-estimate">⏱️ Total Time: 2-3 hours</div>
+            </div>
+
+            <!-- THESIS IDEA 4 -->
+            <div class="thesis-idea">
+                <div class="idea-header" style="background: linear-gradient(135deg, #16a085 0%, #138d75 100%);">
+                    <h2>THESIS IDEA 4: Multi-Year Habitat Persistence Index</h2>
+                    <div class="subtitle">Identifying Consistently Stable Zones Across 2024-2026</div>
+                    <div class="badges">
+                        <span class="badge">⏱️ 3 hours</span>
+                        <span class="badge">🔧 Cell Statistics</span>
+                        <span class="badge">🔄 3-year analysis</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Research Question</h3>
+                    <p><strong>"Which beach zones maintain consistent elevation and morphology across all three years (2024, 2025, 2026), indicating long-term habitat reliability for nesting planning?"</strong></p>
+                </div>
+
+                <div class="section">
+                    <h3>Complete Workflow</h3>
+
+                    <div class="workflow">
+                        <h4>📚 Stack Multi-Year DEMs (30 minutes)</h4>
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <strong>Ensure all 6 DEMs have identical extent and resolution:</strong><br>
+                            May 2024, Aug 2024, May 2025, Aug 2025, May 2026, Aug 2026
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <strong>If extents differ, use Extract by Mask to clip all to common area</strong>
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>🧮 Calculate Temporal Statistics (1.5 hours)</h4>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <strong>Cell Statistics - Mean Elevation</strong><br>
+                            Analysis → Tools → "Cell Statistics"<br>
+                            Input: All 6 DEMs<br>
+                            Statistic: MEAN<br>
+                            Output: Mean_Elevation_2024_2026
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <strong>Cell Statistics - Standard Deviation</strong><br>
+                            Same inputs, Statistic: STD<br>
+                            Output: StdDev_Elevation_2024_2026
+                        </div>
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <strong>Calculate Coefficient of Variation (CV)</strong><br>
+                            Raster Calculator: <code>("StdDev_Elevation_2024_2026" / "Mean_Elevation_2024_2026") * 100</code><br>
+                            Output: CV_Percent_2024_2026
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>🗺️ Classify Habitat Persistence (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">6</div>
+                            <strong>Reclassify CV into persistence zones</strong><br>
+                            CV &lt; 10% → Highly Persistent<br>
+                            CV 10-30% → Moderately Persistent<br>
+                            CV 30-50% → Variable<br>
+                            CV &gt; 50% → Highly Dynamic
+                        </div>
+                        <div class="step">
+                            <div class="step-number">7</div>
+                            <strong>Calculate area of each persistence class</strong><br>
+                            Summarize raster by class → hectares per class
+                        </div>
+                    </div>
+                </div>
+
+                <div class="output-preview">
+                    <h4>📋 Expected Outputs</h4>
+                    <ul>
+                        <li><strong>Map:</strong> Habitat Persistence Index (4 classes from Highly Persistent → Highly Dynamic)</li>
+                        <li><strong>Table:</strong> Area (hectares) and percentage of each persistence class</li>
+                        <li><strong>Finding:</strong> "XX hectares (YY% of beach) are Highly Persistent (CV&lt;10%) - priority zones for in-situ"</li>
+                    </ul>
+                </div>
+
+                <div class="time-estimate">⏱️ Total Time: 3 hours</div>
+            </div>
+
+            <!-- THESIS IDEA 5 -->
+            <div class="thesis-idea">
+                <div class="idea-header" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);">
+                    <h2>THESIS IDEA 5: SLR Threshold Exceedance Mapping</h2>
+                    <div class="subtitle">When Does Habitat Fall Below Critical Thresholds?</div>
+                    <div class="badges">
+                        <span class="badge">⏱️ 2 hours</span>
+                        <span class="badge">🌊 Future scenarios</span>
+                        <span class="badge">📅 2045, 2050, 2060</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Research Question</h3>
+                    <p><strong>"At what SLR increment (+0.4m, +0.8m, +1.34m) does nesting habitat fall below critical elevation thresholds (1.5m above MHW) at each site?"</strong></p>
+                </div>
+
+                <div class="section">
+                    <h3>Complete Workflow</h3>
+
+                    <div class="workflow">
+                        <h4>🌊 Apply SLR Scenarios (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <strong>Current suitable habitat (baseline)</strong><br>
+                            Raster Calculator: <code>"Elevation_AboveMHW" &gt;= 1.5 &amp; "Elevation_AboveMHW" &lt;= 4.0</code><br>
+                            Output: Suitable_Current (1 = suitable, 0 = unsuitable)
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <strong>SLR Scenario 1: +0.4m (2045)</strong><br>
+                            Raster Calculator: <code>("Elevation_AboveMHW" - 0.4) &gt;= 1.5 &amp; ("Elevation_AboveMHW" - 0.4) &lt;= 4.0</code><br>
+                            Output: Suitable_SLR_04m
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <strong>SLR Scenario 2: +0.8m (2050)</strong><br>
+                            Same formula with -0.8m<br>
+                            Output: Suitable_SLR_08m
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <strong>SLR Scenario 3: +1.34m (2060)</strong><br>
+                            Same formula with -1.34m<br>
+                            Output: Suitable_SLR_134m
+                        </div>
+                    </div>
+
+                    <div class="workflow">
+                        <h4>📊 Calculate Habitat Loss (1 hour)</h4>
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <strong>Summarize area per scenario</strong><br>
+                            For each raster, calculate total area of suitable pixels<br>
+                            Pixel count × pixel area (0.01 m²) = total suitable hectares
+                        </div>
+                        <div class="step">
+                            <div class="step-number">6</div>
+                            <strong>Create threshold exceedance map</strong><br>
+                            Raster Calculator:<br>
+                            <code>("Suitable_Current" * 1) + ("Suitable_SLR_04m" * 2) + ("Suitable_SLR_08m" * 3) + ("Suitable_SLR_134m" * 4)</code><br>
+                            Interpretation:<br>
+                            • Value 10 = Lost by 2045<br>
+                            • Value 13 = Lost by 2050<br>
+                            • Value 17 = Lost by 2060<br>
+                            • Value 20 = Persists beyond 2060
+                        </div>
+                    </div>
+                </div>
+
+                <div class="output-preview">
+                    <h4>📋 Expected Outputs</h4>
+                    <ul>
+                        <li><strong>Map:</strong> Threshold Exceedance Timeline (when each zone becomes unsuitable)</li>
+                        <li><strong>Chart:</strong> Area-loss curve showing hectares lost at each SLR increment</li>
+                        <li><strong>Table:</strong> Per-site habitat loss percentages at 2045, 2050, 2060</li>
+                        <li><strong>Finding:</strong> "Site A will lose XX% of suitable habitat by 2050 (+0.8m SLR)"</li>
+                    </ul>
+                </div>
+
+                <div class="time-estimate">⏱️ Total Time: 2 hours</div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="section" style="margin-top: 60px;">
+                <h2 style="color: #2c3e50; font-size: 2em; margin-bottom: 25px;">📊 Thesis Idea Comparison</h2>
+
+                <table>
+                    <tr>
+                        <th>Thesis Idea</th>
+                        <th>Time Required</th>
+                        <th>Complexity</th>
+                        <th>Management Value</th>
+                        <th>Novelty</th>
+                        <th>Start Today?</th>
+                    </tr>
+                    <tr>
+                        <td><strong>1. Seasonal Stability Mapping</strong></td>
+                        <td>2-4 hours</td>
+                        <td>Medium</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>✅ YES</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Vehicle Access Impact</strong></td>
+                        <td>3-5 hours</td>
+                        <td>Medium-High</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td>✅ YES</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Nest Elevation Preference</strong></td>
+                        <td>2-3 hours</td>
+                        <td>Low</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐</td>
+                        <td>✅ YES</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Multi-Year Persistence</strong></td>
+                        <td>3 hours</td>
+                        <td>Medium</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td>🔶 Need 2025/2026 data</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. SLR Threshold Exceedance</strong></td>
+                        <td>2 hours</td>
+                        <td>Low-Medium</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>⭐⭐⭐</td>
+                        <td>✅ YES</td>
+                    </tr>
+                </table>
+
+                <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border-radius: 10px;">
+                    <h3 style="margin-bottom: 15px;">🎯 Recommended Starting Point</h3>
+                    <p style="font-size: 1.1em; line-height: 1.8;">
+                        <strong>THESIS IDEA 1: Seasonal Stability Mapping</strong> is the optimal starting point because:
+                    </p>
+                    <ul style="margin-top: 15px; list-style: none; padding: 0;">
+                        <li>✅ Directly supports PAIS's in-situ transition goal</li>
+                        <li>✅ Leverages your unique twice-yearly survey advantage</li>
+                        <li>✅ Uses only 2024 data (no waiting for future surveys)</li>
+                        <li>✅ Produces immediate management deliverables</li>
+                        <li>✅ Addresses a critical literature gap (nest-scale seasonal stability)</li>
+                        <li>✅ Can be expanded with 2025/2026 data for multi-year analysis later</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <p><strong>Next Step:</strong> <a href="MLS-PAIS-Implementation-Guide.html" style="color: #3498db;">View Detailed Implementation Guide →</a></p>
+            <p style="margin-top: 10px;"><a href="MLS-PAIS-Thesis-Index.html" style="color: #3498db;">← Back to Main Index</a></p>
+        </footer>
+    </div>
+</body>
+</html>

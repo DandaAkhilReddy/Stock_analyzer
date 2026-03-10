@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAIS Sea Turtle Nesting: MLS Thesis Research Framework</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .hero-section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .project-context {
+            background: #f8f9fa;
+            padding: 40px;
+        }
+
+        .context-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .context-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .context-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .context-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .context-card ul li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .context-card ul li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .critical-insight {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 30px;
+            margin: 0;
+            border-left: 10px solid #a93226;
+        }
+
+        .critical-insight h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .critical-insight p {
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .navigation-section {
+            padding: 40px;
+        }
+
+        .navigation-section h2 {
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .nav-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-color: #3498db;
+        }
+
+        .nav-card h3 {
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-card .icon {
+            font-size: 1.5em;
+        }
+
+        .nav-card p {
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .nav-card .highlights {
+            list-style: none;
+            padding-left: 0;
+            margin: 15px 0;
+        }
+
+        .nav-card .highlights li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .nav-card .highlights li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .nav-card a {
+            display: inline-block;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .nav-card a:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+            transform: scale(1.05);
+        }
+
+        .methodology-overview {
+            background: #ecf0f1;
+            padding: 40px;
+        }
+
+        .methodology-overview h2 {
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 25px;
+        }
+
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .method-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .method-item h4 {
+            color: #3498db;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .method-item p {
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.9;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            margin-left: 10px;
+            font-weight: 600;
+        }
+
+        .badge.priority {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PAIS Sea Turtle Nesting Research</h1>
+            <p>Mobile LiDAR-Based Thesis Framework for In-Situ Conservation</p>
+            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">Master's Thesis Research | TAMU-CC | 2024-2026</p>
+        </header>
+
+        <div class="hero-section">
+            <h2>Research Assistant Project Context</h2>
+            <p style="font-size: 1.1em; line-height: 1.8;">
+                <strong>Title:</strong> "Investigating Impacts of Sea Level Rise on Sea Turtle Nesting Management at Padre Island National Seashore"
+            </p>
+            <p style="margin-top: 15px; font-size: 1.05em;">
+                <strong>Collaboration:</strong> Dr. Donna Shaver (PAIS Sea Turtle Biologist) + Dr. Michael Starek (TAMU-CC Remote Sensing) | 2024-2026
+            </p>
+        </div>
+
+        <div class="project-context">
+            <h2 style="color: #2c3e50; font-size: 2em; margin-bottom: 25px;">RA Project Framework</h2>
+            <div class="context-grid">
+                <div class="context-card">
+                    <h3>📅 Survey Schedule</h3>
+                    <ul>
+                        <li><strong>Twice-Yearly MLS Surveys</strong></li>
+                        <li>May-June: Nesting Season</li>
+                        <li>August-September: Hatching Season</li>
+                        <li>3-4 sites × 4.5km each</li>
+                        <li>2024, 2025, 2026 campaigns</li>
+                    </ul>
+                </div>
+
+                <div class="context-card">
+                    <h3>🚗 Site Classification</h3>
+                    <ul>
+                        <li>Vehicle-Access Zones</li>
+                        <li>No-Vehicle-Access Zones</li>
+                        <li>Comparative impact analysis</li>
+                        <li>Tire track corridor mapping</li>
+                    </ul>
+                </div>
+
+                <div class="context-card">
+                    <h3>🌊 SLR Projections (PAIS)</h3>
+                    <ul>
+                        <li>0.4m by 2045</li>
+                        <li>0.8m by 2050</li>
+                        <li>1.34m by 2060</li>
+                        <li><strong>36% above global average</strong></li>
+                    </ul>
+                </div>
+
+                <div class="context-card">
+                    <h3>🛠️ Processing Tools</h3>
+                    <ul>
+                        <li>LAStools: Point cloud processing</li>
+                        <li>CloudCompare: Surface analysis</li>
+                        <li>ArcGIS Pro: Spatial modeling</li>
+                        <li>No coding required</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="critical-insight">
+            <h2>🎯 Critical Management Priority</h2>
+            <p>
+                <strong>Current Practice:</strong> Kemp's ridley eggs are relocated to incubation laboratories due to threats from predation, beach driving, and flooding.
+            </p>
+            <p style="margin-top: 15px;">
+                <strong>PAIS Future Goal:</strong> Transition to <strong>in-situ (natural) nesting</strong> by identifying "safe zones" where eggs can remain on-site throughout the 45-60 day incubation period. Your thesis should provide the spatial framework to support this conservation transition.
+            </p>
+        </div>
+
+        <div class="navigation-section">
+            <h2>📚 Research Documentation</h2>
+            <p style="text-align: center; color: #555; margin-bottom: 30px;">
+                Click each card to explore detailed research components
+            </p>
+
+            <div class="nav-grid">
+                <div class="nav-card">
+                    <h3><span class="icon">📖</span> Literature Review</h3>
+                    <p>Comprehensive synthesis of 2018-2025 research on seasonal beach dynamics, incubation strategies, and vehicle impacts.</p>
+                    <ul class="highlights">
+                        <li>Seasonal morphology and nesting success</li>
+                        <li>In-situ vs ex-situ incubation outcomes</li>
+                        <li>Vehicle impact on coastal morphology</li>
+                        <li>Nest elevation preferences</li>
+                        <li>Multi-temporal stability methods</li>
+                    </ul>
+                    <a href="MLS-PAIS-Literature-Review.html">View Literature Review →</a>
+                </div>
+
+                <div class="nav-card">
+                    <h3><span class="icon">💡</span> 5 Thesis Ideas <span class="badge">RECOMMENDED</span></h3>
+                    <p>Concrete, actionable thesis directions you can start analyzing TODAY with existing MLS data.</p>
+                    <ul class="highlights">
+                        <li>Seasonal Stability Mapping (May→Aug)</li>
+                        <li>Vehicle Access Impact Analysis</li>
+                        <li>Nest Elevation Preference Study</li>
+                        <li>Multi-Year Habitat Persistence</li>
+                        <li>SLR Threshold Exceedance Mapping</li>
+                    </ul>
+                    <a href="MLS-PAIS-Thesis-Ideas.html">Explore Thesis Ideas →</a>
+                </div>
+
+                <div class="nav-card">
+                    <h3><span class="icon">⚙️</span> Implementation Guide</h3>
+                    <p>Step-by-step ArcGIS Pro workflows you can execute immediately without additional approvals.</p>
+                    <ul class="highlights">
+                        <li>Ready-to-run Raster Calculator scripts</li>
+                        <li>Extract to Points workflows</li>
+                        <li>Zonal Statistics procedures</li>
+                        <li>2-4 hour analysis timelines</li>
+                    </ul>
+                    <a href="MLS-PAIS-Implementation-Guide.html">Start Implementation →</a>
+                </div>
+
+                <div class="nav-card">
+                    <h3><span class="icon">📊</span> Expected Outputs</h3>
+                    <p>Management-ready deliverables, maps, and tables for PAIS conservation planning.</p>
+                    <ul class="highlights">
+                        <li>Safe zone identification maps</li>
+                        <li>Seasonal erosion risk layers</li>
+                        <li>Vehicle impact assessments</li>
+                        <li>SLR vulnerability matrices</li>
+                    </ul>
+                    <a href="MLS-PAIS-Expected-Outputs.html">View Deliverables →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="methodology-overview">
+            <h2>🔬 Analytical Framework</h2>
+            <p style="color: #555; margin-bottom: 20px;">
+                All thesis ideas leverage the unique twice-yearly survey structure to quantify seasonal changes during the critical nesting-to-hatching window.
+            </p>
+            <div class="method-grid">
+                <div class="method-item">
+                    <h4>Temporal Differencing</h4>
+                    <p>DEM_Aug - DEM_May = Seasonal Erosion Rate during 45-60 day incubation period</p>
+                </div>
+                <div class="method-item">
+                    <h4>Nest-Scale Analysis</h4>
+                    <p>50m buffer around GPS nest locations → Zonal Statistics for local stability assessment</p>
+                </div>
+                <div class="method-item">
+                    <h4>Multi-Year Persistence</h4>
+                    <p>Stack 2024, 2025, 2026 DEMs → Coefficient of Variation for temporal consistency</p>
+                </div>
+                <div class="method-item">
+                    <h4>Vehicle Comparison</h4>
+                    <p>T-test comparing erosion rates: Vehicle-Access vs. No-Vehicle-Access zones</p>
+                </div>
+                <div class="method-item">
+                    <h4>Elevation Thresholding</h4>
+                    <p>Kemp's ridley optimal range: 1.5-4.0m above MHW with 3.5-6.7° slope</p>
+                </div>
+                <div class="method-item">
+                    <h4>SLR Scenario Testing</h4>
+                    <p>Incremental inundation: +0.4m, +0.8m, +1.34m applied to current DEMs</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>TAMU-CC Conrad Blucher Institute | Dr. Michael Starek Lab</strong></p>
+            <p style="margin-top: 10px;">In collaboration with PAIS Sea Turtle Science and Recovery Program | Dr. Donna Shaver</p>
+            <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.8;">
+                Mobile LiDAR-Based Conservation Framework | 2024-2026
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

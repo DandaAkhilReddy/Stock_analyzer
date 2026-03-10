@@ -1,0 +1,158 @@
+# System files
+NTUSER.DAT*
+ntuser.*
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# Personal directories
+AppData/
+Application Data/
+Contacts/
+Cookies/
+Documents/
+Downloads/
+Favorites/
+Links/
+Local Settings/
+Music/
+My Documents/
+OneDrive/
+OneDrive - hhamedicine.com/
+Recent/
+Saved Games/
+Searches/
+SendTo/
+Start Menu/
+Videos/
+Microsoft/
+
+# Development tools and caches
+.cache/
+.cargo/
+.rustup/
+.local/
+.docker/
+.swa/
+.azure/
+.azure-functions-core-tools/
+.azurefunctions/
+.fly/
+.keras/
+.matplotlib/
+.ngrok2/
+node_modules/
+pipx/
+.npm/
+.npmrc
+
+# IDE and editor files
+.vscode/
+*.swp
+*.swo
+*~
+
+# Sensitive files
+.ssh/
+.gitconfig
+.bash_history
+.claude.json
+.claude.json.backup
+.claude.json.corrupted.*
+.claude/
+.config/
+.continue/sessions/
+.continue/index/
+.codeium/
+.codex/
+.windsurf/
+.rest-client/
+.env
+
+# Project specific
+ARCHIVE/
+DEV_TOOLS/
+IT_WORKSPACE/
+PROFESSIONAL/
+Work/
+AzureCLI.msi
+nul
+
+# Temporary files
+*.log
+*.tmp
+temp_*
+test.txt
+.vercel
+
+# Session documentation and guides (project-specific docs should be in project folders)
+*_COMPLETE.md
+*_SUMMARY.md
+*_GUIDE.md
+*_TESTING*.md
+*_DEPLOYMENT*.md
+*_SETUP*.md
+*_IMPLEMENTATION*.md
+*_ANALYSIS.md
+*_STATUS.md
+*_PROCEDURES.md
+*_TROUBLESHOOTING.md
+*_FIX*.md
+*-IDEAS-*.md
+NEXT_STEPS.md
+PR_DESCRIPTION.md
+DEBUG_*.md
+GET_*.md
+IOS_*.md
+MACSTADIUM_*.md
+MONOREPO_*.md
+REORGANIZATION_*.md
+BODY_*.md
+COMPLETE_*.md
+COMPREHENSIVE_*.md
+docker-compose.yml
+jira-scripts/
+jira-setup-guide.md
+
+# Misnamed Python files (incorrect path encoding)
+C:usersakhilreddy*
+C?usersakhil*
+
+# Local Netlify folder
+.netlify
+
+# Separate Git repositories (tracked independently)
+cricket-team-management/
+website/
+reddygo-platform/
+ReddyLLM/
+enzyme-gcn-classifier/
+Agent-SDK/
+Agentchains.ai/
+ReddyfitWebsiteready/
+ReddyfitclubV8/
+pais-thesis-deployment/
+ml-bootcamp/
+ml-bootcamp-standalone/
+hss-website/
+HSSMedicine/
+hha-docanalytics/
+clauden8n/
+personalwebsite/
+personalwebsite-temp/
+vamshi-research/
+reddytalkf1/
+projects/
+Instagram/
+Research/
+Desktop/
+
+# Build artifacts and backups
+*.tar.gz
+*.html
+*.sh
+*.bat
+*.ps1
+
+# Temporary script files
+C:usersakhilreddy*
