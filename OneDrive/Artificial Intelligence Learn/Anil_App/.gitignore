@@ -27,6 +27,9 @@ Thumbs.db
 node_modules/
 frontend/dist/
 
+# Production build artifacts
+backend/static/
+
 # Testing
 .coverage
 htmlcov/
