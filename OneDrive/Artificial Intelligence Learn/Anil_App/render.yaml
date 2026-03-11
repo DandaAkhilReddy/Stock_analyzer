@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: stock-analyzer
+    runtime: docker
+    repo: https://github.com/DandaAkhilReddy/Stock_analyzer
+    branch: main
+    plan: free
+    envVars:
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_OPENAI_DEPLOYMENT
+        value: Kimi-K2.5
+      - key: AZURE_OPENAI_API_VERSION
+        value: 2024-05-01-preview
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        value: "*"
+    healthCheckPath: /health
