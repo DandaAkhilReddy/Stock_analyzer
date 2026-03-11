@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { BarChart3 } from 'lucide-react';
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
@@ -63,9 +64,12 @@ export function TechnicalSummary({ technical, currentPrice }: TechnicalSummaryPr
       </div>
 
       <div className="space-y-2">
-        {rows.map((row) => (
-          <div
+        {rows.map((row, i) => (
+          <motion.div
             key={row.label}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25, delay: i * 0.03 }}
             className="flex items-center justify-between py-1 border-b border-stone-100 last:border-0"
           >
             <span className="text-xs text-stone-500">{row.label}</span>
@@ -81,7 +85,7 @@ export function TechnicalSummary({ technical, currentPrice }: TechnicalSummaryPr
                 </Badge>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </Card>

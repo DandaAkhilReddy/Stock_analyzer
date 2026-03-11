@@ -8,7 +8,19 @@
  */
 
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
+      <div {...props}>{children}</div>
+    ),
+  },
+  useMotionValue: () => ({ set: vi.fn() }),
+  useSpring: (v: unknown) => v,
+  useTransform: () => 0,
+}));
+
 import { SupportResistance } from '../../components/technical/SupportResistance';
 import { TechnicalSummary } from '../../components/technical/TechnicalSummary';
 import type { TechnicalSnapshot } from '../../types/analysis';

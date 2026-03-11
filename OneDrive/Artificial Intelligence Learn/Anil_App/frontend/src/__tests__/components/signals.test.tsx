@@ -22,6 +22,9 @@ vi.mock('framer-motion', () => ({
     ),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  useMotionValue: () => ({ set: vi.fn() }),
+  useSpring: (v: unknown) => v,
+  useTransform: () => 0,
 }));
 
 // Mock the entire stockStore module so StockSearchBar never touches zustand

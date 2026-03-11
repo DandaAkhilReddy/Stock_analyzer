@@ -1,7 +1,9 @@
+import { motion } from 'framer-motion';
 import type { NewsItem } from '../../types/analysis';
 
 interface NewsCardProps {
   item: NewsItem;
+  index?: number;
 }
 
 const sentimentColor: Record<string, string> = {
@@ -10,12 +12,17 @@ const sentimentColor: Record<string, string> = {
   neutral: 'text-stone-400',
 };
 
-export function NewsCard({ item }: NewsCardProps) {
+export function NewsCard({ item, index = 0 }: NewsCardProps) {
   const sentimentClass =
     item.sentiment !== null ? (sentimentColor[item.sentiment] ?? 'text-stone-400') : 'text-stone-400';
 
   return (
-    <div className="block p-3 rounded-lg hover:bg-stone-100 transition-colors">
+    <motion.div
+      className="block p-3 rounded-lg hover:bg-stone-100 transition-colors"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.04 }}
+    >
       <h5 className="text-sm text-stone-700 hover:text-stone-900 leading-snug">
         {item.title}
       </h5>
@@ -29,6 +36,6 @@ export function NewsCard({ item }: NewsCardProps) {
           </span>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

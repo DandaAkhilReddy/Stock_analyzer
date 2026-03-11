@@ -6,6 +6,36 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
+
+vi.mock('framer-motion', () => {
+  const createMotionComponent = (tag: string) => {
+    const Component = ({ children, ...props }: any) => {
+      const Tag = tag as any;
+      // Filter out framer-motion specific props that aren't valid HTML
+      const { style, className, ...rest } = props;
+      const htmlProps: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(rest)) {
+        if (!key.startsWith('on') || key === 'onClick' || key === 'onMouseMove' || key === 'onMouseLeave') {
+          if (typeof val !== 'function' || key.startsWith('on')) {
+            htmlProps[key] = val;
+          }
+        }
+      }
+      return <Tag style={style} className={className} {...htmlProps}>{children}</Tag>;
+    };
+    return Component;
+  };
+  return {
+    motion: new Proxy({}, {
+      get: (_target, prop: string) => createMotionComponent(prop),
+    }),
+    useMotionValue: () => ({ set: vi.fn() }),
+    useSpring: (v: any) => v,
+    useTransform: () => 0,
+  };
+});
+
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';

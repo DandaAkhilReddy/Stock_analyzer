@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Target } from 'lucide-react';
 import { Card } from '../common/Card';
 import type { PriceForecast, PricePredictions } from '../../types/analysis';
@@ -63,21 +64,39 @@ export function PricePrediction({ predictions, currentPrice }: PricePredictionPr
         <h4 className="text-sm font-medium text-stone-500">Price Predictions</h4>
       </div>
       <div className="grid grid-cols-3 gap-3">
-        <ForecastCard
-          label="1 Week"
-          forecast={predictions.one_week}
-          currentPrice={currentPrice}
-        />
-        <ForecastCard
-          label="1 Month"
-          forecast={predictions.one_month}
-          currentPrice={currentPrice}
-        />
-        <ForecastCard
-          label="3 Months"
-          forecast={predictions.three_months}
-          currentPrice={currentPrice}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0 }}
+        >
+          <ForecastCard
+            label="1 Week"
+            forecast={predictions.one_week}
+            currentPrice={currentPrice}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <ForecastCard
+            label="1 Month"
+            forecast={predictions.one_month}
+            currentPrice={currentPrice}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <ForecastCard
+            label="3 Months"
+            forecast={predictions.three_months}
+            currentPrice={currentPrice}
+          />
+        </motion.div>
       </div>
     </Card>
   );

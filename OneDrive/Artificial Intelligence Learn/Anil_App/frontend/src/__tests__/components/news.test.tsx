@@ -6,6 +6,19 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
+
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
+      <div {...props}>{children}</div>
+    ),
+  },
+  useMotionValue: () => ({ set: vi.fn() }),
+  useSpring: (v: unknown) => v,
+  useTransform: () => 0,
+}));
+
 import { NewsCard } from '../../components/news/NewsCard';
 import { NewsFeed } from '../../components/news/NewsFeed';
 import type { NewsItem } from '../../types/analysis';

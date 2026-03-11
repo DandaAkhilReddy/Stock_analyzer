@@ -19,8 +19,17 @@ vi.mock('framer-motion', () => ({
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
       <div {...props}>{children}</div>
     ),
+    h1: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }) => (
+      <h1 {...props}>{children}</h1>
+    ),
+    p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
+      <p {...props}>{children}</p>
+    ),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useMotionValue: () => ({ set: vi.fn() }),
+  useSpring: (v: unknown) => v,
+  useTransform: () => 0,
 }));
 
 const mockFetchAnalysis = vi.fn();
@@ -68,15 +77,15 @@ describe('App', () => {
     expect(screen.getByText('Stock Analyzer')).toBeInTheDocument();
   });
 
-  it('renders the StockAnalysis empty state prompt on the root route', () => {
+  it('renders the LandingHero on the root route when no ticker is selected', () => {
     render(<App />);
-    expect(screen.getByText('Search for a stock to begin')).toBeInTheDocument();
+    expect(screen.getByText(/Stock Analysis/)).toBeInTheDocument();
   });
 
-  it('renders the search input in the header', () => {
+  it('renders the hero search input on landing', () => {
     render(<App />);
     const input = screen.getByPlaceholderText(
-      'Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)',
+      /Search any stock/,
     );
     expect(input).toBeInTheDocument();
   });

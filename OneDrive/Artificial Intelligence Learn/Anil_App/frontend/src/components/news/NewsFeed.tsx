@@ -19,7 +19,7 @@ export function NewsFeed({ items }: NewsFeedProps) {
         {items.length === 0 ? (
           <p className="text-sm text-stone-400 text-center py-4">No recent news found</p>
         ) : (
-          items.map((item, i) => <NewsCard key={i} item={item} />)
+          items.map((item, i) => <NewsCard key={i} item={item} index={i} />)
         )}
       </div>
     </Card>

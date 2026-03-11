@@ -6,8 +6,23 @@
  * mobile card stack simultaneously (CSS hides one at runtime); every repeated
  * value therefore appears twice in the DOM — getAllBy* is used accordingly.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
+      <div {...props}>{children}</div>
+    ),
+    tr: ({ children, ...props }: React.HTMLAttributes<HTMLTableRowElement> & { children?: React.ReactNode }) => (
+      <tr {...props}>{children}</tr>
+    ),
+  },
+  useMotionValue: () => ({ set: vi.fn() }),
+  useSpring: (v: unknown) => v,
+  useTransform: () => 0,
+}));
+
 import { QuarterlyEarnings } from '../../components/financials/QuarterlyEarnings';
 import type { QuarterlyEarning } from '../../types/analysis';
 

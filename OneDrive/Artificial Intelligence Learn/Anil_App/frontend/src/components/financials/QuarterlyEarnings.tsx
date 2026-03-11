@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card } from '../common/Card';
 import type { QuarterlyEarning } from '../../types/analysis';
@@ -53,9 +54,12 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
               const yoyPositive = yoy !== null && yoy >= 0;
 
               return (
-                <tr
+                <motion.tr
                   key={q.quarter}
                   className={`border-t border-stone-100 ${i % 2 === 0 ? 'bg-stone-50' : ''}`}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.05 }}
                 >
                   <td className="py-2.5 text-stone-900 font-medium">{q.quarter}</td>
                   <td className="py-2.5 text-right text-stone-600">{formatMoney(q.revenue)}</td>
@@ -76,7 +80,7 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
                       <span className="text-stone-400">N/A</span>
                     )}
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
           </tbody>
@@ -85,14 +89,17 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
-        {earnings.map((q) => {
+        {earnings.map((q, i) => {
           const yoy = q.yoy_revenue_growth;
           const yoyPositive = yoy !== null && yoy >= 0;
 
           return (
-            <div
+            <motion.div
               key={q.quarter}
               className="bg-stone-50 rounded-xl p-3 border border-stone-100"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: i * 0.08 }}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-stone-900">{q.quarter}</span>
@@ -120,7 +127,7 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
                   <p className="text-stone-600">{q.eps !== null ? `$${q.eps.toFixed(2)}` : 'N/A'}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

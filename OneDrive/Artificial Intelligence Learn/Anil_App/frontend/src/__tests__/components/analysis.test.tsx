@@ -25,6 +25,9 @@ vi.mock('framer-motion', () => ({
       <div {...props}>{children}</div>
     ),
   },
+  useMotionValue: () => ({ set: vi.fn() }),
+  useSpring: (v: unknown) => v,
+  useTransform: () => 0,
 }));
 
 // ---------------------------------------------------------------------------

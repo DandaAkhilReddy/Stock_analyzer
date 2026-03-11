@@ -6,15 +6,20 @@
  */
 
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mock the store so StockSearchBar (rendered inside Header) doesn't hit zustand
 // ---------------------------------------------------------------------------
 
+const mockStore = {
+  currentTicker: null as string | null,
+  isLoading: false,
+};
+
 vi.mock('../../stores/stockStore', () => ({
-  useStockStore: vi.fn((selector: (s: { isLoading: boolean }) => boolean) =>
-    selector({ isLoading: false }),
+  useStockStore: vi.fn((selector: (s: typeof mockStore) => unknown) =>
+    selector(mockStore),
   ),
 }));
 
@@ -32,6 +37,11 @@ import { Header } from '../../components/layout/Header';
 // ===========================================================================
 
 describe('AppLayout', () => {
+  beforeEach(() => {
+    mockStore.currentTicker = null;
+    mockStore.isLoading = false;
+  });
+
   it('renders children inside the layout', () => {
     render(
       <AppLayout>
@@ -77,6 +87,13 @@ describe('AppLayout', () => {
     expect(screen.getByText('first')).toBeInTheDocument();
     expect(screen.getByText('second')).toBeInTheDocument();
   });
+
+  it('main has max-w-5xl class when currentTicker is set', () => {
+    mockStore.currentTicker = 'AAPL';
+    render(<AppLayout><span /></AppLayout>);
+    const main = document.querySelector('main') as HTMLElement;
+    expect(main).toHaveClass('max-w-5xl');
+  });
 });
 
 // ===========================================================================
@@ -84,6 +101,15 @@ describe('AppLayout', () => {
 // ===========================================================================
 
 describe('Header', () => {
+  beforeEach(() => {
+    mockStore.currentTicker = null;
+    mockStore.isLoading = false;
+  });
+
+  afterEach(() => {
+    mockStore.currentTicker = null;
+  });
+
   it('renders the "Stock Analyzer" brand title', () => {
     render(<Header />);
     expect(screen.getByText('Stock Analyzer')).toBeInTheDocument();
@@ -99,12 +125,28 @@ describe('Header', () => {
     expect(document.querySelector('header')).toBeInTheDocument();
   });
 
-  it('renders the StockSearchBar input within the header', () => {
+  it('renders the StockSearchBar input within the header when currentTicker is set', () => {
+    mockStore.currentTicker = 'AAPL';
     render(<Header />);
     const input = screen.getByPlaceholderText(
       'Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)',
     );
     expect(input).toBeInTheDocument();
+  });
+
+  it('does not render the search bar when currentTicker is null (landing state)', () => {
+    render(<Header />);
+    expect(
+      screen.queryByPlaceholderText(
+        'Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)',
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it('header has bg-transparent class when currentTicker is null (landing state)', () => {
+    render(<Header />);
+    const header = document.querySelector('header') as HTMLElement;
+    expect(header).toHaveClass('bg-transparent');
   });
 
   it('header has sticky positioning class', () => {
