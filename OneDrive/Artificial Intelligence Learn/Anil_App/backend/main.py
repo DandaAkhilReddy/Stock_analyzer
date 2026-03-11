@@ -1,20 +1,29 @@
 """Stock Analyzer API entry point."""
 from __future__ import annotations
 
+import pathlib
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.core.exceptions import AppException, RateLimitError, StockNotFoundError
+from app.core.exceptions import (
+    AppException,
+    ExternalAPIError,
+    RateLimitError,
+    StockNotFoundError,
+)
 from app.core.logging import get_logger, setup_logging
 from app.routers import analysis
 
 logger = get_logger(__name__)
+
+_STATIC_DIR = pathlib.Path(__file__).resolve().parent / "static"
 
 
 @asynccontextmanager
@@ -50,6 +59,8 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
     status_code = 500
     if isinstance(exc, StockNotFoundError):
         status_code = 404
+    elif isinstance(exc, ExternalAPIError):
+        status_code = 502
     elif isinstance(exc, RateLimitError):
         status_code = 429
 
@@ -69,3 +80,22 @@ async def health() -> dict[str, str]:
 async def ready() -> dict[str, Any]:
     """Readiness probe."""
     return {"status": "ready"}
+
+
+# ---------------------------------------------------------------------------
+# Serve frontend static build (production only)
+# ---------------------------------------------------------------------------
+if _STATIC_DIR.is_dir():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=_STATIC_DIR / "assets"),
+        name="static-assets",
+    )
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str) -> FileResponse:
+        """Serve the React SPA — all non-API routes return index.html."""
+        file_path = _STATIC_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(_STATIC_DIR / "index.html")
