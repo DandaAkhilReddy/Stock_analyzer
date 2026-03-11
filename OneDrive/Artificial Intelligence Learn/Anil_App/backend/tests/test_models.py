@@ -426,9 +426,8 @@ class TestStockAnalysisResponse:
 
     def test_default_disclaimer_text(self) -> None:
         resp = StockAnalysisResponse(**_make_response())
-        assert "AI-estimated" in resp.disclaimer
+        assert "Yahoo Finance" in resp.disclaimer
         assert "not financial advice" in resp.disclaimer
-        assert "live data" in resp.disclaimer
 
     def test_disclaimer_overridable(self) -> None:
         custom = "Custom disclaimer for tests."

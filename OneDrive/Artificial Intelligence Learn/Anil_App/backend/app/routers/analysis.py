@@ -6,20 +6,22 @@ from fastapi import APIRouter
 from app.core.logging import get_logger
 from app.models.analysis import StockAnalysisResponse
 from app.services.ai_analysis_service import AIAnalysisService
+from app.services.market_data_service import MarketDataService
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api", tags=["analysis"])
 
-_ai_service = AIAnalysisService()
+_market_service = MarketDataService()
+_ai_service = AIAnalysisService(market_data=_market_service)
 
 
 @router.post("/analyze/{ticker}", response_model=StockAnalysisResponse)
 async def analyze_stock(ticker: str) -> StockAnalysisResponse:
-    """Run comprehensive AI-powered stock analysis.
+    """Run comprehensive stock analysis.
 
-    Sends the ticker to Kimi K2.5 which provides current price data,
-    technical indicators, news, and investment recommendation.
+    Fetches real market data from Yahoo Finance, then uses Kimi K2.5
+    for qualitative analysis (recommendation, news, predictions).
     """
     logger.info("analysis_request", ticker=ticker)
     result = await _ai_service.analyze(ticker)

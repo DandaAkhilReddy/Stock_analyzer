@@ -129,7 +129,6 @@ class StockAnalysisResponse(BaseModel):
     analysis_timestamp: datetime
     model_used: str = "kimi-k2.5"
     disclaimer: str = (
-        "Prices and data are AI-estimated based on the model's training data "
-        "and may not reflect current market prices. "
-        "This is not financial advice. Always verify with live data."
+        "Price data sourced from Yahoo Finance. "
+        "Analysis and predictions are AI-generated — not financial advice."
     )

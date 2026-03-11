@@ -1,6 +1,7 @@
-"""AI analysis service — generates full stock analysis using Kimi K2.5."""
+"""AI analysis service — two-phase: real market data + AI qualitative analysis."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 
 from app.core.exceptions import AIAnalysisError
@@ -16,73 +17,42 @@ from app.models.analysis import (
     TechnicalSnapshot,
 )
 from app.providers.openai_provider import OpenAIProvider
+from app.services.market_data_service import MarketDataService
 
 logger = get_logger(__name__)
 
-_SYSTEM_PROMPT = """You are a senior equity research analyst with access to current market data. Provide comprehensive stock analysis including current price data, technical indicators, recent news, and investment recommendation.
+_SYSTEM_PROMPT = (
+    "You are a senior equity research analyst. You will be given REAL "
+    "current market data for a stock. Your job is to provide qualitative "
+    "analysis only.\n\n"
+    "IMPORTANT: If the user provides a company name, misspelling, or "
+    "informal name instead of a valid ticker symbol, you MUST identify "
+    "the correct official ticker symbol (e.g., 'microsft' → 'MSFT', "
+    "'apple' → 'AAPL', 'google' → 'GOOGL').\n\n"
+    "Do NOT invent or override any price data — it is provided to you "
+    "from Yahoo Finance.\n\n"
+    "Respond in valid JSON matching the exact schema provided. "
+    "No markdown, no code blocks, just raw JSON."
+)
 
-IMPORTANT: If the user provides a company name, misspelling, or informal name instead of a valid ticker symbol, you MUST identify the correct official ticker symbol (e.g., "microsft" → "MSFT", "apple" → "AAPL", "google" → "GOOGL"). Always use the correct ticker in your JSON response.
+_USER_PROMPT_TEMPLATE = """Analyze the stock: {ticker} ({company_name})
 
-You must research and provide the most recent data you know about the stock. Include actual price levels, real technical indicator values, and recent news headlines.
+=== REAL MARKET DATA (from Yahoo Finance — do NOT override) ===
+Current Price: ${current_price}
+Previous Close: ${previous_close}
+Day Range: ${day_low} – ${day_high}
+52-Week Range: ${week_52_low} – ${week_52_high}
+Volume: {volume}
+Market Cap: {market_cap}
+P/E Ratio: {pe_ratio} | EPS: ${eps}
 
-Respond in valid JSON matching the exact schema provided. No markdown, no code blocks, just raw JSON."""
+Technical Indicators (computed from real data):
+  SMA-20: {sma_20} | SMA-50: {sma_50} | SMA-200: {sma_200}
+  RSI-14: {rsi_14}
+  MACD: {macd_line} | Signal: {macd_signal}
 
-_USER_PROMPT_TEMPLATE = """Analyze the stock: {ticker}
-
-Provide a comprehensive analysis with all of the following data. Use the most recent data available to you.
-
-Required JSON output:
+Based on the above real data, provide your qualitative analysis as JSON:
 {{
-  "ticker": "<correct NYSE/NASDAQ ticker symbol>",
-  "company_name": "<full company name>",
-  "current_price": <float>,
-  "previous_close": <float or null>,
-  "open": <float or null>,
-  "day_high": <float or null>,
-  "day_low": <float or null>,
-  "volume": <int or null>,
-  "market_cap": "<string like '2.8T' or '150B' or null>",
-  "pe_ratio": <float or null>,
-  "eps": <float or null>,
-  "week_52_high": <float or null>,
-  "week_52_low": <float or null>,
-  "dividend_yield": <float as decimal like 0.005 or null>,
-  "technical": {{
-    "sma_20": <float or null>,
-    "sma_50": <float or null>,
-    "sma_200": <float or null>,
-    "ema_12": <float or null>,
-    "ema_26": <float or null>,
-    "rsi_14": <float or null>,
-    "macd_line": <float or null>,
-    "macd_signal": <float or null>,
-    "macd_histogram": <float or null>,
-    "bollinger_upper": <float or null>,
-    "bollinger_middle": <float or null>,
-    "bollinger_lower": <float or null>,
-    "support_levels": [<float>, ...],
-    "resistance_levels": [<float>, ...],
-    "signal": "strong_buy" | "buy" | "neutral" | "sell" | "strong_sell"
-  }},
-  "news": [
-    {{"title": "<headline>", "source": "<source name>", "sentiment": "positive" | "negative" | "neutral"}},
-    ... (5-10 recent headlines)
-  ],
-  "quarterly_earnings": [
-    {{"quarter": "<e.g. Q1 2025>", "revenue": <float in millions USD or null>, "net_income": <float in millions USD or null>, "eps": <float or null>, "yoy_revenue_growth": <float as decimal like 0.12 for 12% or null>}},
-    ... (last 4 reported quarters, most recent first)
-  ],
-  "historical_prices": [
-    {{"date": "YYYY-MM-DD", "open": <float>, "high": <float>, "low": <float>, "close": <float>, "volume": <int or null>}},
-    ... (generate approximately 120 trading days / ~6 months of estimated daily OHLC data, most recent trading day first, going backward. Make the price trajectory consistent with current_price, week_52_high, week_52_low. Exclude weekends and holidays.)
-  ],
-  "company_description": "<2-3 paragraph company overview: what the company does, its main products/services, market position, competitive advantages>",
-  "sector": "<e.g. Technology>",
-  "industry": "<e.g. Consumer Electronics>",
-  "headquarters": "<e.g. Cupertino, California>",
-  "ceo": "<current CEO name>",
-  "founded": "<e.g. 1976>",
-  "employees": "<e.g. ~164,000>",
   "recommendation": "strong_buy" | "buy" | "hold" | "sell" | "strong_sell",
   "confidence_score": <float 0.0-1.0>,
   "summary": "<2-3 sentence analysis summary>",
@@ -97,136 +67,242 @@ Required JSON output:
     "one_week": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float>}},
     "one_month": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float>}},
     "three_months": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float>}}
-  }}
+  }},
+  "news": [
+    {{"title": "<headline>", "source": "<source name>", "sentiment": "positive" | "negative" | "neutral"}},
+    ... (5-10 recent headlines)
+  ],
+  "quarterly_earnings": [
+    {{"quarter": "<e.g. Q1 2025>", "revenue": <float in millions USD or null>, "net_income": <float in millions USD or null>, "eps": <float or null>, "yoy_revenue_growth": <float as decimal like 0.12 for 12% or null>}},
+    ... (last 4 reported quarters, most recent first)
+  ],
+  "support_levels": [<float>, ...],
+  "resistance_levels": [<float>, ...],
+  "signal": "strong_buy" | "buy" | "neutral" | "sell" | "strong_sell",
+  "ceo": "<current CEO name>",
+  "founded": "<e.g. 1976>"
 }}"""
 
 
 class AIAnalysisService:
-    """Generates comprehensive AI-powered stock analysis using Kimi K2.5."""
+    """Two-phase stock analysis: real market data + AI qualitative."""
 
-    def __init__(self, provider: OpenAIProvider | None = None) -> None:
-        """Initialise with an OpenAI provider.
+    def __init__(
+        self,
+        provider: OpenAIProvider | None = None,
+        market_data: MarketDataService | None = None,
+    ) -> None:
+        """Initialise with an OpenAI provider and market data service.
 
         Args:
-            provider: An ``OpenAIProvider`` instance. Defaults to a new
-                instance when ``None`` is supplied.
+            provider: An ``OpenAIProvider`` instance.
+            market_data: A ``MarketDataService`` for real prices.
         """
         self._provider = provider or OpenAIProvider()
+        self._market = market_data or MarketDataService()
 
     async def analyze(self, ticker: str) -> StockAnalysisResponse:
-        """Run full AI analysis on a stock ticker.
+        """Run two-phase analysis: real data fetch + AI qualitative.
 
         Args:
-            ticker: Stock ticker symbol (e.g. "AAPL", "MSFT").
+            ticker: Stock ticker symbol or company name.
 
         Returns:
-            Complete stock analysis response.
+            Complete stock analysis response with real prices.
 
         Raises:
-            AIAnalysisError: If the AI call fails or response parsing fails.
+            AIAnalysisError: If the AI call or data fetch fails.
         """
         ticker = ticker.upper().strip()
-        user_prompt = _USER_PROMPT_TEMPLATE.format(ticker=ticker)
-        logger.info("ai_analysis_starting", ticker=ticker)
+        logger.info("analysis_starting", ticker=ticker)
+
+        # Phase 1: Fetch real market data (quote + history + technicals)
+        try:
+            quote, history, technicals = await asyncio.gather(
+                self._market.get_quote(ticker),
+                self._market.get_historical(ticker, period="6mo"),
+                self._market.get_technicals(ticker, period="1y"),
+            )
+        except Exception as exc:
+            logger.error(
+                "market_data_fetch_failed",
+                ticker=ticker,
+                error=str(exc),
+            )
+            raise AIAnalysisError(
+                f"Failed to fetch market data for {ticker}: {exc}"
+            ) from exc
+
+        # Use resolved ticker from yfinance
+        resolved_ticker = quote.get("ticker", ticker)
+
+        # Phase 2: AI qualitative analysis with real data context
+        user_prompt = _USER_PROMPT_TEMPLATE.format(
+            ticker=resolved_ticker,
+            company_name=quote.get("company_name", resolved_ticker),
+            current_price=quote["current_price"],
+            previous_close=quote.get("previous_close") or "N/A",
+            day_low=quote.get("day_low") or "N/A",
+            day_high=quote.get("day_high") or "N/A",
+            week_52_low=quote.get("week_52_low") or "N/A",
+            week_52_high=quote.get("week_52_high") or "N/A",
+            volume=f"{quote['volume']:,}" if quote.get("volume") else "N/A",
+            market_cap=quote.get("market_cap") or "N/A",
+            pe_ratio=quote.get("pe_ratio") or "N/A",
+            eps=quote.get("eps") or "N/A",
+            sma_20=technicals.sma_20 or "N/A",
+            sma_50=technicals.sma_50 or "N/A",
+            sma_200=technicals.sma_200 or "N/A",
+            rsi_14=technicals.rsi_14 or "N/A",
+            macd_line=technicals.macd_line or "N/A",
+            macd_signal=technicals.macd_signal or "N/A",
+        )
 
         try:
-            result = await self._provider.chat_completion_json(
+            ai_result = await self._provider.chat_completion_json(
                 system_prompt=_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
-                max_tokens=32000,
+                max_tokens=8000,
             )
-            response = self._parse_response(ticker, result)
-            logger.info(
-                "ai_analysis_complete",
-                ticker=ticker,
-                recommendation=response.recommendation,
-            )
-            return response
         except AIAnalysisError:
             raise
         except Exception as exc:
-            logger.error("ai_analysis_unexpected_error", ticker=ticker, error=str(exc))
+            logger.error(
+                "ai_analysis_failed", ticker=ticker, error=str(exc)
+            )
             raise AIAnalysisError(str(exc)) from exc
 
-    def _parse_response(self, ticker: str, data: dict) -> StockAnalysisResponse:
-        """Parse AI JSON response into the domain model.
+        # Phase 3: Merge real data + AI qualitative
+        response = self._merge_response(
+            resolved_ticker, quote, history, technicals, ai_result
+        )
+        logger.info(
+            "analysis_complete",
+            ticker=resolved_ticker,
+            recommendation=response.recommendation,
+        )
+        return response
+
+    def _merge_response(
+        self,
+        ticker: str,
+        quote: dict,
+        history: list[HistoricalPrice],
+        technicals: TechnicalSnapshot,
+        ai_data: dict,
+    ) -> StockAnalysisResponse:
+        """Merge real market data with AI qualitative analysis.
 
         Args:
-            ticker: Ticker symbol used to populate the response.
-            data: Raw parsed JSON dict from the model.
+            ticker: Resolved ticker symbol.
+            quote: Real quote data from yfinance.
+            history: Real historical OHLC data.
+            technicals: Computed technical indicators.
+            ai_data: Qualitative analysis from AI.
 
         Returns:
-            A fully populated ``StockAnalysisResponse``.
+            Fully populated ``StockAnalysisResponse``.
 
         Raises:
-            AIAnalysisError: If required keys are missing or values have
-                unexpected types.
+            AIAnalysisError: If required AI fields are missing.
         """
-        logger.debug("ai_raw_response", ticker=ticker, keys=list(data.keys()))
+        logger.debug(
+            "merging_response", ticker=ticker, ai_keys=list(ai_data.keys())
+        )
         try:
-            technical_data = data.get("technical")
-            technical = TechnicalSnapshot(**technical_data) if technical_data else None
+            # Merge AI support/resistance into technicals
+            support = ai_data.get("support_levels", [])
+            resistance = ai_data.get("resistance_levels", [])
+            signal = ai_data.get("signal", technicals.signal)
 
-            news_data = data.get("news", [])
-            news = [NewsItem(**n) for n in news_data]
+            merged_technical = TechnicalSnapshot(
+                sma_20=technicals.sma_20,
+                sma_50=technicals.sma_50,
+                sma_200=technicals.sma_200,
+                ema_12=technicals.ema_12,
+                ema_26=technicals.ema_26,
+                rsi_14=technicals.rsi_14,
+                macd_line=technicals.macd_line,
+                macd_signal=technicals.macd_signal,
+                macd_histogram=technicals.macd_histogram,
+                bollinger_upper=technicals.bollinger_upper,
+                bollinger_middle=technicals.bollinger_middle,
+                bollinger_lower=technicals.bollinger_lower,
+                support_levels=[float(s) for s in support],
+                resistance_levels=[float(r) for r in resistance],
+                signal=signal,
+            )
 
-            earnings_data = data.get("quarterly_earnings", [])
-            quarterly_earnings = [QuarterlyEarning(**e) for e in earnings_data]
+            news = [
+                NewsItem(**n) for n in ai_data.get("news", [])
+            ]
+            earnings = [
+                QuarterlyEarning(**e)
+                for e in ai_data.get("quarterly_earnings", [])
+            ]
 
-            historical_data = data.get("historical_prices", [])
-            historical_prices = [HistoricalPrice(**h) for h in historical_data]
-
-            risk_data = data.get("risk_assessment", {})
-            predictions_data = data.get("price_predictions", {})
+            predictions_data = ai_data.get("price_predictions", {})
+            risk_data = ai_data.get("risk_assessment", {})
 
             return StockAnalysisResponse(
-                ticker=data.get("ticker", ticker).upper().strip(),
-                company_name=data.get("company_name", ticker),
-                current_price=float(data["current_price"]),
-                previous_close=data.get("previous_close"),
-                open=data.get("open"),
-                day_high=data.get("day_high"),
-                day_low=data.get("day_low"),
-                volume=data.get("volume"),
-                market_cap=data.get("market_cap"),
-                pe_ratio=data.get("pe_ratio"),
-                eps=data.get("eps"),
-                week_52_high=data.get("week_52_high"),
-                week_52_low=data.get("week_52_low"),
-                dividend_yield=data.get("dividend_yield"),
-                technical=technical,
+                # Real data from yfinance
+                ticker=ticker,
+                company_name=quote.get("company_name", ticker),
+                current_price=quote["current_price"],
+                previous_close=quote.get("previous_close"),
+                open=quote.get("open"),
+                day_high=quote.get("day_high"),
+                day_low=quote.get("day_low"),
+                volume=quote.get("volume"),
+                market_cap=quote.get("market_cap"),
+                pe_ratio=quote.get("pe_ratio"),
+                eps=quote.get("eps"),
+                week_52_high=quote.get("week_52_high"),
+                week_52_low=quote.get("week_52_low"),
+                dividend_yield=quote.get("dividend_yield"),
+                historical_prices=history,
+                technical=merged_technical,
+                # Company info from yfinance
+                company_description=quote.get("company_description", ""),
+                sector=quote.get("sector", ""),
+                industry=quote.get("industry", ""),
+                headquarters=quote.get("headquarters", ""),
+                ceo=ai_data.get("ceo", ""),
+                founded=ai_data.get("founded", ""),
+                employees=quote.get("employees", ""),
+                # AI qualitative analysis
                 news=news,
-                quarterly_earnings=quarterly_earnings,
-                historical_prices=historical_prices,
-                company_description=data.get("company_description", ""),
-                sector=data.get("sector", ""),
-                industry=data.get("industry", ""),
-                headquarters=data.get("headquarters", ""),
-                ceo=data.get("ceo", ""),
-                founded=data.get("founded", ""),
-                employees=data.get("employees", ""),
-                recommendation=data["recommendation"],
-                confidence_score=float(data["confidence_score"]),
-                summary=data["summary"],
-                bull_case=data["bull_case"],
-                bear_case=data["bear_case"],
+                quarterly_earnings=earnings,
+                recommendation=ai_data["recommendation"],
+                confidence_score=float(ai_data["confidence_score"]),
+                summary=ai_data["summary"],
+                bull_case=ai_data["bull_case"],
+                bear_case=ai_data["bear_case"],
                 risk_assessment=RiskAssessment(
                     overall_risk=risk_data["overall_risk"],
                     risk_factors=risk_data.get("risk_factors", []),
                     risk_score=float(risk_data.get("risk_score", 0.5)),
                 ),
                 price_predictions=PricePredictions(
-                    one_week=PriceForecast(**predictions_data["one_week"]),
-                    one_month=PriceForecast(**predictions_data["one_month"]),
-                    three_months=PriceForecast(**predictions_data["three_months"]),
+                    one_week=PriceForecast(
+                        **predictions_data["one_week"]
+                    ),
+                    one_month=PriceForecast(
+                        **predictions_data["one_month"]
+                    ),
+                    three_months=PriceForecast(
+                        **predictions_data["three_months"]
+                    ),
                 ),
                 analysis_timestamp=datetime.now(timezone.utc),
             )
         except (KeyError, TypeError, ValueError) as exc:
             logger.error(
-                "ai_response_parse_error",
+                "response_merge_error",
                 ticker=ticker,
                 error=str(exc),
-                data=str(data)[:500],
+                ai_data=str(ai_data)[:500],
             )
-            raise AIAnalysisError(f"Failed to parse AI response: {exc}") from exc
+            raise AIAnalysisError(
+                f"Failed to parse AI response: {exc}"
+            ) from exc

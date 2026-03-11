@@ -42,8 +42,8 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
         horzLines: { color: '#f5f5f4' },
       },
       crosshair: { mode: CrosshairMode.Normal },
-      rightPriceScale: { borderColor: '#e7e5e4' },
-      timeScale: { borderColor: '#e7e5e4', timeVisible: false },
+      rightPriceScale: { borderColor: '#e7e5e4', autoScale: true },
+      timeScale: { borderColor: '#e7e5e4', timeVisible: true, fixLeftEdge: true, fixRightEdge: true },
     });
 
     const candleSeries = chart.addCandlestickSeries({
