@@ -69,14 +69,14 @@ describe('Badge', () => {
 
   // Variant → expected text colour token (Tailwind class fragment)
   const variantColorMap: Array<[string, string]> = [
-    ['strong_buy', 'text-green-400'],
-    ['buy', 'text-emerald-400'],
-    ['hold', 'text-yellow-400'],
-    ['sell', 'text-orange-400'],
-    ['strong_sell', 'text-red-400'],
-    ['positive', 'text-green-400'],
-    ['negative', 'text-red-400'],
-    ['neutral', 'text-gray-400'],
+    ['strong_buy', 'text-emerald-700'],
+    ['buy', 'text-emerald-600'],
+    ['hold', 'text-amber-700'],
+    ['sell', 'text-orange-600'],
+    ['strong_sell', 'text-red-600'],
+    ['positive', 'text-emerald-700'],
+    ['negative', 'text-red-700'],
+    ['neutral', 'text-stone-600'],
   ];
 
   it.each(variantColorMap)(
@@ -131,7 +131,7 @@ describe('Badge', () => {
         fallback
       </Badge>,
     );
-    expect(screen.getByText('fallback')).toHaveClass('text-gray-400');
+    expect(screen.getByText('fallback')).toHaveClass('text-stone-600');
   });
 });
 

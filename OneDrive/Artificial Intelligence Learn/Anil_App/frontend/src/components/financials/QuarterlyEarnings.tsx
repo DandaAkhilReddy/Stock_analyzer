@@ -19,10 +19,10 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
     return (
       <Card>
         <div className="flex items-center gap-2 mb-3">
-          <BarChart3 size={16} className="text-gray-400" />
-          <h4 className="text-sm font-medium text-gray-400">Quarterly Earnings</h4>
+          <BarChart3 size={16} className="text-stone-500" />
+          <h4 className="text-sm font-medium text-stone-500">Quarterly Earnings</h4>
         </div>
-        <p className="text-sm text-gray-500 text-center py-6">No quarterly data available</p>
+        <p className="text-sm text-stone-400 text-center py-6">No quarterly data available</p>
       </Card>
     );
   }
@@ -30,16 +30,16 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
   return (
     <Card>
       <div className="flex items-center gap-2 mb-4">
-        <BarChart3 size={16} className="text-gray-400" />
-        <h4 className="text-sm font-medium text-gray-400">Quarterly Earnings</h4>
-        <span className="text-xs text-gray-600 ml-auto">{earnings.length} quarters</span>
+        <BarChart3 size={16} className="text-stone-500" />
+        <h4 className="text-sm font-medium text-stone-500">Quarterly Earnings</h4>
+        <span className="text-xs text-stone-400 ml-auto">{earnings.length} quarters</span>
       </div>
 
       {/* Desktop table */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[11px] text-gray-500 uppercase tracking-wider">
+            <tr className="text-[11px] text-stone-500 uppercase tracking-wider bg-stone-50">
               <th className="text-left pb-3 font-medium">Quarter</th>
               <th className="text-right pb-3 font-medium">Revenue</th>
               <th className="text-right pb-3 font-medium">Net Income</th>
@@ -55,25 +55,25 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
               return (
                 <tr
                   key={q.quarter}
-                  className={`border-t border-white/[0.04] ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}
+                  className={`border-t border-stone-100 ${i % 2 === 0 ? 'bg-stone-50' : ''}`}
                 >
-                  <td className="py-2.5 text-white font-medium">{q.quarter}</td>
-                  <td className="py-2.5 text-right text-gray-300">{formatMoney(q.revenue)}</td>
-                  <td className="py-2.5 text-right text-gray-300">{formatMoney(q.net_income)}</td>
-                  <td className="py-2.5 text-right text-gray-300">
+                  <td className="py-2.5 text-stone-900 font-medium">{q.quarter}</td>
+                  <td className="py-2.5 text-right text-stone-600">{formatMoney(q.revenue)}</td>
+                  <td className="py-2.5 text-right text-stone-600">{formatMoney(q.net_income)}</td>
+                  <td className="py-2.5 text-right text-stone-600">
                     {q.eps !== null ? `$${q.eps.toFixed(2)}` : 'N/A'}
                   </td>
                   <td className="py-2.5 text-right">
                     {yoy !== null ? (
                       <span
-                        className={`inline-flex items-center gap-0.5 ${yoyPositive ? 'text-emerald-400' : 'text-red-400'}`}
+                        className={`inline-flex items-center gap-0.5 ${yoyPositive ? 'text-emerald-600' : 'text-red-600'}`}
                       >
                         {yoyPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                         {yoyPositive ? '+' : ''}
                         {(yoy * 100).toFixed(1)}%
                       </span>
                     ) : (
-                      <span className="text-gray-500">N/A</span>
+                      <span className="text-stone-400">N/A</span>
                     )}
                   </td>
                 </tr>
@@ -92,13 +92,13 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
           return (
             <div
               key={q.quarter}
-              className="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]"
+              className="bg-stone-50 rounded-xl p-3 border border-stone-100"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-white">{q.quarter}</span>
+                <span className="text-sm font-medium text-stone-900">{q.quarter}</span>
                 {yoy !== null && (
                   <span
-                    className={`text-xs flex items-center gap-0.5 ${yoyPositive ? 'text-emerald-400' : 'text-red-400'}`}
+                    className={`text-xs flex items-center gap-0.5 ${yoyPositive ? 'text-emerald-600' : 'text-red-600'}`}
                   >
                     {yoyPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                     {yoyPositive ? '+' : ''}
@@ -108,16 +108,16 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
               </div>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div>
-                  <p className="text-gray-500">Revenue</p>
-                  <p className="text-gray-300">{formatMoney(q.revenue)}</p>
+                  <p className="text-stone-400">Revenue</p>
+                  <p className="text-stone-600">{formatMoney(q.revenue)}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Net Income</p>
-                  <p className="text-gray-300">{formatMoney(q.net_income)}</p>
+                  <p className="text-stone-400">Net Income</p>
+                  <p className="text-stone-600">{formatMoney(q.net_income)}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">EPS</p>
-                  <p className="text-gray-300">{q.eps !== null ? `$${q.eps.toFixed(2)}` : 'N/A'}</p>
+                  <p className="text-stone-400">EPS</p>
+                  <p className="text-stone-600">{q.eps !== null ? `$${q.eps.toFixed(2)}` : 'N/A'}</p>
                 </div>
               </div>
             </div>

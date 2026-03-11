@@ -54,8 +54,8 @@ export function TechnicalSummary({ technical, currentPrice }: TechnicalSummaryPr
     <Card>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <BarChart3 size={16} className="text-gray-400" />
-          <h4 className="text-sm font-medium text-gray-400">Technical Summary</h4>
+          <BarChart3 size={16} className="text-stone-500" />
+          <h4 className="text-sm font-medium text-stone-500">Technical Summary</h4>
         </div>
         <Badge variant={technical.signal} size="md">
           {technical.signal.replace('_', ' ').toUpperCase()}
@@ -66,11 +66,11 @@ export function TechnicalSummary({ technical, currentPrice }: TechnicalSummaryPr
         {rows.map((row) => (
           <div
             key={row.label}
-            className="flex items-center justify-between py-1 border-b border-gray-800/50 last:border-0"
+            className="flex items-center justify-between py-1 border-b border-stone-100 last:border-0"
           >
-            <span className="text-xs text-gray-400">{row.label}</span>
+            <span className="text-xs text-stone-500">{row.label}</span>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-gray-300">
+              <span className="text-xs font-mono text-stone-600">
                 {row.value !== null && row.value !== undefined
                   ? row.value.toFixed(2)
                   : 'N/A'}

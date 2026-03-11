@@ -37,19 +37,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="flex flex-col items-center justify-center gap-4 p-8 bg-gray-900 border border-gray-800 rounded-xl text-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20">
-            <AlertTriangle size={24} className="text-red-400" />
+        <div className="flex flex-col items-center justify-center gap-4 p-8 bg-white border border-stone-200 rounded-xl text-center shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 border border-red-200">
+            <AlertTriangle size={24} className="text-red-500" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white mb-1">Something went wrong</h3>
-            <p className="text-xs text-gray-500 max-w-xs">
+            <h3 className="text-sm font-semibold text-stone-900 mb-1">Something went wrong</h3>
+            <p className="text-xs text-stone-500 max-w-xs">
               {this.state.error?.message ?? 'An unexpected error occurred. Please try again.'}
             </p>
           </div>
           <button
             onClick={this.handleReset}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg text-sm text-stone-600 transition-colors"
           >
             <RefreshCw size={14} />
             Try again

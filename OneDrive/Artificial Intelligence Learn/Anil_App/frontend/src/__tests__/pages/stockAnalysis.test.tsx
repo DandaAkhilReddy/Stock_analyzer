@@ -9,9 +9,10 @@
  *   1. No ticker selected  → empty-state prompt
  *   2. Loading in progress → spinner + ticker name
  *   3. Error state         → error message + retry button
- *   4. Analysis available, activeTab = 'news'       → NewsFeed visible
- *   5. Analysis available, activeTab = 'financials' → QuarterlyEarnings visible
- *   6. Analysis available, activeTab = 'growth'     → PricePrediction visible
+ *   4. Analysis available, activeTab = 'chart'      → PriceChart visible
+ *   5. Analysis available, activeTab = 'news'       → NewsFeed visible
+ *   6. Analysis available, activeTab = 'financials' → QuarterlyEarnings visible
+ *   7. Analysis available, activeTab = 'about'      → CompanyAbout visible
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -30,6 +31,20 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// Mock lightweight-charts so PriceChart renders without a real DOM canvas
+vi.mock('lightweight-charts', () => ({
+  createChart: () => ({
+    addCandlestickSeries: () => ({ setData: vi.fn() }),
+    addHistogramSeries: () => ({ setData: vi.fn() }),
+    priceScale: () => ({ applyOptions: vi.fn() }),
+    timeScale: () => ({ fitContent: vi.fn(), borderColor: '' }),
+    applyOptions: vi.fn(),
+    remove: vi.fn(),
+  }),
+  ColorType: { Solid: 'solid' },
+  CrosshairMode: { Normal: 1 },
+}));
+
 const mockFetchAnalysis = vi.fn();
 const mockSetActiveTab = vi.fn();
 
@@ -39,7 +54,7 @@ vi.mock('../../stores/stockStore', () => ({
 
 import { useStockStore } from '../../stores/stockStore';
 import { StockAnalysis } from '../../pages/StockAnalysis';
-import type { StockAnalysisResponse } from '../../types/analysis';
+import type { StockAnalysisResponse, AnalysisTab } from '../../types/analysis';
 
 // ---------------------------------------------------------------------------
 // Fixture
@@ -81,6 +96,7 @@ const mockAnalysis: StockAnalysisResponse = {
   quarterly_earnings: [
     { quarter: 'Q1 2025', revenue: 94_900, net_income: 23_600, eps: 1.53, yoy_revenue_growth: 0.05 },
   ],
+  historical_prices: [],
   recommendation: 'buy',
   confidence_score: 0.78,
   summary: 'Apple shows strong momentum.',
@@ -94,6 +110,13 @@ const mockAnalysis: StockAnalysisResponse = {
   },
   analysis_timestamp: '2025-01-01T00:00:00Z',
   model_used: 'kimi-k2.5',
+  sector: 'Technology',
+  industry: 'Consumer Electronics',
+  headquarters: 'Cupertino, CA',
+  ceo: 'Tim Cook',
+  founded: '1976',
+  employees: '164,000',
+  company_description: 'Apple designs and sells consumer electronics.',
   disclaimer: 'Not financial advice.',
 };
 
@@ -106,7 +129,7 @@ interface StoreSlice {
   analysis: StockAnalysisResponse | null;
   isLoading: boolean;
   error: string | null;
-  activeTab: 'news' | 'financials' | 'growth';
+  activeTab: AnalysisTab;
   setActiveTab: typeof mockSetActiveTab;
   fetchAnalysis: typeof mockFetchAnalysis;
 }
@@ -117,7 +140,7 @@ function setupStore(overrides: Partial<StoreSlice> = {}): void {
     analysis: null,
     isLoading: false,
     error: null,
-    activeTab: 'news',
+    activeTab: 'chart',
     setActiveTab: mockSetActiveTab,
     fetchAnalysis: mockFetchAnalysis,
     ...overrides,
@@ -224,12 +247,12 @@ describe('StockAnalysis', () => {
   });
 
   // -------------------------------------------------------------------------
-  // 4. Analysis available — news tab (default)
+  // 4. Analysis available — chart tab (default)
   // -------------------------------------------------------------------------
 
-  describe('analysis loaded — news tab', () => {
+  describe('analysis loaded — chart tab', () => {
     beforeEach(() =>
-      setupStore({ currentTicker: 'AAPL', analysis: mockAnalysis, activeTab: 'news' }),
+      setupStore({ currentTicker: 'AAPL', analysis: mockAnalysis, activeTab: 'chart' }),
     );
 
     it('renders StockHeader with ticker', () => {
@@ -242,12 +265,42 @@ describe('StockAnalysis', () => {
       expect(screen.getByText('Apple Inc.')).toBeInTheDocument();
     });
 
-    it('renders the TabBar', () => {
+    it('renders the TabBar with all 4 tabs', () => {
       render(<StockAnalysis />);
+      expect(screen.getByRole('button', { name: /chart/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /news/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /financials/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /growth/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /about/i })).toBeInTheDocument();
     });
+
+    it('renders the PriceChart area when activeTab is chart', () => {
+      render(<StockAnalysis />);
+      // With empty historical_prices, the empty state message renders
+      expect(
+        screen.getByText('No historical price data available'),
+      ).toBeInTheDocument();
+    });
+
+    it('does not render NewsFeed on the chart tab', () => {
+      render(<StockAnalysis />);
+      expect(screen.queryByText('Latest News')).not.toBeInTheDocument();
+    });
+
+    it('calls setActiveTab when a tab button is clicked', () => {
+      render(<StockAnalysis />);
+      fireEvent.click(screen.getByRole('button', { name: /financials/i }));
+      expect(mockSetActiveTab).toHaveBeenCalledWith('financials');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 5. Analysis available — news tab
+  // -------------------------------------------------------------------------
+
+  describe('analysis loaded — news tab', () => {
+    beforeEach(() =>
+      setupStore({ currentTicker: 'AAPL', analysis: mockAnalysis, activeTab: 'news' }),
+    );
 
     it('renders the NewsFeed when activeTab is news', () => {
       render(<StockAnalysis />);
@@ -263,16 +316,10 @@ describe('StockAnalysis', () => {
       render(<StockAnalysis />);
       expect(screen.queryByText('Quarterly Earnings')).not.toBeInTheDocument();
     });
-
-    it('calls setActiveTab when a tab button is clicked', () => {
-      render(<StockAnalysis />);
-      fireEvent.click(screen.getByRole('button', { name: /financials/i }));
-      expect(mockSetActiveTab).toHaveBeenCalledWith('financials');
-    });
   });
 
   // -------------------------------------------------------------------------
-  // 5. Analysis available — financials tab
+  // 6. Analysis available — financials tab
   // -------------------------------------------------------------------------
 
   describe('analysis loaded — financials tab', () => {
@@ -290,9 +337,14 @@ describe('StockAnalysis', () => {
       expect(screen.getByText('Price Data')).toBeInTheDocument();
     });
 
-    it('renders Key Statistics card on financials tab', () => {
+    it('renders Technical Summary on financials tab when technical data exists', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Key Statistics')).toBeInTheDocument();
+      expect(screen.getByText('Technical Summary')).toBeInTheDocument();
+    });
+
+    it('renders Price Predictions on financials tab', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('Price Predictions')).toBeInTheDocument();
     });
 
     it('does not render NewsFeed (Latest News) on financials tab', () => {
@@ -302,42 +354,47 @@ describe('StockAnalysis', () => {
   });
 
   // -------------------------------------------------------------------------
-  // 6. Analysis available — growth tab
+  // 7. Analysis available — about tab
   // -------------------------------------------------------------------------
 
-  describe('analysis loaded — growth tab', () => {
+  describe('analysis loaded — about tab', () => {
     beforeEach(() =>
-      setupStore({ currentTicker: 'AAPL', analysis: mockAnalysis, activeTab: 'growth' }),
+      setupStore({ currentTicker: 'AAPL', analysis: mockAnalysis, activeTab: 'about' }),
     );
 
-    it('renders Price Predictions heading on growth tab', () => {
+    it('renders the company description on the about tab', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Price Predictions')).toBeInTheDocument();
+      expect(screen.getByText(/Apple designs and sells consumer electronics/)).toBeInTheDocument();
     });
 
-    it('renders Bull Case section on growth tab', () => {
+    it('renders AI Analysis Summary on the about tab', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('AI Analysis Summary')).toBeInTheDocument();
+    });
+
+    it('renders Bull Case section on the about tab', () => {
       render(<StockAnalysis />);
       expect(screen.getByText('Bull Case')).toBeInTheDocument();
     });
 
-    it('renders Bear Case section on growth tab', () => {
+    it('renders Bear Case section on the about tab', () => {
       render(<StockAnalysis />);
       expect(screen.getByText('Bear Case')).toBeInTheDocument();
     });
 
-    it('renders Risk Assessment heading on growth tab', () => {
+    it('renders Risk Assessment heading on the about tab', () => {
       render(<StockAnalysis />);
       expect(screen.getByText('Risk Assessment')).toBeInTheDocument();
     });
 
-    it('does not render NewsFeed on growth tab', () => {
+    it('does not render NewsFeed on about tab', () => {
       render(<StockAnalysis />);
       expect(screen.queryByText('Latest News')).not.toBeInTheDocument();
     });
   });
 
   // -------------------------------------------------------------------------
-  // 7. Ticker present but analysis is null and not loading (returns null)
+  // 8. Ticker present but analysis is null and not loading (returns null)
   // -------------------------------------------------------------------------
 
   describe('ticker set but analysis is null and not loading or erroring', () => {

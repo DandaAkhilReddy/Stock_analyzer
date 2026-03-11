@@ -14,7 +14,7 @@ const INITIAL_STATE = {
   analysis: null,
   isLoading: false,
   error: null,
-  activeTab: 'news' as const,
+  activeTab: 'chart' as const,
 };
 
 const mockAnalysis: StockAnalysisResponse = {
@@ -120,8 +120,8 @@ describe('useStockStore', () => {
       expect(useStockStore.getState().error).toBeNull();
     });
 
-    it('has activeTab as news', () => {
-      expect(useStockStore.getState().activeTab).toBe('news');
+    it('has activeTab as chart', () => {
+      expect(useStockStore.getState().activeTab).toBe('chart');
     });
   });
 
@@ -135,9 +135,9 @@ describe('useStockStore', () => {
       expect(useStockStore.getState().activeTab).toBe('financials');
     });
 
-    it('changes activeTab to growth', () => {
-      useStockStore.getState().setActiveTab('growth');
-      expect(useStockStore.getState().activeTab).toBe('growth');
+    it('changes activeTab to about', () => {
+      useStockStore.getState().setActiveTab('about');
+      expect(useStockStore.getState().activeTab).toBe('about');
     });
 
     it('changes activeTab back to news', () => {
@@ -186,12 +186,12 @@ describe('useStockStore', () => {
       await promise;
     });
 
-    it('resets activeTab to news when called', async () => {
+    it('resets activeTab to chart when called', async () => {
       useStockStore.setState({ activeTab: 'financials' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       const promise = useStockStore.getState().fetchAnalysis('AAPL');
-      expect(useStockStore.getState().activeTab).toBe('news');
+      expect(useStockStore.getState().activeTab).toBe('chart');
       await promise;
     });
   });
@@ -321,22 +321,22 @@ describe('useStockStore', () => {
   // -------------------------------------------------------------------------
 
   describe('fetchAnalysis — activeTab reset', () => {
-    it('resets activeTab to news even when previously on financials', async () => {
+    it('resets activeTab to chart even when previously on financials', async () => {
       useStockStore.setState({ activeTab: 'financials' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       await useStockStore.getState().fetchAnalysis('AAPL');
 
-      expect(useStockStore.getState().activeTab).toBe('news');
+      expect(useStockStore.getState().activeTab).toBe('chart');
     });
 
-    it('resets activeTab to news even when previously on growth', async () => {
-      useStockStore.setState({ activeTab: 'growth' });
+    it('resets activeTab to chart even when previously on about', async () => {
+      useStockStore.setState({ activeTab: 'about' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       await useStockStore.getState().fetchAnalysis('AAPL');
 
-      expect(useStockStore.getState().activeTab).toBe('news');
+      expect(useStockStore.getState().activeTab).toBe('chart');
     });
   });
 

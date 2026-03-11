@@ -154,11 +154,11 @@ describe('AIRecommendation', () => {
 
   describe('badge variant styles', () => {
     const cases: Array<[StockAnalysisResponse['recommendation'], string]> = [
-      ['strong_buy', 'text-green-400'],
-      ['buy', 'text-emerald-400'],
-      ['hold', 'text-yellow-400'],
-      ['sell', 'text-orange-400'],
-      ['strong_sell', 'text-red-400'],
+      ['strong_buy', 'text-emerald-700'],
+      ['buy', 'text-emerald-600'],
+      ['hold', 'text-amber-700'],
+      ['sell', 'text-orange-600'],
+      ['strong_sell', 'text-red-600'],
     ];
 
     it.each(cases)(
@@ -690,40 +690,40 @@ describe('RiskAssessment', () => {
   // -------------------------------------------------------------------------
 
   describe('risk colour applied via inline style', () => {
-    it('applies emerald colour (#10b981) for "low" risk label', () => {
+    it('applies emerald colour (#059669) for "low" risk label', () => {
       render(
         <RiskAssessment
           riskAssessment={{ ...baseRiskAssessment, overall_risk: 'low' }}
         />,
       );
       const label = screen.getByText('Low Risk');
-      expect(label).toHaveStyle({ color: '#10b981' });
+      expect(label).toHaveStyle({ color: '#059669' });
     });
 
-    it('applies amber colour (#f59e0b) for "medium" risk label', () => {
+    it('applies amber colour (#d97706) for "medium" risk label', () => {
       render(<RiskAssessment riskAssessment={baseRiskAssessment} />);
       const label = screen.getByText('Medium Risk');
-      expect(label).toHaveStyle({ color: '#f59e0b' });
+      expect(label).toHaveStyle({ color: '#d97706' });
     });
 
-    it('applies orange colour (#f97316) for "high" risk label', () => {
+    it('applies orange colour (#ea580c) for "high" risk label', () => {
       render(
         <RiskAssessment
           riskAssessment={{ ...baseRiskAssessment, overall_risk: 'high' }}
         />,
       );
       const label = screen.getByText('High Risk');
-      expect(label).toHaveStyle({ color: '#f97316' });
+      expect(label).toHaveStyle({ color: '#ea580c' });
     });
 
-    it('applies red colour (#ef4444) for "very_high" risk label', () => {
+    it('applies red colour (#dc2626) for "very_high" risk label', () => {
       render(
         <RiskAssessment
           riskAssessment={{ ...baseRiskAssessment, overall_risk: 'very_high' }}
         />,
       );
       const label = screen.getByText('Very High Risk');
-      expect(label).toHaveStyle({ color: '#ef4444' });
+      expect(label).toHaveStyle({ color: '#dc2626' });
     });
   });
 });

@@ -35,7 +35,16 @@ export interface QuarterlyEarning {
   yoy_revenue_growth: number | null;
 }
 
-export type AnalysisTab = 'news' | 'financials' | 'growth';
+export interface HistoricalPrice {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number | null;
+}
+
+export type AnalysisTab = 'chart' | 'news' | 'financials' | 'about';
 
 export interface PriceForecast {
   low: number;
@@ -74,6 +83,14 @@ export interface StockAnalysisResponse {
   technical: TechnicalSnapshot | null;
   news: NewsItem[];
   quarterly_earnings: QuarterlyEarning[];
+  historical_prices: HistoricalPrice[];
+  company_description: string;
+  sector: string;
+  industry: string;
+  headquarters: string;
+  ceo: string;
+  founded: string;
+  employees: string;
   recommendation: Recommendation;
   confidence_score: number;
   summary: string;

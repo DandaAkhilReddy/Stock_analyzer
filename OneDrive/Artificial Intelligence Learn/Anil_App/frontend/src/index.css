@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+body {
+  background-color: #fafaf9; /* stone-50 */
+}

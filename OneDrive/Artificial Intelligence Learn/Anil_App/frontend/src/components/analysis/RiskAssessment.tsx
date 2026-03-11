@@ -3,10 +3,10 @@ import { Card } from '../common/Card';
 import type { RiskAssessment as RiskAssessmentType, RiskLevel } from '../../types/analysis';
 
 const riskColors: Record<RiskLevel, string> = {
-  low: '#10b981',
-  medium: '#f59e0b',
-  high: '#f97316',
-  very_high: '#ef4444',
+  low: '#059669',
+  medium: '#d97706',
+  high: '#ea580c',
+  very_high: '#dc2626',
 };
 
 const riskLabels: Record<RiskLevel, string> = {
@@ -31,8 +31,8 @@ export function RiskAssessment({ riskAssessment }: RiskAssessmentProps) {
   return (
     <Card>
       <div className="flex items-center gap-2 mb-3">
-        <Shield size={16} className="text-gray-400" />
-        <h4 className="text-sm font-medium text-gray-400">Risk Assessment</h4>
+        <Shield size={16} className="text-stone-500" />
+        <h4 className="text-sm font-medium text-stone-500">Risk Assessment</h4>
       </div>
 
       <div className="flex items-center gap-4 mb-4">
@@ -43,7 +43,7 @@ export function RiskAssessment({ riskAssessment }: RiskAssessmentProps) {
               cy="18"
               r="15.9"
               fill="none"
-              stroke="#1f2937"
+              stroke="#e7e5e4"
               strokeWidth="3"
             />
             <circle
@@ -73,11 +73,11 @@ export function RiskAssessment({ riskAssessment }: RiskAssessmentProps) {
 
       {riskAssessment.risk_factors.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">Risk Factors</p>
+          <p className="text-xs text-stone-500 mb-2">Risk Factors</p>
           <ul className="space-y-1">
             {riskAssessment.risk_factors.map((factor, i) => (
-              <li key={i} className="text-xs text-gray-400 flex items-start gap-1.5">
-                <span className="text-red-400 mt-0.5">*</span>
+              <li key={i} className="text-xs text-stone-500 flex items-start gap-1.5">
+                <span className="text-red-500 mt-0.5">*</span>
                 {factor}
               </li>
             ))}

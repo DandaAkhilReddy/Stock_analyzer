@@ -61,8 +61,8 @@ const baseAnalysis: StockAnalysisResponse = {
 // ===========================================================================
 
 describe('NewsCard — unrecognised sentiment fallback', () => {
-  it('applies text-gray-500 for an unrecognised sentiment string (runtime fallback)', () => {
-    // Cast bypasses TS so we can hit the ?? 'text-gray-500' fallback at line 15
+  it('applies text-stone-400 for an unrecognised sentiment string (runtime fallback)', () => {
+    // Cast bypasses TS so we can hit the ?? 'text-stone-400' fallback at line 15
     render(
       <NewsCard
         item={{
@@ -73,7 +73,7 @@ describe('NewsCard — unrecognised sentiment fallback', () => {
       />,
     );
     const label = screen.getByText('unknown_value');
-    expect(label).toHaveClass('text-gray-500');
+    expect(label).toHaveClass('text-stone-400');
   });
 });
 
@@ -118,15 +118,17 @@ describe('PriceCard — formatNumber small volume', () => {
 // ===========================================================================
 
 describe('StockHeader — previousClose = 0 edge case', () => {
-  it('shows 0% change when previous_close is 0 (avoids divide-by-zero)', () => {
-    // previousClose=0 → changePercent = 0 (guarded by `previousClose > 0`)
+  it('omits the change row when previous_close is 0 (avoids divide-by-zero)', () => {
+    // previousClose=0 is falsy → change = null → change row is not rendered
     render(
       <StockHeader
         analysis={{ ...baseAnalysis, current_price: 100, previous_close: 0 }}
       />,
     );
-    // change = 100 - 0 = 100, changePercent = 0 (guarded)
-    expect(screen.getByText('(+0.00%)')).toBeInTheDocument();
+    // The price is still displayed
+    expect(screen.getByText('$100.00')).toBeInTheDocument();
+    // No change percentage is rendered when previous_close is 0
+    expect(screen.queryByText(/[+\-]\d+\.\d+%/)).not.toBeInTheDocument();
   });
 });
 

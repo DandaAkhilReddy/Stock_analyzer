@@ -7,9 +7,9 @@ interface CardProps {
 export function Card({ children, className = '', title }: CardProps) {
   return (
     <div
-      className={`bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-5 transition-all duration-200 hover:bg-white/[0.05] hover:border-white/[0.1] ${className}`}
+      className={`bg-white border border-stone-200 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md ${className}`}
     >
-      {title && <h3 className="text-sm font-medium text-gray-400 mb-3">{title}</h3>}
+      {title && <h3 className="text-sm font-medium text-stone-500 mb-3">{title}</h3>}
       {children}
     </div>
   );

@@ -73,25 +73,19 @@ describe('StockHeader', () => {
 
   it('renders the current price with two decimal places', () => {
     render(<StockHeader analysis={mockAnalysis} />);
-    // Price is rendered inside a div that also contains the badge — use partial match
     expect(screen.getByText(/\$185\.50/)).toBeInTheDocument();
   });
 
-  it('shows the (AI Estimated) badge', () => {
+  it('renders a recommendation badge with label text', () => {
     render(<StockHeader analysis={mockAnalysis} />);
-    expect(screen.getByText('(AI Estimated)')).toBeInTheDocument();
+    expect(screen.getByText('Buy')).toBeInTheDocument();
   });
 
-  it('shows a positive change when current_price > previous_close', () => {
-    // change = 185.50 - 184.20 = 1.30
+  it('shows a positive change and percent when current_price > previous_close', () => {
+    // change = 185.50 - 184.20 = +1.30, pct ≈ +0.71%
     render(<StockHeader analysis={mockAnalysis} />);
-    expect(screen.getByText('+1.30')).toBeInTheDocument();
-  });
-
-  it('shows positive change percent', () => {
-    // changePercent = (1.30 / 184.20) * 100 ≈ 0.71
-    render(<StockHeader analysis={mockAnalysis} />);
-    expect(screen.getByText('(+0.71%)')).toBeInTheDocument();
+    expect(screen.getByText(/\+1\.30/)).toBeInTheDocument();
+    expect(screen.getByText(/\+0\.71%/)).toBeInTheDocument();
   });
 
   it('shows a negative change when current_price < previous_close', () => {
@@ -102,17 +96,28 @@ describe('StockHeader', () => {
     };
     render(<StockHeader analysis={downAnalysis} />);
     // change = -2.20
-    expect(screen.getByText('-2.20')).toBeInTheDocument();
+    expect(screen.getByText(/-2\.20/)).toBeInTheDocument();
   });
 
-  it('falls back to current_price when previous_close is null (change = 0)', () => {
+  it('does not render a change line when previous_close is null', () => {
     const noPrevClose: StockAnalysisResponse = {
       ...mockAnalysis,
       previous_close: null,
     };
     render(<StockHeader analysis={noPrevClose} />);
-    // change = 0, so we see +0.00
-    expect(screen.getByText('+0.00')).toBeInTheDocument();
+    // No change span should appear
+    expect(screen.queryByText(/\+0\.00/)).not.toBeInTheDocument();
+  });
+
+  it('renders the market cap badge when market_cap is provided', () => {
+    render(<StockHeader analysis={mockAnalysis} />);
+    expect(screen.getByText(/Mkt Cap: 2\.8T/)).toBeInTheDocument();
+  });
+
+  it('does not render the market cap badge when market_cap is null', () => {
+    const noMarketCap: StockAnalysisResponse = { ...mockAnalysis, market_cap: null };
+    render(<StockHeader analysis={noMarketCap} />);
+    expect(screen.queryByText(/Mkt Cap:/)).not.toBeInTheDocument();
   });
 });
 

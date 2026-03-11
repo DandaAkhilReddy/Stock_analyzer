@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from app.core.exceptions import AIAnalysisError
 from app.core.logging import get_logger
 from app.models.analysis import (
+    HistoricalPrice,
     NewsItem,
     PriceForecast,
     PricePredictions,
@@ -71,6 +72,17 @@ Required JSON output:
     {{"quarter": "<e.g. Q1 2025>", "revenue": <float in millions USD or null>, "net_income": <float in millions USD or null>, "eps": <float or null>, "yoy_revenue_growth": <float as decimal like 0.12 for 12% or null>}},
     ... (last 4 reported quarters, most recent first)
   ],
+  "historical_prices": [
+    {{"date": "YYYY-MM-DD", "open": <float>, "high": <float>, "low": <float>, "close": <float>, "volume": <int or null>}},
+    ... (generate approximately 120 trading days / ~6 months of estimated daily OHLC data, most recent trading day first, going backward. Make the price trajectory consistent with current_price, week_52_high, week_52_low. Exclude weekends and holidays.)
+  ],
+  "company_description": "<2-3 paragraph company overview: what the company does, its main products/services, market position, competitive advantages>",
+  "sector": "<e.g. Technology>",
+  "industry": "<e.g. Consumer Electronics>",
+  "headquarters": "<e.g. Cupertino, California>",
+  "ceo": "<current CEO name>",
+  "founded": "<e.g. 1976>",
+  "employees": "<e.g. ~164,000>",
   "recommendation": "strong_buy" | "buy" | "hold" | "sell" | "strong_sell",
   "confidence_score": <float 0.0-1.0>,
   "summary": "<2-3 sentence analysis summary>",
@@ -161,6 +173,9 @@ class AIAnalysisService:
             earnings_data = data.get("quarterly_earnings", [])
             quarterly_earnings = [QuarterlyEarning(**e) for e in earnings_data]
 
+            historical_data = data.get("historical_prices", [])
+            historical_prices = [HistoricalPrice(**h) for h in historical_data]
+
             risk_data = data.get("risk_assessment", {})
             predictions_data = data.get("price_predictions", {})
 
@@ -182,6 +197,14 @@ class AIAnalysisService:
                 technical=technical,
                 news=news,
                 quarterly_earnings=quarterly_earnings,
+                historical_prices=historical_prices,
+                company_description=data.get("company_description", ""),
+                sector=data.get("sector", ""),
+                industry=data.get("industry", ""),
+                headquarters=data.get("headquarters", ""),
+                ceo=data.get("ceo", ""),
+                founded=data.get("founded", ""),
+                employees=data.get("employees", ""),
                 recommendation=data["recommendation"],
                 confidence_score=float(data["confidence_score"]),
                 summary=data["summary"],

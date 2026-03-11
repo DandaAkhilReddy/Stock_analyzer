@@ -41,8 +41,8 @@ export function KeyStats({ analysis }: KeyStatsProps) {
       <div className="grid grid-cols-3 gap-4">
         {stats.map((s) => (
           <div key={s.label}>
-            <p className="text-xs text-gray-500 uppercase tracking-wide">{s.label}</p>
-            <p className="text-sm font-medium text-white mt-0.5">{s.value}</p>
+            <p className="text-xs text-stone-500 uppercase tracking-wide">{s.label}</p>
+            <p className="text-sm font-medium text-stone-900 mt-0.5">{s.value}</p>
           </div>
         ))}
       </div>

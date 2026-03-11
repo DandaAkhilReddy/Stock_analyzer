@@ -7,7 +7,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen bg-stone-50 text-stone-800">
       <Header />
       <main className="max-w-[1600px] mx-auto px-4 py-6">
         {children}

@@ -8,9 +8,9 @@ interface MetricPillProps {
 
 function MetricPill({ label, value }: MetricPillProps) {
   return (
-    <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-2.5 min-w-[120px] flex-shrink-0">
-      <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-sm font-semibold text-white">{value}</p>
+    <div className="bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 min-w-[120px] flex-shrink-0">
+      <p className="text-[11px] text-stone-500 uppercase tracking-wider mb-0.5">{label}</p>
+      <p className="text-sm font-semibold text-stone-900">{value}</p>
     </div>
   );
 }

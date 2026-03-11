@@ -12,10 +12,10 @@ const recommendationLabels: Record<Recommendation, string> = {
 };
 
 const riskColors: Record<RiskLevel, string> = {
-  low: 'text-emerald-400',
-  medium: 'text-amber-400',
-  high: 'text-orange-400',
-  very_high: 'text-red-400',
+  low: 'text-emerald-600',
+  medium: 'text-amber-600',
+  high: 'text-orange-600',
+  very_high: 'text-red-600',
 };
 
 const riskLabels: Record<RiskLevel, string> = {
@@ -40,52 +40,52 @@ export function SignalBanner({ analysis }: SignalBannerProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.15 }}
-      className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4"
+      className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm"
     >
       <div className="flex flex-wrap items-center gap-4 mb-3">
         {/* Recommendation */}
         <div className="flex items-center gap-2">
-          <Brain size={16} className="text-emerald-400" />
+          <Brain size={16} className="text-indigo-600" />
           <Badge variant={analysis.recommendation} size="md">
             {recommendationLabels[analysis.recommendation]}
           </Badge>
           <div className="flex items-center gap-1.5">
-            <div className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+            <div className="w-16 h-1.5 bg-stone-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all"
+                className="h-full bg-indigo-500 rounded-full transition-all"
                 style={{ width: `${analysis.confidence_score * 100}%` }}
               />
             </div>
-            <span className="text-xs font-medium text-gray-300">{confidencePct}%</span>
+            <span className="text-xs font-medium text-stone-600">{confidencePct}%</span>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="w-px h-5 bg-white/[0.08] hidden sm:block" />
+        <div className="w-px h-5 bg-stone-200 hidden sm:block" />
 
         {/* Technical Signal */}
         {technicalSignal && (
           <div className="flex items-center gap-2">
-            <Activity size={14} className="text-gray-500" />
-            <span className="text-xs text-gray-500">Tech:</span>
+            <Activity size={14} className="text-stone-400" />
+            <span className="text-xs text-stone-400">Tech:</span>
             <Badge variant={technicalSignal} size="sm">
               {technicalSignal.replace('_', ' ')}
             </Badge>
             {rsi !== null && rsi !== undefined && (
-              <span className="text-xs text-gray-400">
-                RSI: <span className="font-medium text-white">{rsi.toFixed(0)}</span>
+              <span className="text-xs text-stone-500">
+                RSI: <span className="font-medium text-stone-900">{rsi.toFixed(0)}</span>
               </span>
             )}
           </div>
         )}
 
         {/* Divider */}
-        <div className="w-px h-5 bg-white/[0.08] hidden sm:block" />
+        <div className="w-px h-5 bg-stone-200 hidden sm:block" />
 
         {/* Risk */}
         <div className="flex items-center gap-2">
-          <Shield size={14} className="text-gray-500" />
-          <span className="text-xs text-gray-500">Risk:</span>
+          <Shield size={14} className="text-stone-400" />
+          <span className="text-xs text-stone-400">Risk:</span>
           <span className={`text-xs font-semibold ${riskColors[riskLevel]}`}>
             {riskLabels[riskLevel]}
           </span>
@@ -93,10 +93,10 @@ export function SignalBanner({ analysis }: SignalBannerProps) {
       </div>
 
       {/* Summary */}
-      <p className="text-sm text-gray-400 leading-relaxed mb-3">{analysis.summary}</p>
+      <p className="text-sm text-stone-600 leading-relaxed mb-3">{analysis.summary}</p>
 
       {/* Disclaimer */}
-      <p className="text-[11px] text-amber-500/80 bg-amber-500/10 px-3 py-1.5 rounded-lg">
+      <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
         {analysis.disclaimer}
       </p>
     </motion.div>

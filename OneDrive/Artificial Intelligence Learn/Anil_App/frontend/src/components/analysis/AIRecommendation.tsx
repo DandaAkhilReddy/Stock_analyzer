@@ -34,9 +34,9 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
     >
       <Card>
         <div className="flex items-center gap-2 mb-4">
-          <Brain size={18} className="text-emerald-400" />
-          <h3 className="text-sm font-medium text-gray-400">AI Recommendation</h3>
-          <span className="text-[10px] text-gray-600 ml-auto">
+          <Brain size={18} className="text-indigo-600" />
+          <h3 className="text-sm font-medium text-stone-500">AI Recommendation</h3>
+          <span className="text-[10px] text-stone-400 ml-auto">
             Powered by {analysis.model_used}
           </span>
         </div>
@@ -48,22 +48,22 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
           </Badge>
 
           <div>
-            <p className="text-xs text-gray-500">Confidence</p>
+            <p className="text-xs text-stone-500">Confidence</p>
             <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div className="w-24 h-2 bg-stone-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-emerald-500 rounded-full transition-all"
+                  className="h-full bg-indigo-500 rounded-full transition-all"
                   style={{ width: `${analysis.confidence_score * 100}%` }}
                 />
               </div>
-              <span className="text-sm font-medium text-white">{confidencePct}%</span>
+              <span className="text-sm font-medium text-stone-900">{confidencePct}%</span>
             </div>
           </div>
         </div>
 
-        <p className="text-sm text-gray-300 leading-relaxed">{analysis.summary}</p>
+        <p className="text-sm text-stone-600 leading-relaxed">{analysis.summary}</p>
 
-        <p className="text-xs text-amber-500/80 bg-amber-500/10 px-3 py-2 rounded mt-4">
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded mt-4">
           {analysis.disclaimer}
         </p>
       </Card>

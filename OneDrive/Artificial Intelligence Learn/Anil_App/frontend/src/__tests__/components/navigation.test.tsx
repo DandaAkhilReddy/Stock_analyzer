@@ -32,7 +32,7 @@ vi.mock('framer-motion', () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function renderTabBar(activeTab: AnalysisTab = 'news', onTabChange = vi.fn()) {
+function renderTabBar(activeTab: AnalysisTab = 'chart', onTabChange = vi.fn()) {
   return { onTabChange, ...render(<TabBar activeTab={activeTab} onTabChange={onTabChange} />) };
 }
 
@@ -43,9 +43,14 @@ function renderTabBar(activeTab: AnalysisTab = 'news', onTabChange = vi.fn()) {
 describe('TabBar', () => {
   // --- Rendering ------------------------------------------------------------
 
-  it('renders exactly 3 tab buttons', () => {
+  it('renders exactly 4 tab buttons', () => {
     renderTabBar();
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+    expect(screen.getAllByRole('button')).toHaveLength(4);
+  });
+
+  it('renders a "Chart" tab button', () => {
+    renderTabBar();
+    expect(screen.getByRole('button', { name: /chart/i })).toBeInTheDocument();
   });
 
   it('renders a "News" tab button', () => {
@@ -58,88 +63,111 @@ describe('TabBar', () => {
     expect(screen.getByRole('button', { name: /financials/i })).toBeInTheDocument();
   });
 
-  it('renders a "Growth" tab button', () => {
+  it('renders an "About" tab button', () => {
     renderTabBar();
-    expect(screen.getByRole('button', { name: /growth/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /about/i })).toBeInTheDocument();
   });
 
   // --- Active tab styling ---------------------------------------------------
 
-  it('applies text-white class to the active tab button', () => {
-    renderTabBar('news');
-    const activeButton = screen.getByRole('button', { name: /news/i });
-    expect(activeButton).toHaveClass('text-white');
+  it('applies text-stone-900 class to the active tab button', () => {
+    renderTabBar('chart');
+    const activeButton = screen.getByRole('button', { name: /chart/i });
+    expect(activeButton).toHaveClass('text-stone-900');
   });
 
-  it('does not apply text-white to inactive tab buttons', () => {
-    renderTabBar('news');
-    expect(screen.getByRole('button', { name: /financials/i })).not.toHaveClass('text-white');
-    expect(screen.getByRole('button', { name: /growth/i })).not.toHaveClass('text-white');
+  it('does not apply text-stone-900 to inactive tab buttons', () => {
+    renderTabBar('chart');
+    expect(screen.getByRole('button', { name: /news/i })).not.toHaveClass('text-stone-900');
+    expect(screen.getByRole('button', { name: /financials/i })).not.toHaveClass('text-stone-900');
+    expect(screen.getByRole('button', { name: /about/i })).not.toHaveClass('text-stone-900');
   });
 
-  it('applies text-gray-500 to inactive tab buttons', () => {
+  it('applies text-stone-400 to inactive tab buttons', () => {
+    renderTabBar('chart');
+    expect(screen.getByRole('button', { name: /news/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /financials/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /about/i })).toHaveClass('text-stone-400');
+  });
+
+  it('marks "news" button as active when activeTab is "news"', () => {
     renderTabBar('news');
-    expect(screen.getByRole('button', { name: /financials/i })).toHaveClass('text-gray-500');
-    expect(screen.getByRole('button', { name: /growth/i })).toHaveClass('text-gray-500');
+    expect(screen.getByRole('button', { name: /news/i })).toHaveClass('text-stone-900');
+    expect(screen.getByRole('button', { name: /chart/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /financials/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /about/i })).toHaveClass('text-stone-400');
   });
 
   it('marks "financials" button as active when activeTab is "financials"', () => {
     renderTabBar('financials');
-    expect(screen.getByRole('button', { name: /financials/i })).toHaveClass('text-white');
-    expect(screen.getByRole('button', { name: /news/i })).toHaveClass('text-gray-500');
-    expect(screen.getByRole('button', { name: /growth/i })).toHaveClass('text-gray-500');
+    expect(screen.getByRole('button', { name: /financials/i })).toHaveClass('text-stone-900');
+    expect(screen.getByRole('button', { name: /chart/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /news/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /about/i })).toHaveClass('text-stone-400');
   });
 
-  it('marks "growth" button as active when activeTab is "growth"', () => {
-    renderTabBar('growth');
-    expect(screen.getByRole('button', { name: /growth/i })).toHaveClass('text-white');
-    expect(screen.getByRole('button', { name: /news/i })).toHaveClass('text-gray-500');
-    expect(screen.getByRole('button', { name: /financials/i })).toHaveClass('text-gray-500');
+  it('marks "about" button as active when activeTab is "about"', () => {
+    renderTabBar('about');
+    expect(screen.getByRole('button', { name: /about/i })).toHaveClass('text-stone-900');
+    expect(screen.getByRole('button', { name: /chart/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /news/i })).toHaveClass('text-stone-400');
+    expect(screen.getByRole('button', { name: /financials/i })).toHaveClass('text-stone-400');
   });
 
   // --- Underline indicator --------------------------------------------------
 
   it('renders the animated underline only for the active tab', () => {
-    renderTabBar('news');
-    // The mocked motion.div carries data-testid="tab-underline"
+    renderTabBar('chart');
     const underlines = screen.getAllByTestId('tab-underline');
     expect(underlines).toHaveLength(1);
   });
 
-  it('does not render the underline when a different tab is active', () => {
+  it('places the underline inside the active tab button', () => {
     renderTabBar('financials');
-    // Only one underline exists and it sits inside the Financials button
     const [underline] = screen.getAllByTestId('tab-underline');
     expect(screen.getByRole('button', { name: /financials/i })).toContainElement(underline);
   });
 
+  it('underline has bg-indigo-600 class', () => {
+    renderTabBar('chart');
+    const [underline] = screen.getAllByTestId('tab-underline');
+    expect(underline).toHaveClass('bg-indigo-600');
+  });
+
   // --- Click callbacks ------------------------------------------------------
 
+  it('calls onTabChange with "chart" when the Chart button is clicked', () => {
+    const { onTabChange } = renderTabBar('news');
+    fireEvent.click(screen.getByRole('button', { name: /chart/i }));
+    expect(onTabChange).toHaveBeenCalledTimes(1);
+    expect(onTabChange).toHaveBeenCalledWith('chart');
+  });
+
   it('calls onTabChange with "news" when the News button is clicked', () => {
-    const { onTabChange } = renderTabBar('financials');
+    const { onTabChange } = renderTabBar('chart');
     fireEvent.click(screen.getByRole('button', { name: /news/i }));
     expect(onTabChange).toHaveBeenCalledTimes(1);
     expect(onTabChange).toHaveBeenCalledWith('news');
   });
 
   it('calls onTabChange with "financials" when the Financials button is clicked', () => {
-    const { onTabChange } = renderTabBar('news');
+    const { onTabChange } = renderTabBar('chart');
     fireEvent.click(screen.getByRole('button', { name: /financials/i }));
     expect(onTabChange).toHaveBeenCalledTimes(1);
     expect(onTabChange).toHaveBeenCalledWith('financials');
   });
 
-  it('calls onTabChange with "growth" when the Growth button is clicked', () => {
-    const { onTabChange } = renderTabBar('news');
-    fireEvent.click(screen.getByRole('button', { name: /growth/i }));
+  it('calls onTabChange with "about" when the About button is clicked', () => {
+    const { onTabChange } = renderTabBar('chart');
+    fireEvent.click(screen.getByRole('button', { name: /about/i }));
     expect(onTabChange).toHaveBeenCalledTimes(1);
-    expect(onTabChange).toHaveBeenCalledWith('growth');
+    expect(onTabChange).toHaveBeenCalledWith('about');
   });
 
   it('calls onTabChange even when the already-active tab is clicked', () => {
-    const { onTabChange } = renderTabBar('news');
-    fireEvent.click(screen.getByRole('button', { name: /news/i }));
-    expect(onTabChange).toHaveBeenCalledWith('news');
+    const { onTabChange } = renderTabBar('chart');
+    fireEvent.click(screen.getByRole('button', { name: /chart/i }));
+    expect(onTabChange).toHaveBeenCalledWith('chart');
   });
 
   it('does not call onTabChange when no button is clicked', () => {
@@ -149,12 +177,13 @@ describe('TabBar', () => {
 
   // --- Tab order ------------------------------------------------------------
 
-  it('renders tabs in the order: News, Financials, Growth', () => {
+  it('renders tabs in the order: Chart, News, Financials, About', () => {
     renderTabBar();
     const buttons = screen.getAllByRole('button');
-    expect(buttons[0]).toHaveAccessibleName(/news/i);
-    expect(buttons[1]).toHaveAccessibleName(/financials/i);
-    expect(buttons[2]).toHaveAccessibleName(/growth/i);
+    expect(buttons[0]).toHaveAccessibleName(/chart/i);
+    expect(buttons[1]).toHaveAccessibleName(/news/i);
+    expect(buttons[2]).toHaveAccessibleName(/financials/i);
+    expect(buttons[3]).toHaveAccessibleName(/about/i);
   });
 
   // --- Container structure --------------------------------------------------
@@ -165,5 +194,11 @@ describe('TabBar', () => {
     expect(wrapper.tagName).toBe('DIV');
     expect(wrapper).toHaveClass('flex');
     expect(wrapper).toHaveClass('border-b');
+  });
+
+  it('uses border-stone-200 on the container', () => {
+    const { container } = renderTabBar();
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper).toHaveClass('border-stone-200');
   });
 });

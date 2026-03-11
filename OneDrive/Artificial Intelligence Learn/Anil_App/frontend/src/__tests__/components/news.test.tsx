@@ -60,19 +60,19 @@ describe('NewsCard', () => {
   it('applies the emerald colour class for positive sentiment', () => {
     render(<NewsCard item={makeItem({ sentiment: 'positive' })} />);
     const label = screen.getByText('positive');
-    expect(label).toHaveClass('text-emerald-400');
+    expect(label).toHaveClass('text-emerald-600');
   });
 
   it('applies the red colour class for negative sentiment', () => {
     render(<NewsCard item={makeItem({ sentiment: 'negative' })} />);
     const label = screen.getByText('negative');
-    expect(label).toHaveClass('text-red-400');
+    expect(label).toHaveClass('text-red-600');
   });
 
   it('applies the gray colour class for neutral sentiment', () => {
     render(<NewsCard item={makeItem({ sentiment: 'neutral' })} />);
     const label = screen.getByText('neutral');
-    expect(label).toHaveClass('text-gray-500');
+    expect(label).toHaveClass('text-stone-400');
   });
 
   it('renders both source and sentiment together when both are provided', () => {

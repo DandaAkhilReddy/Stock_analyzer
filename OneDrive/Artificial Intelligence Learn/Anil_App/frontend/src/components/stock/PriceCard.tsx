@@ -16,8 +16,8 @@ interface StatItemProps {
 function StatItem({ label, value }: StatItemProps) {
   return (
     <div>
-      <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className="text-sm font-medium text-white mt-0.5">{value}</p>
+      <p className="text-xs text-stone-500 uppercase tracking-wide">{label}</p>
+      <p className="text-sm font-medium text-stone-900 mt-0.5">{value}</p>
     </div>
   );
 }

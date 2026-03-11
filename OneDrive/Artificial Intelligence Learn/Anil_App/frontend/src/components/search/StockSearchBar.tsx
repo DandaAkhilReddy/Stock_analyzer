@@ -25,8 +25,8 @@ export function StockSearchBar() {
 
   return (
     <div className="relative">
-      <div className="flex items-center bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus-within:border-emerald-500 transition-colors">
-        <Search size={18} className="text-gray-500 shrink-0" />
+      <div className="flex items-center bg-stone-100 border border-stone-300 rounded-lg px-3 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-colors">
+        <Search size={18} className="text-stone-400 shrink-0" />
         <input
           ref={inputRef}
           type="text"
@@ -34,14 +34,14 @@ export function StockSearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)"
-          className="bg-transparent border-none outline-none text-white placeholder-gray-500 ml-2 w-full text-sm"
+          className="bg-transparent border-none outline-none text-stone-900 placeholder:text-stone-400 ml-2 w-full text-sm"
         />
         {isLoading ? (
-          <Loader2 size={16} className="text-emerald-500 animate-spin shrink-0" />
+          <Loader2 size={16} className="text-indigo-500 animate-spin shrink-0" />
         ) : (
           <button
             onClick={handleSubmit}
-            className="text-gray-500 hover:text-emerald-400 transition-colors shrink-0"
+            className="text-stone-400 hover:text-indigo-600 transition-colors shrink-0"
             aria-label="Search"
           >
             <Search size={16} />

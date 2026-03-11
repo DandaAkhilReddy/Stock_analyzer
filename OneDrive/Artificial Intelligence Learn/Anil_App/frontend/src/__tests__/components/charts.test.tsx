@@ -118,16 +118,16 @@ describe('MACDChart', () => {
   // Color styling
   // -------------------------------------------------------------------------
 
-  it('applies emerald colour (#10b981) for bullish histogram', () => {
+  it('applies emerald colour (#059669) for bullish histogram', () => {
     render(<MACDChart macdLine={1.5} signalLine={1.2} histogram={0.3} />);
     const bullishLabel = screen.getByText('Bullish');
-    expect(bullishLabel).toHaveStyle({ color: '#10b981' });
+    expect(bullishLabel).toHaveStyle({ color: '#059669' });
   });
 
-  it('applies red colour (#ef4444) for bearish histogram', () => {
+  it('applies red colour (#dc2626) for bearish histogram', () => {
     render(<MACDChart macdLine={-0.5} signalLine={0.1} histogram={-0.6} />);
     const bearishLabel = screen.getByText('Bearish');
-    expect(bearishLabel).toHaveStyle({ color: '#ef4444' });
+    expect(bearishLabel).toHaveStyle({ color: '#dc2626' });
   });
 });
 
@@ -211,22 +211,22 @@ describe('RSIChart', () => {
   // Colour styling
   // -------------------------------------------------------------------------
 
-  it('applies red colour (#ef4444) for overbought RSI', () => {
+  it('applies red colour (#dc2626) for overbought RSI', () => {
     render(<RSIChart rsiValue={80} />);
     const label = screen.getByText('Overbought');
-    expect(label).toHaveStyle({ color: '#ef4444' });
+    expect(label).toHaveStyle({ color: '#dc2626' });
   });
 
-  it('applies emerald colour (#10b981) for oversold RSI', () => {
+  it('applies emerald colour (#059669) for oversold RSI', () => {
     render(<RSIChart rsiValue={20} />);
     const label = screen.getByText('Oversold');
-    expect(label).toHaveStyle({ color: '#10b981' });
+    expect(label).toHaveStyle({ color: '#059669' });
   });
 
-  it('applies amber colour (#f59e0b) for neutral RSI', () => {
+  it('applies amber colour (#d97706) for neutral RSI', () => {
     render(<RSIChart rsiValue={55} />);
     const label = screen.getByText('Neutral');
-    expect(label).toHaveStyle({ color: '#f59e0b' });
+    expect(label).toHaveStyle({ color: '#d97706' });
   });
 
   // -------------------------------------------------------------------------

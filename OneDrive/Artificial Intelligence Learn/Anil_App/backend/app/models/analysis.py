@@ -70,6 +70,17 @@ class RiskAssessment(BaseModel):
     risk_score: float
 
 
+class HistoricalPrice(BaseModel):
+    """Single day OHLC price point for charting."""
+
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int | None = None
+
+
 class StockAnalysisResponse(BaseModel):
     """Full unified stock analysis — everything from one AI call."""
 
@@ -96,6 +107,16 @@ class StockAnalysisResponse(BaseModel):
     # News
     news: list[NewsItem] = []
     quarterly_earnings: list[QuarterlyEarning] = []
+    # Historical
+    historical_prices: list[HistoricalPrice] = []
+    # Company info
+    company_description: str = ""
+    sector: str = ""
+    industry: str = ""
+    headquarters: str = ""
+    ceo: str = ""
+    founded: str = ""
+    employees: str = ""
     # AI Analysis
     recommendation: Literal["strong_buy", "buy", "hold", "sell", "strong_sell"]
     confidence_score: float

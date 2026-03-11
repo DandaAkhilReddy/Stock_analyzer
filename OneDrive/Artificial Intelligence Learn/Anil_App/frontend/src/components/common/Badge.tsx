@@ -3,14 +3,14 @@ import type { Recommendation, TechnicalSignal } from '../../types/analysis';
 type BadgeVariant = Recommendation | TechnicalSignal | 'positive' | 'negative' | 'neutral';
 
 const variantStyles: Record<string, string> = {
-  strong_buy: 'bg-green-500/20 text-green-400 border-green-500/30',
-  buy: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  hold: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  neutral: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-  sell: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  strong_sell: 'bg-red-500/20 text-red-400 border-red-500/30',
-  positive: 'bg-green-500/20 text-green-400 border-green-500/30',
-  negative: 'bg-red-500/20 text-red-400 border-red-500/30',
+  strong_buy: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  buy: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  hold: 'bg-amber-50 text-amber-700 border-amber-200',
+  neutral: 'bg-stone-100 text-stone-600 border-stone-200',
+  sell: 'bg-orange-50 text-orange-600 border-orange-200',
+  strong_sell: 'bg-red-50 text-red-600 border-red-200',
+  positive: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  negative: 'bg-red-50 text-red-700 border-red-200',
 };
 
 interface BadgeProps {
