@@ -22,14 +22,25 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 // Module mocks — must appear before any import of the mocked modules
 // ---------------------------------------------------------------------------
 
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
-      <div {...props}>{children}</div>
-    ),
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+vi.mock('framer-motion', () => {
+  const createMotionComponent = (tag: string) => {
+    const Component = ({ children, ...props }: any) => {
+      const Tag = tag as any;
+      return <Tag {...props}>{children}</Tag>;
+    };
+    Component.displayName = `motion.${tag}`;
+    return Component;
+  };
+  return {
+    motion: new Proxy({}, {
+      get: (_target, prop: string) => createMotionComponent(prop),
+    }),
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    useMotionValue: () => ({ set: () => {} }),
+    useSpring: (v: any) => v,
+    useTransform: () => 0,
+  };
+});
 
 // Mock lightweight-charts so PriceChart renders without a real DOM canvas
 vi.mock('lightweight-charts', () => ({
@@ -171,14 +182,14 @@ describe('StockAnalysis', () => {
   describe('empty state (no currentTicker)', () => {
     beforeEach(() => setupStore({ currentTicker: null }));
 
-    it('shows the "Search for a stock to begin" heading', () => {
+    it('shows the "AI-Powered" heading from LandingHero', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Search for a stock to begin')).toBeInTheDocument();
+      expect(screen.getByText(/AI-Powered/i)).toBeInTheDocument();
     });
 
-    it('shows the descriptive paragraph text', () => {
+    it('shows the "Stock Analysis" text from LandingHero', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText(/Enter a ticker symbol/)).toBeInTheDocument();
+      expect(screen.getByText(/Stock Analysis/i)).toBeInTheDocument();
     });
 
     it('does not show a loading spinner', () => {
@@ -233,14 +244,14 @@ describe('StockAnalysis', () => {
       expect(screen.getByText('Ticker not found')).toBeInTheDocument();
     });
 
-    it('renders a Retry button', () => {
+    it('renders a Try Again button', () => {
       render(<StockAnalysis />);
-      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
     });
 
-    it('calls fetchAnalysis with the current ticker when Retry is clicked', () => {
+    it('calls fetchAnalysis with the current ticker when Try Again is clicked', () => {
       render(<StockAnalysis />);
-      fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+      fireEvent.click(screen.getByRole('button', { name: /try again/i }));
       expect(mockFetchAnalysis).toHaveBeenCalledOnce();
       expect(mockFetchAnalysis).toHaveBeenCalledWith('AAPL');
     });

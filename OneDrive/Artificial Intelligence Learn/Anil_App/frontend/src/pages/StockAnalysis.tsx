@@ -1,7 +1,9 @@
-import { Loader2, AlertTriangle, BarChart2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStockStore } from '../stores/stockStore';
 
+import { LandingHero } from '../components/landing/LandingHero';
 import { StockHeader } from '../components/stock/StockHeader';
 import { TabBar } from '../components/navigation/TabBar';
 import { PriceChart } from '../components/charts/PriceChart';
@@ -22,45 +24,59 @@ export function StockAnalysis() {
   const setActiveTab = useStockStore((s) => s.setActiveTab);
 
   if (!currentTicker) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <BarChart2 size={64} className="text-stone-300 mb-4" />
-        <h2 className="text-xl font-semibold text-stone-500 mb-2">
-          Search for a stock to begin
-        </h2>
-        <p className="text-sm text-stone-400 max-w-md">
-          Enter a ticker symbol (e.g., AAPL, TSLA, MSFT) in the search bar above to get
-          AI-powered analysis, technical indicators, price predictions, and the latest news.
-        </p>
-      </div>
-    );
+    return <LandingHero />;
   }
+
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => setLoadingSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  const loadingMessage =
+    loadingSeconds < 10
+      ? 'AI is crunching the data'
+      : loadingSeconds < 30
+        ? 'Still working... generating detailed analysis'
+        : 'Almost there... large responses take a bit longer';
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 size={40} className="text-indigo-500 animate-spin" />
-        <p className="text-stone-500 text-sm">Analyzing {currentTicker}...</p>
-        <p className="text-stone-400 text-xs">
-          AI is crunching the data — this may take a few seconds
-        </p>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-72px)] gap-4">
+        <div className="relative flex items-center justify-center">
+          <motion.div
+            className="absolute w-16 h-16 rounded-full border-2 border-indigo-500/30"
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <Loader2 size={32} className="text-indigo-500 animate-spin" />
+        </div>
+        <div className="text-center">
+          <p className="text-stone-600 text-sm font-medium">Analyzing {currentTicker}...</p>
+          <p className="text-stone-400 text-xs mt-1">{loadingMessage}</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-3">
-        <AlertTriangle size={40} className="text-red-600" />
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-72px)] text-center gap-3">
+        <AlertTriangle size={40} className="text-red-500" />
         <h2 className="text-lg font-semibold text-red-600">
           Error analyzing {currentTicker}
         </h2>
-        <p className="text-sm text-stone-500">{error}</p>
+        <p className="text-sm text-stone-500 max-w-md">{error}</p>
         <button
           onClick={() => useStockStore.getState().fetchAnalysis(currentTicker)}
-          className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"
+          className="mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors"
         >
-          Retry
+          Try Again
         </button>
       </div>
     );
@@ -69,14 +85,15 @@ export function StockAnalysis() {
   if (!analysis) return null;
 
   return (
-    <div className="space-y-4">
-      {/* Persistent Header */}
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+    >
       <StockHeader analysis={analysis} />
-
-      {/* Tab Navigation */}
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -121,6 +138,6 @@ export function StockAnalysis() {
           {activeTab === 'about' && <CompanyAbout analysis={analysis} />}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

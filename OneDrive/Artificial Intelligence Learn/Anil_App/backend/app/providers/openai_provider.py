@@ -74,7 +74,7 @@ class OpenAIProvider:
                 ],
                 temperature=temperature,
                 max_tokens=max_tokens,
-                timeout=120.0,
+                timeout=180.0,
             )
         except Exception as exc:
             logger.error("openai_api_error", error=str(exc))

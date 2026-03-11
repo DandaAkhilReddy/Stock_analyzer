@@ -318,11 +318,11 @@ class TestChatCompletionJsonCallArguments:
         assert messages[1]["role"] == "user"
 
     @pytest.mark.asyncio
-    async def test_timeout_is_120_seconds(self) -> None:
+    async def test_timeout_is_180_seconds(self) -> None:
         provider, create_mock = _make_provider()
         create_mock.return_value = _make_response('{"ok": true}')
 
         await provider.chat_completion_json("sys", "usr")
 
         _, kwargs = create_mock.call_args
-        assert kwargs["timeout"] == pytest.approx(120.0)
+        assert kwargs["timeout"] == pytest.approx(180.0)
