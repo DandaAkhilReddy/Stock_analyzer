@@ -23,10 +23,6 @@ export function StockAnalysis() {
   const activeTab = useStockStore((s) => s.activeTab);
   const setActiveTab = useStockStore((s) => s.setActiveTab);
 
-  if (!currentTicker) {
-    return <LandingHero />;
-  }
-
   const [loadingSeconds, setLoadingSeconds] = useState(0);
 
   useEffect(() => {
@@ -37,6 +33,10 @@ export function StockAnalysis() {
     const interval = setInterval(() => setLoadingSeconds((s) => s + 1), 1000);
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  if (!currentTicker) {
+    return <LandingHero />;
+  }
 
   const loadingMessage =
     loadingSeconds < 10
