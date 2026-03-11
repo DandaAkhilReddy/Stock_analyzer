@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CrosshairMode } from 'lightweight-charts';
+import { createChart, ColorType, CrosshairMode, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
 import type { HistoricalPrice } from '../../types/analysis';
 
 interface PriceChartProps {
@@ -46,7 +46,7 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
       timeScale: { borderColor: '#e7e5e4', timeVisible: true, fixLeftEdge: true, fixRightEdge: true },
     });
 
-    const candleSeries = chart.addCandlestickSeries({
+    const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#059669',
       downColor: '#dc2626',
       borderUpColor: '#059669',
@@ -65,7 +65,7 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
       })),
     );
 
-    const volumeSeries = chart.addHistogramSeries({
+    const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
     });
