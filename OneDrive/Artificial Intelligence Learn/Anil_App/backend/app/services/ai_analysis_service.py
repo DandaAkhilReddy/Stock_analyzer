@@ -9,6 +9,7 @@ from app.models.analysis import (
     NewsItem,
     PriceForecast,
     PricePredictions,
+    QuarterlyEarning,
     RiskAssessment,
     StockAnalysisResponse,
     TechnicalSnapshot,
@@ -18,6 +19,8 @@ from app.providers.openai_provider import OpenAIProvider
 logger = get_logger(__name__)
 
 _SYSTEM_PROMPT = """You are a senior equity research analyst with access to current market data. Provide comprehensive stock analysis including current price data, technical indicators, recent news, and investment recommendation.
+
+IMPORTANT: If the user provides a company name, misspelling, or informal name instead of a valid ticker symbol, you MUST identify the correct official ticker symbol (e.g., "microsft" → "MSFT", "apple" → "AAPL", "google" → "GOOGL"). Always use the correct ticker in your JSON response.
 
 You must research and provide the most recent data you know about the stock. Include actual price levels, real technical indicator values, and recent news headlines.
 
@@ -29,6 +32,7 @@ Provide a comprehensive analysis with all of the following data. Use the most re
 
 Required JSON output:
 {{
+  "ticker": "<correct NYSE/NASDAQ ticker symbol>",
   "company_name": "<full company name>",
   "current_price": <float>,
   "previous_close": <float or null>,
@@ -62,6 +66,10 @@ Required JSON output:
   "news": [
     {{"title": "<headline>", "source": "<source name>", "sentiment": "positive" | "negative" | "neutral"}},
     ... (5-10 recent headlines)
+  ],
+  "quarterly_earnings": [
+    {{"quarter": "<e.g. Q1 2025>", "revenue": <float in millions USD or null>, "net_income": <float in millions USD or null>, "eps": <float or null>, "yoy_revenue_growth": <float as decimal like 0.12 for 12% or null>}},
+    ... (last 4 reported quarters, most recent first)
   ],
   "recommendation": "strong_buy" | "buy" | "hold" | "sell" | "strong_sell",
   "confidence_score": <float 0.0-1.0>,
@@ -113,7 +121,7 @@ class AIAnalysisService:
             result = await self._provider.chat_completion_json(
                 system_prompt=_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
-                max_tokens=4000,
+                max_tokens=32000,
             )
             response = self._parse_response(ticker, result)
             logger.info(
@@ -142,6 +150,7 @@ class AIAnalysisService:
             AIAnalysisError: If required keys are missing or values have
                 unexpected types.
         """
+        logger.debug("ai_raw_response", ticker=ticker, keys=list(data.keys()))
         try:
             technical_data = data.get("technical")
             technical = TechnicalSnapshot(**technical_data) if technical_data else None
@@ -149,11 +158,14 @@ class AIAnalysisService:
             news_data = data.get("news", [])
             news = [NewsItem(**n) for n in news_data]
 
+            earnings_data = data.get("quarterly_earnings", [])
+            quarterly_earnings = [QuarterlyEarning(**e) for e in earnings_data]
+
             risk_data = data.get("risk_assessment", {})
             predictions_data = data.get("price_predictions", {})
 
             return StockAnalysisResponse(
-                ticker=ticker,
+                ticker=data.get("ticker", ticker).upper().strip(),
                 company_name=data.get("company_name", ticker),
                 current_price=float(data["current_price"]),
                 previous_close=data.get("previous_close"),
@@ -169,6 +181,7 @@ class AIAnalysisService:
                 dividend_yield=data.get("dividend_yield"),
                 technical=technical,
                 news=news,
+                quarterly_earnings=quarterly_earnings,
                 recommendation=data["recommendation"],
                 confidence_score=float(data["confidence_score"]),
                 summary=data["summary"],

@@ -35,6 +35,16 @@ class NewsItem(BaseModel):
     sentiment: Literal["positive", "negative", "neutral"] | None = None
 
 
+class QuarterlyEarning(BaseModel):
+    """One quarter of earnings data."""
+
+    quarter: str
+    revenue: float | None = None
+    net_income: float | None = None
+    eps: float | None = None
+    yoy_revenue_growth: float | None = None
+
+
 class PriceForecast(BaseModel):
     """Low / mid / high price forecast with a confidence score."""
 
@@ -85,6 +95,7 @@ class StockAnalysisResponse(BaseModel):
     technical: TechnicalSnapshot | None = None
     # News
     news: list[NewsItem] = []
+    quarterly_earnings: list[QuarterlyEarning] = []
     # AI Analysis
     recommendation: Literal["strong_buy", "buy", "hold", "sell", "strong_sell"]
     confidence_score: float
@@ -97,6 +108,7 @@ class StockAnalysisResponse(BaseModel):
     analysis_timestamp: datetime
     model_used: str = "kimi-k2.5"
     disclaimer: str = (
-        "This is AI-generated analysis and not financial advice. "
-        "Always do your own research."
+        "Prices and data are AI-estimated based on the model's training data "
+        "and may not reflect current market prices. "
+        "This is not financial advice. Always verify with live data."
     )
