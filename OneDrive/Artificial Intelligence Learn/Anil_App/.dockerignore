@@ -1,0 +1,13 @@
+node_modules
+frontend/node_modules
+frontend/dist
+backend/__pycache__
+backend/.pytest_cache
+.env
+*.pyc
+.git
+.vscode
+.idea
+__pycache__
+htmlcov
+.coverage
