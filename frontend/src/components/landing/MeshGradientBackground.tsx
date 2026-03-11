@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-export function MeshGradientBackground(): JSX.Element {
+export function MeshGradientBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden">
       <motion.div

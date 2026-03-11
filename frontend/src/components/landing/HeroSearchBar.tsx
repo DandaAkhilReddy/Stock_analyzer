@@ -3,7 +3,7 @@ import { Search, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStockStore } from '../../stores/stockStore';
 
-export function HeroSearchBar(): JSX.Element {
+export function HeroSearchBar() {
   const [query, setQuery] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
   const isLoading = useStockStore((state) => state.isLoading);

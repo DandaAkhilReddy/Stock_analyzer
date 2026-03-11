@@ -4,7 +4,7 @@ import { DotGrid } from "./DotGrid";
 import { HeroTitle } from "./HeroTitle";
 import { HeroSearchBar } from "./HeroSearchBar";
 
-export function LandingHero(): JSX.Element {
+export function LandingHero() {
   return (
     <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-72px)]">
       {/* Animated mesh gradient background */}

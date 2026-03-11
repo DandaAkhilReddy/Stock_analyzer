@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-export function HeroTitle(): JSX.Element {
+export function HeroTitle() {
   return (
     <div className="text-center">
       <motion.h1
