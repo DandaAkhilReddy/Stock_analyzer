@@ -211,7 +211,7 @@ class MarketDataService:
             "ceo": profile_data.get("ceo", ""),
             "founded": "",
             "employees": (
-                f"{profile_data['fullTimeEmployees']:,}"
+                f"{int(profile_data['fullTimeEmployees']):,}"
                 if profile_data.get("fullTimeEmployees")
                 else ""
             ),
