@@ -648,7 +648,7 @@ class TestErrorHandling:
     ) -> None:
         """ExternalAPIError from market data propagates as-is (not wrapped)."""
         mock_market.get_quote = AsyncMock(
-            side_effect=ExternalAPIError("Yahoo Finance", "connection refused")
+            side_effect=ExternalAPIError("FMP API", "connection refused")
         )
         service = AIAnalysisService(provider=mock_provider, market_data=mock_market)
 
@@ -661,11 +661,11 @@ class TestErrorHandling:
     ) -> None:
         """RuntimeError from get_historical is wrapped in AIAnalysisError."""
         mock_market.get_historical = AsyncMock(
-            side_effect=RuntimeError("yfinance unavailable")
+            side_effect=RuntimeError("FMP API unavailable")
         )
         service = AIAnalysisService(provider=mock_provider, market_data=mock_market)
 
-        with pytest.raises(AIAnalysisError, match="yfinance unavailable"):
+        with pytest.raises(AIAnalysisError, match="FMP API unavailable"):
             await service.analyze("AAPL")
 
     @pytest.mark.asyncio

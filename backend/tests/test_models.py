@@ -418,7 +418,7 @@ class TestStockAnalysisResponse:
 
     def test_default_model_used(self) -> None:
         resp = StockAnalysisResponse(**_make_response())
-        assert resp.model_used == "kimi-k2.5"
+        assert resp.model_used == "gpt-5.3"
 
     def test_model_used_override(self) -> None:
         resp = StockAnalysisResponse(**_make_response(model_used="gpt-4o"))
@@ -426,7 +426,7 @@ class TestStockAnalysisResponse:
 
     def test_default_disclaimer_text(self) -> None:
         resp = StockAnalysisResponse(**_make_response())
-        assert "Yahoo Finance" in resp.disclaimer
+        assert "Financial Modeling Prep" in resp.disclaimer
         assert "not financial advice" in resp.disclaimer
 
     def test_disclaimer_overridable(self) -> None:
