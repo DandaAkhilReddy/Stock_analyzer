@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     azure_openai_deployment: str = "Kimi-K2.5"
     azure_openai_api_version: str = "2024-05-01-preview"
 
+    # Financial Modeling Prep
+    fmp_api_key: str = ""
+
     # App
     environment: str = "development"
     log_level: str = "DEBUG"
