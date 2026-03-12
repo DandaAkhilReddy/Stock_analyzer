@@ -20,7 +20,7 @@ _ai_service = AIAnalysisService(market_data=_market_service)
 async def analyze_stock(ticker: str) -> StockAnalysisResponse:
     """Run comprehensive stock analysis.
 
-    Fetches real market data from Yahoo Finance, then uses Kimi K2.5
+    Fetches real market data from Financial Modeling Prep, then uses AI
     for qualitative analysis (recommendation, news, predictions).
     """
     logger.info("analysis_request", ticker=ticker)
