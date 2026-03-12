@@ -245,6 +245,71 @@ class TestGetQuote:
             with pytest.raises(ExternalAPIError):
                 await service.get_quote("AAPL")
 
+    @pytest.mark.asyncio
+    async def test_employees_string_value_formatted(self) -> None:
+        service = MarketDataService()
+        profile = {**_MOCK_PROFILE[0], "fullTimeEmployees": "164000"}
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            return_value=(_MOCK_QUOTE[0], profile),
+        ):
+            result = await service.get_quote("AAPL")
+        assert result["employees"] == "164,000"
+
+    @pytest.mark.asyncio
+    async def test_employees_missing_returns_empty_string(self) -> None:
+        service = MarketDataService()
+        profile = {k: v for k, v in _MOCK_PROFILE[0].items()
+                   if k != "fullTimeEmployees"}
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            return_value=(_MOCK_QUOTE[0], profile),
+        ):
+            result = await service.get_quote("AAPL")
+        assert result["employees"] == ""
+
+    @pytest.mark.asyncio
+    async def test_fallback_company_name_from_quote_name(self) -> None:
+        service = MarketDataService()
+        profile = {k: v for k, v in _MOCK_PROFILE[0].items()
+                   if k != "companyName"}
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            return_value=(_MOCK_QUOTE[0], profile),
+        ):
+            result = await service.get_quote("AAPL")
+        assert result["company_name"] == "Apple Inc."
+
+    @pytest.mark.asyncio
+    async def test_fallback_company_name_from_ticker(self) -> None:
+        service = MarketDataService()
+        quote = {k: v for k, v in _MOCK_QUOTE[0].items() if k != "name"}
+        profile = {k: v for k, v in _MOCK_PROFILE[0].items()
+                   if k != "companyName"}
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            return_value=(quote, profile),
+        ):
+            result = await service.get_quote("AAPL")
+        assert result["company_name"] == "AAPL"
+
+    @pytest.mark.asyncio
+    async def test_headquarters_with_missing_fields(self) -> None:
+        service = MarketDataService()
+        profile = {k: v for k, v in _MOCK_PROFILE[0].items()
+                   if k not in ("city", "state", "country")}
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            return_value=(_MOCK_QUOTE[0], profile),
+        ):
+            result = await service.get_quote("AAPL")
+        assert result["headquarters"] == ""
+
 
 # ---------------------------------------------------------------------------
 # MarketDataService.get_historical
@@ -283,6 +348,43 @@ class TestGetHistorical:
         ):
             with pytest.raises(ExternalAPIError):
                 await service.get_historical("AAPL")
+
+    @pytest.mark.asyncio
+    async def test_handles_dict_response_gracefully(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service, "_get_json", return_value={"error": "bad request"}
+        ):
+            result = await service.get_historical("AAPL")
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_multiple_items_sorted_oldest_first(self) -> None:
+        service = MarketDataService()
+        bars = [
+            {"date": "2025-01-03", "open": 102, "high": 103,
+             "low": 101, "close": 102.5, "volume": 100},
+            {"date": "2025-01-02", "open": 101, "high": 102,
+             "low": 100, "close": 101.5, "volume": 100},
+            {"date": "2025-01-01", "open": 100, "high": 101,
+             "low": 99, "close": 100.5, "volume": 100},
+        ]
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service.get_historical("AAPL")
+        assert result[0].date == "2025-01-01"
+        assert result[-1].date == "2025-01-03"
+
+    @pytest.mark.asyncio
+    async def test_volume_none_handled(self) -> None:
+        service = MarketDataService()
+        bars = [
+            {"date": "2025-01-01", "open": 100, "high": 101,
+             "low": 99, "close": 100.5},
+        ]
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service.get_historical("AAPL")
+        assert len(result) == 1
+        assert result[0].volume is None
 
 
 # ---------------------------------------------------------------------------
@@ -383,3 +485,284 @@ class TestResolveTicker:
         ):
             with pytest.raises(StockNotFoundError):
                 await service.resolve_ticker("MICROSOFT")
+
+    @pytest.mark.asyncio
+    async def test_ticker_with_dot_triggers_search(self) -> None:
+        service = MarketDataService()
+        mock_results = [{"symbol": "BRK.B"}]
+        with patch.object(
+            service, "_search_ticker", return_value=mock_results
+        ):
+            result = await service.resolve_ticker("BRK.B")
+        assert result == "BRK.B"
+
+    @pytest.mark.asyncio
+    async def test_whitespace_stripped(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("  AAPL  ")
+        assert result == "AAPL"
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService.search_ticker
+# ---------------------------------------------------------------------------
+
+
+class TestSearchTicker:
+    """Tests for MarketDataService.search_ticker (fallback search)."""
+
+    @pytest.mark.asyncio
+    async def test_returns_uppercase_symbol(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service, "_search_ticker", return_value=_MOCK_SEARCH
+        ):
+            result = await service.search_ticker("microsoft")
+        assert result == "MSFT"
+
+    @pytest.mark.asyncio
+    async def test_raises_stock_not_found_when_no_results(self) -> None:
+        service = MarketDataService()
+        with patch.object(service, "_search_ticker", return_value=[]):
+            with pytest.raises(StockNotFoundError):
+                await service.search_ticker("XYZNONEXIST")
+
+    @pytest.mark.asyncio
+    async def test_raises_stock_not_found_when_empty_symbol(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service, "_search_ticker", return_value=[{"symbol": ""}]
+        ):
+            with pytest.raises(StockNotFoundError):
+                await service.search_ticker("something")
+
+    @pytest.mark.asyncio
+    async def test_calls_search_ticker_internal(self) -> None:
+        service = MarketDataService()
+        mock = AsyncMock(return_value=_MOCK_SEARCH)
+        with patch.object(service, "_search_ticker", mock):
+            await service.search_ticker("microsoft")
+        mock.assert_called_once_with("MICROSOFT")
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_on_network_failure(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_search_ticker",
+            side_effect=ExternalAPIError("FMP API", "timeout"),
+        ):
+            with pytest.raises(ExternalAPIError):
+                await service.search_ticker("apple")
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService._get_json
+# ---------------------------------------------------------------------------
+
+
+class TestGetJson:
+    """Tests for MarketDataService._get_json error handling."""
+
+    @pytest.mark.asyncio
+    async def test_returns_parsed_json_on_success(self) -> None:
+        service = MarketDataService()
+        mock_resp = _mock_response([{"symbol": "AAPL"}])
+        mock_client = AsyncMock()
+        mock_client.get.return_value = mock_resp
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result = await service._get_json(
+                "https://example.com", {"apikey": "test"}
+            )
+        assert result == [{"symbol": "AAPL"}]
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_on_timeout(self) -> None:
+        service = MarketDataService()
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = httpx.TimeoutException("timed out")
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            with pytest.raises(ExternalAPIError, match="timed out"):
+                await service._get_json(
+                    "https://example.com", {"apikey": "test"}
+                )
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_on_http_status_error(self) -> None:
+        service = MarketDataService()
+        resp = httpx.Response(
+            500,
+            content=b"Internal Server Error",
+            request=httpx.Request("GET", "https://example.com"),
+        )
+        mock_client = AsyncMock()
+        mock_client.get.return_value = resp
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            with pytest.raises(ExternalAPIError, match="HTTP 500"):
+                await service._get_json(
+                    "https://example.com", {"apikey": "test"}
+                )
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_on_generic_http_error(
+        self,
+    ) -> None:
+        service = MarketDataService()
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = httpx.ConnectError("connection refused")
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            with pytest.raises(ExternalAPIError, match="Request failed"):
+                await service._get_json(
+                    "https://example.com", {"apikey": "test"}
+                )
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService._fetch_quote_and_profile
+# ---------------------------------------------------------------------------
+
+
+class TestFetchQuoteAndProfile:
+    """Tests for MarketDataService._fetch_quote_and_profile."""
+
+    @pytest.mark.asyncio
+    async def test_returns_quote_and_profile_dicts(self) -> None:
+        service = MarketDataService()
+        quote_resp = _mock_response(_MOCK_QUOTE)
+        profile_resp = _mock_response(_MOCK_PROFILE)
+        with patch.object(
+            service,
+            "_parallel_get",
+            return_value=(quote_resp, profile_resp),
+        ):
+            quote, profile = await service._fetch_quote_and_profile("AAPL")
+        assert quote["symbol"] == "AAPL"
+        assert profile["companyName"] == "Apple Inc."
+
+    @pytest.mark.asyncio
+    async def test_handles_empty_response_lists(self) -> None:
+        service = MarketDataService()
+        quote_resp = _mock_response([])
+        profile_resp = _mock_response([])
+        with patch.object(
+            service,
+            "_parallel_get",
+            return_value=(quote_resp, profile_resp),
+        ):
+            quote, profile = await service._fetch_quote_and_profile("AAPL")
+        assert quote == {}
+        assert profile == {}
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_on_timeout(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_parallel_get",
+            side_effect=httpx.TimeoutException("timed out"),
+        ):
+            with pytest.raises(ExternalAPIError, match="timed out"):
+                await service._fetch_quote_and_profile("AAPL")
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_on_http_error(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_parallel_get",
+            side_effect=httpx.ConnectError("refused"),
+        ):
+            with pytest.raises(ExternalAPIError, match="Failed to fetch"):
+                await service._fetch_quote_and_profile("AAPL")
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService._compute_technicals
+# ---------------------------------------------------------------------------
+
+
+def _generate_historical_bars(count: int, base_price: float = 100.0) -> list[dict]:
+    """Generate mock historical bars for technicals tests."""
+    bars = []
+    for i in range(count):
+        price = base_price + i * 0.5
+        bars.append({
+            "date": f"2025-01-{i + 1:02d}",
+            "open": price - 0.5,
+            "high": price + 1.0,
+            "low": price - 1.0,
+            "close": price,
+            "volume": 1000000,
+        })
+    # FMP returns newest-first
+    return list(reversed(bars))
+
+
+class TestComputeTechnicals:
+    """Tests for MarketDataService._compute_technicals."""
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_snapshot_when_less_than_20_bars(self) -> None:
+        service = MarketDataService()
+        bars = _generate_historical_bars(10)
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service._compute_technicals("AAPL")
+        assert result.sma_20 is None
+        assert result.rsi_14 is None
+
+    @pytest.mark.asyncio
+    async def test_computes_sma_20_correctly(self) -> None:
+        service = MarketDataService()
+        bars = _generate_historical_bars(30)
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service._compute_technicals("AAPL")
+        assert result.sma_20 is not None
+        assert isinstance(result.sma_20, float)
+
+    @pytest.mark.asyncio
+    async def test_computes_rsi_14(self) -> None:
+        service = MarketDataService()
+        # Need alternating prices so RSI has both gains and losses
+        bars = []
+        for i in range(50):
+            price = 100 + (i % 5) * 2 - 4  # oscillates 96-104
+            bars.append({
+                "date": f"2025-{(i // 28) + 1:02d}-{(i % 28) + 1:02d}",
+                "open": price - 0.5, "high": price + 1,
+                "low": price - 1, "close": float(price), "volume": 1000000,
+            })
+        bars = list(reversed(bars))
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service._compute_technicals("AAPL")
+        assert result.rsi_14 is not None
+        assert 0 <= result.rsi_14 <= 100
+
+    @pytest.mark.asyncio
+    async def test_computes_macd_values(self) -> None:
+        service = MarketDataService()
+        bars = _generate_historical_bars(50)
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service._compute_technicals("AAPL")
+        assert result.macd_line is not None
+        assert result.macd_signal is not None
+        assert result.macd_histogram is not None
+
+    @pytest.mark.asyncio
+    async def test_computes_bollinger_bands(self) -> None:
+        service = MarketDataService()
+        bars = _generate_historical_bars(30)
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service._compute_technicals("AAPL")
+        assert result.bollinger_upper is not None
+        assert result.bollinger_middle is not None
+        assert result.bollinger_lower is not None
+        assert result.bollinger_upper > result.bollinger_middle
+        assert result.bollinger_middle > result.bollinger_lower
