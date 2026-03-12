@@ -30,14 +30,14 @@ _SYSTEM_PROMPT = (
     "the correct official ticker symbol (e.g., 'microsft' → 'MSFT', "
     "'apple' → 'AAPL', 'google' → 'GOOGL').\n\n"
     "Do NOT invent or override any price data — it is provided to you "
-    "from Yahoo Finance.\n\n"
+    "from real market data.\n\n"
     "Respond in valid JSON matching the exact schema provided. "
     "No markdown, no code blocks, just raw JSON."
 )
 
 _USER_PROMPT_TEMPLATE = """Analyze the stock: {ticker} ({company_name})
 
-=== REAL MARKET DATA (from Yahoo Finance — do NOT override) ===
+=== REAL MARKET DATA (do NOT override) ===
 Current Price: ${current_price}
 Previous Close: ${previous_close}
 Day Range: ${day_low} – ${day_high}
