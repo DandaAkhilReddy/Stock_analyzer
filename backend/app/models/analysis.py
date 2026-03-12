@@ -127,8 +127,8 @@ class StockAnalysisResponse(BaseModel):
     price_predictions: PricePredictions
     # Metadata
     analysis_timestamp: datetime
-    model_used: str = "kimi-k2.5"
+    model_used: str = "gpt-5.3"
     disclaimer: str = (
-        "Price data sourced from Yahoo Finance. "
+        "Price data sourced from Financial Modeling Prep. "
         "Analysis and predictions are AI-generated — not financial advice."
     )
