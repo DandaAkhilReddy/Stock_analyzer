@@ -73,7 +73,7 @@ class OpenAIProvider:
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=temperature,
-                max_tokens=max_tokens,
+                max_completion_tokens=max_tokens,
                 timeout=180.0,
             )
         except Exception as exc:
