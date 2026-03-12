@@ -257,7 +257,7 @@ class TestChatCompletionJsonCallArguments:
         await provider.chat_completion_json("sys", "usr", max_tokens=512)
 
         _, kwargs = create_mock.call_args
-        assert kwargs["max_tokens"] == 512
+        assert kwargs["max_completion_tokens"] == 512
 
     @pytest.mark.asyncio
     async def test_default_temperature_is_0_3(self) -> None:
@@ -277,7 +277,7 @@ class TestChatCompletionJsonCallArguments:
         await provider.chat_completion_json("sys", "usr")
 
         _, kwargs = create_mock.call_args
-        assert kwargs["max_tokens"] == 16000
+        assert kwargs["max_completion_tokens"] == 16000
 
     @pytest.mark.asyncio
     async def test_messages_contain_system_role(self) -> None:
