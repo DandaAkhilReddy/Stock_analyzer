@@ -12,7 +12,7 @@ from app.models.analysis import HistoricalPrice, TechnicalSnapshot
 
 logger = get_logger(__name__)
 
-_FMP_BASE = "https://financialmodelingprep.com/api/v3"
+_FMP_BASE = "https://financialmodelingprep.com/stable"
 _TIMEOUT = 30.0
 
 
@@ -235,12 +235,13 @@ class MarketDataService:
         """
         logger.info("fmp_history_start", ticker=ticker, period=period)
 
-        url = f"{_FMP_BASE}/historical-price-full/{ticker}"
-        data = await self._get_json(url, self._params())
+        url = f"{_FMP_BASE}/historical-price-eod/full"
+        data = await self._get_json(url, self._params(symbol=ticker))
 
-        historical = data.get("historical", []) if isinstance(data, dict) else []
+        # FMP /stable/ returns a flat array (newest-first)
+        historical = data if isinstance(data, list) else []
 
-        # FMP returns newest first — reverse for oldest-first
+        # Reverse for oldest-first
         rows: list[HistoricalPrice] = []
         for item in reversed(historical):
             rows.append(
@@ -290,7 +291,7 @@ class MarketDataService:
 
     async def _search_ticker(self, query: str) -> list[dict]:
         """Search FMP for matching ticker symbols."""
-        url = f"{_FMP_BASE}/search"
+        url = f"{_FMP_BASE}/search-name"
         data = await self._get_json(url, self._params(query=query, limit=5))
         return data if isinstance(data, list) else []
 
@@ -298,13 +299,13 @@ class MarketDataService:
         self, ticker: str
     ) -> tuple[dict, dict]:
         """Fetch quote and profile data in parallel."""
-        quote_url = f"{_FMP_BASE}/quote/{ticker}"
-        profile_url = f"{_FMP_BASE}/profile/{ticker}"
+        quote_url = f"{_FMP_BASE}/quote"
+        profile_url = f"{_FMP_BASE}/profile"
 
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             try:
                 quote_resp, profile_resp = await self._parallel_get(
-                    client, quote_url, profile_url
+                    client, quote_url, profile_url, ticker
                 )
             except httpx.TimeoutException as exc:
                 raise ExternalAPIError(
@@ -331,11 +332,12 @@ class MarketDataService:
         client: httpx.AsyncClient,
         url1: str,
         url2: str,
+        ticker: str,
     ) -> tuple[httpx.Response, httpx.Response]:
         """Execute two GET requests in parallel."""
         import asyncio
 
-        params = self._params()
+        params = self._params(symbol=ticker)
         r1, r2 = await asyncio.gather(
             client.get(url1, params=params),
             client.get(url2, params=params),
@@ -348,9 +350,9 @@ class MarketDataService:
         """Fetch 1-year history from FMP and compute technical indicators."""
         import pandas as pd
 
-        url = f"{_FMP_BASE}/historical-price-full/{ticker}"
-        data = await self._get_json(url, self._params())
-        historical = data.get("historical", []) if isinstance(data, dict) else []
+        url = f"{_FMP_BASE}/historical-price-eod/full"
+        data = await self._get_json(url, self._params(symbol=ticker))
+        historical = data if isinstance(data, list) else []
 
         if len(historical) < 20:
             return TechnicalSnapshot()
