@@ -121,19 +121,16 @@ _MOCK_PROFILE: list[dict] = [
     }
 ]
 
-_MOCK_HISTORICAL: dict = {
-    "symbol": "AAPL",
-    "historical": [
-        {
-            "date": "2025-01-10",
-            "open": 184.0,
-            "high": 186.0,
-            "low": 183.0,
-            "close": 185.5,
-            "volume": 45000000,
-        }
-    ],
-}
+_MOCK_HISTORICAL: list[dict] = [
+    {
+        "date": "2025-01-10",
+        "open": 184.0,
+        "high": 186.0,
+        "low": 183.0,
+        "close": 185.5,
+        "volume": 45000000,
+    }
+]
 
 _MOCK_SEARCH: list[dict] = [
     {"symbol": "MSFT", "name": "Microsoft Corporation"}
@@ -271,7 +268,7 @@ class TestGetHistorical:
     async def test_returns_empty_list_when_no_data(self) -> None:
         service = MarketDataService()
         with patch.object(
-            service, "_get_json", return_value={"historical": []}
+            service, "_get_json", return_value=[]
         ):
             result = await service.get_historical("AAPL")
         assert result == []
