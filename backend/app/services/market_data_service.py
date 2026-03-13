@@ -306,18 +306,16 @@ class MarketDataService:
     # ------------------------------------------------------------------
 
     async def _search_ticker(self, query: str) -> list[dict]:
-        """Search FMP for matching ticker symbols.
+        """Search FMP for matching US ticker symbols.
 
-        Results are re-ordered to prefer US exchanges (symbols without
-        dots like .NE, .DE) so that 'TESLA' resolves to 'TSLA' not
-        'TSLA.NE'.
+        Foreign listings (symbols containing dots like TSLA.NE, MSFT.DE)
+        are filtered out so only US exchange results are returned.
         """
         url = f"{_FMP_BASE}/search-name"
         data = await self._get_json(url, self._params(query=query, limit=10))
         results = data if isinstance(data, list) else []
-        # Prefer symbols without dots (US tickers) over foreign ones
-        results.sort(key=lambda r: "." in r.get("symbol", ""))
-        return results
+        # US exchanges only — filter out foreign listings (symbols with dots)
+        return [r for r in results if "." not in r.get("symbol", "")]
 
     async def _fetch_quote_and_profile(
         self, ticker: str
