@@ -25,7 +25,13 @@ export function StockAnalysis() {
   const activeTab = useStockStore((s) => s.activeTab);
   const setActiveTab = useStockStore((s) => s.setActiveTab);
 
+  const [hasHydrated, setHasHydrated] = useState(useStockStore.persist.hasHydrated());
   const [loadingSeconds, setLoadingSeconds] = useState(0);
+
+  useEffect(() => {
+    const unsub = useStockStore.persist.onFinishHydration(() => setHasHydrated(true));
+    return unsub;
+  }, []);
 
   useEffect(() => {
     if (!isLoading) {
@@ -35,6 +41,9 @@ export function StockAnalysis() {
     const interval = setInterval(() => setLoadingSeconds((s) => s + 1), 1000);
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  // Wait for persist middleware to rehydrate before deciding what to show
+  if (!hasHydrated) return null;
 
   if (!currentTicker) {
     return <LandingHero />;
