@@ -23,6 +23,12 @@ vi.mock('../../stores/stockStore', () => ({
   ),
 }));
 
+// Mock the stock API so useStockSearch's debounced fetch never hits the network
+vi.mock('../../services/stockApi', () => ({
+  searchStocks: vi.fn().mockResolvedValue([]),
+  analyzeStock: vi.fn().mockResolvedValue({}),
+}));
+
 // Attach getState so the imperative call in StockSearchBar works too
 import { useStockStore } from '../../stores/stockStore';
 (useStockStore as unknown as { getState: () => { fetchAnalysis: () => void } }).getState = () => ({

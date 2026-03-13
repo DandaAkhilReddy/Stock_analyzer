@@ -35,6 +35,12 @@ vi.mock('../../stores/stockStore', () => ({
   useStockStore: vi.fn(),
 }));
 
+// Mock the stock API so useStockSearch's debounced fetch never hits the network
+vi.mock('../../services/stockApi', () => ({
+  searchStocks: vi.fn().mockResolvedValue([]),
+  analyzeStock: vi.fn().mockResolvedValue({}),
+}));
+
 // Lazily import the mocked module so we can configure it per-test.
 import { useStockStore } from '../../stores/stockStore';
 

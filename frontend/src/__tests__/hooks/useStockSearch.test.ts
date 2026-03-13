@@ -5,9 +5,11 @@
  * without needing a full component tree.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useStockSearch } from '../../hooks/useStockSearch';
+
+const noop = vi.fn();
 
 describe('useStockSearch', () => {
   // -------------------------------------------------------------------------
@@ -15,18 +17,33 @@ describe('useStockSearch', () => {
   // -------------------------------------------------------------------------
 
   it('initialises query as an empty string', () => {
-    const { result } = renderHook(() => useStockSearch());
+    const { result } = renderHook(() => useStockSearch(noop));
     expect(result.current.query).toBe('');
   });
 
   it('exposes setQuery function', () => {
-    const { result } = renderHook(() => useStockSearch());
+    const { result } = renderHook(() => useStockSearch(noop));
     expect(typeof result.current.setQuery).toBe('function');
   });
 
-  it('exposes clearSearch function', () => {
-    const { result } = renderHook(() => useStockSearch());
-    expect(typeof result.current.clearSearch).toBe('function');
+  it('exposes close function', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+    expect(typeof result.current.close).toBe('function');
+  });
+
+  it('exposes isOpen as false initially', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+    expect(result.current.isOpen).toBe(false);
+  });
+
+  it('exposes suggestions as empty array initially', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+    expect(result.current.suggestions).toEqual([]);
+  });
+
+  it('exposes selectedIndex as -1 initially', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+    expect(result.current.selectedIndex).toBe(-1);
   });
 
   // -------------------------------------------------------------------------
@@ -34,7 +51,7 @@ describe('useStockSearch', () => {
   // -------------------------------------------------------------------------
 
   it('updates query via setQuery', () => {
-    const { result } = renderHook(() => useStockSearch());
+    const { result } = renderHook(() => useStockSearch(noop));
 
     act(() => {
       result.current.setQuery('AAPL');
@@ -44,7 +61,7 @@ describe('useStockSearch', () => {
   });
 
   it('setQuery can set an arbitrary string value', () => {
-    const { result } = renderHook(() => useStockSearch());
+    const { result } = renderHook(() => useStockSearch(noop));
 
     act(() => {
       result.current.setQuery('Microsoft Corporation');
@@ -54,7 +71,7 @@ describe('useStockSearch', () => {
   });
 
   it('setQuery can set an empty string (explicit clear)', () => {
-    const { result } = renderHook(() => useStockSearch());
+    const { result } = renderHook(() => useStockSearch(noop));
 
     act(() => {
       result.current.setQuery('TSLA');
@@ -67,41 +84,28 @@ describe('useStockSearch', () => {
   });
 
   // -------------------------------------------------------------------------
-  // clearSearch
+  // close
   // -------------------------------------------------------------------------
 
-  it('clearSearch resets query to empty string', () => {
-    const { result } = renderHook(() => useStockSearch());
+  it('close resets isOpen to false and selectedIndex to -1', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
 
     act(() => {
-      result.current.setQuery('NVDA');
+      result.current.close();
     });
-    expect(result.current.query).toBe('NVDA');
 
-    act(() => {
-      result.current.clearSearch();
-    });
-    expect(result.current.query).toBe('');
+    expect(result.current.isOpen).toBe(false);
+    expect(result.current.selectedIndex).toBe(-1);
   });
 
-  it('clearSearch is a stable reference (useCallback — same ref across renders)', () => {
-    const { result, rerender } = renderHook(() => useStockSearch());
+  it('close is a stable reference (useCallback — same ref across renders)', () => {
+    const { result, rerender } = renderHook(() => useStockSearch(noop));
 
-    const firstRef = result.current.clearSearch;
+    const firstRef = result.current.close;
     rerender();
-    const secondRef = result.current.clearSearch;
+    const secondRef = result.current.close;
 
     expect(firstRef).toBe(secondRef);
-  });
-
-  it('calling clearSearch when already empty leaves query as empty string', () => {
-    const { result } = renderHook(() => useStockSearch());
-
-    act(() => {
-      result.current.clearSearch();
-    });
-
-    expect(result.current.query).toBe('');
   });
 
   // -------------------------------------------------------------------------
@@ -109,7 +113,7 @@ describe('useStockSearch', () => {
   // -------------------------------------------------------------------------
 
   it('tracks multiple sequential setQuery updates correctly', () => {
-    const { result } = renderHook(() => useStockSearch());
+    const { result } = renderHook(() => useStockSearch(noop));
 
     act(() => { result.current.setQuery('A'); });
     expect(result.current.query).toBe('A');

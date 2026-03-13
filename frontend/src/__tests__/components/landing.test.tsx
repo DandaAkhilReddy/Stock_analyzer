@@ -51,6 +51,12 @@ vi.mock('../../stores/stockStore', () => ({
   ),
 }));
 
+// Mock the stock API so useStockSearch's debounced fetch never hits the network
+vi.mock('../../services/stockApi', () => ({
+  searchStocks: vi.fn().mockResolvedValue([]),
+  analyzeStock: vi.fn().mockResolvedValue({}),
+}));
+
 import { useStockStore } from '../../stores/stockStore';
 
 // Attach getState so the imperative call in HeroSearchBar doesn't throw.
@@ -292,7 +298,7 @@ describe('HeroSearchBar', () => {
   });
 
   it('shows the Loader2 spinner and hides the kbd hint when isLoading is true', () => {
-    vi.mocked(useStockStore).mockImplementationOnce(
+    vi.mocked(useStockStore).mockImplementation(
       (selector: (s: { isLoading: boolean }) => unknown) => selector({ isLoading: true }),
     );
     render(<HeroSearchBar />);
@@ -301,6 +307,10 @@ describe('HeroSearchBar', () => {
     expect(svg).toBeInTheDocument();
     // The kbd hint should not be present
     expect(screen.queryByText(/Enter/i)).not.toBeInTheDocument();
+    // Restore default mock
+    vi.mocked(useStockStore).mockImplementation(
+      (selector: (s: { isLoading: boolean }) => unknown) => selector({ isLoading: false }),
+    );
   });
 });
 
