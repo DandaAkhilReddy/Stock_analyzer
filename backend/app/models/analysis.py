@@ -125,6 +125,9 @@ class StockAnalysisResponse(BaseModel):
     bear_case: str
     risk_assessment: RiskAssessment
     price_predictions: PricePredictions
+    # Research enrichment
+    research_context: str = ""
+    research_sources: list[str] = []
     # Metadata
     analysis_timestamp: datetime
     model_used: str = "gpt-5.3"
