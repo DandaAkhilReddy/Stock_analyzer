@@ -14,6 +14,7 @@ import { PricePrediction } from '../components/analysis/PricePrediction';
 import { TechnicalSummary } from '../components/technical/TechnicalSummary';
 import { SupportResistance } from '../components/technical/SupportResistance';
 import { CompanyAbout } from '../components/about/CompanyAbout';
+import { ResearchSources } from '../components/analysis/ResearchSources';
 
 export function StockAnalysis() {
   const currentTicker = useStockStore((s) => s.currentTicker);
@@ -135,7 +136,15 @@ export function StockAnalysis() {
             </div>
           )}
 
-          {activeTab === 'about' && <CompanyAbout analysis={analysis} />}
+          {activeTab === 'about' && (
+            <div className="space-y-4">
+              <CompanyAbout analysis={analysis} />
+              <ResearchSources
+                researchContext={analysis.research_context ?? ''}
+                researchSources={analysis.research_sources ?? []}
+              />
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     </motion.div>
