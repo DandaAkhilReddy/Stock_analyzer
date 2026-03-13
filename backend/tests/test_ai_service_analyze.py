@@ -646,8 +646,15 @@ class TestErrorHandling:
     async def test_analyze_propagates_external_api_error(
         self, mock_provider: AsyncMock, mock_market: AsyncMock
     ) -> None:
-        """ExternalAPIError from market data propagates as-is (not wrapped)."""
+        """ExternalAPIError from market data triggers search fallback.
+
+        When get_quote raises ExternalAPIError, the service falls back
+        to search_ticker. If search also fails, the error propagates.
+        """
         mock_market.get_quote = AsyncMock(
+            side_effect=ExternalAPIError("FMP API", "connection refused")
+        )
+        mock_market.search_ticker = AsyncMock(
             side_effect=ExternalAPIError("FMP API", "connection refused")
         )
         service = AIAnalysisService(provider=mock_provider, market_data=mock_market)
