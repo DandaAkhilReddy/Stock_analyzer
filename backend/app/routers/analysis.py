@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.analysis import StockAnalysisResponse
+from app.providers.sharepoint_agent import SharePointAgentProvider
 from app.services.ai_analysis_service import AIAnalysisService
 from app.services.market_data_service import MarketDataService
 
@@ -13,7 +15,12 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/api", tags=["analysis"])
 
 _market_service = MarketDataService()
-_ai_service = AIAnalysisService(market_data=_market_service)
+_sharepoint = (
+    SharePointAgentProvider() if settings.sharepoint_agent_endpoint else None
+)
+_ai_service = AIAnalysisService(
+    market_data=_market_service, sharepoint=_sharepoint
+)
 
 
 @router.post("/analyze/{ticker}", response_model=StockAnalysisResponse)
