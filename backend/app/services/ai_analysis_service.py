@@ -17,6 +17,7 @@ from app.models.analysis import (
     TechnicalSnapshot,
 )
 from app.providers.openai_provider import OpenAIProvider
+from app.providers.sharepoint_agent import SharePointAgentProvider
 from app.services.market_data_service import MarketDataService
 
 logger = get_logger(__name__)
@@ -51,6 +52,7 @@ Technical Indicators (computed from real data):
   RSI-14: {rsi_14}
   MACD: {macd_line} | Signal: {macd_signal}
 
+{research_section}
 Based on the above real data, provide your qualitative analysis as JSON:
 {{
   "recommendation": "strong_buy" | "buy" | "hold" | "sell" | "strong_sell",
@@ -91,15 +93,18 @@ class AIAnalysisService:
         self,
         provider: OpenAIProvider | None = None,
         market_data: MarketDataService | None = None,
+        sharepoint: SharePointAgentProvider | None = None,
     ) -> None:
-        """Initialise with an OpenAI provider and market data service.
+        """Initialise with an OpenAI provider, market data, and research agent.
 
         Args:
             provider: An ``OpenAIProvider`` instance.
             market_data: A ``MarketDataService`` for real prices.
+            sharepoint: Optional ``SharePointAgentProvider`` for research.
         """
         self._provider = provider or OpenAIProvider()
         self._market = market_data or MarketDataService()
+        self._sharepoint = sharepoint
 
     async def analyze(self, ticker: str) -> StockAnalysisResponse:
         """Run two-phase analysis: real data fetch + AI qualitative.
@@ -151,10 +156,35 @@ class AIAnalysisService:
                 f"Failed to fetch market data for {ticker}: {exc}"
             ) from exc
 
-        # Use resolved ticker from yfinance
+        # Use resolved ticker from FMP
         resolved_ticker = quote.get("ticker", ticker)
 
+        # Phase 1.5: Research enrichment (non-blocking)
+        research_context = ""
+        research_sources: list[str] = []
+        if self._sharepoint:
+            try:
+                research_context, research_sources = (
+                    await self._sharepoint.research_company(
+                        resolved_ticker,
+                        quote.get("company_name", resolved_ticker),
+                    )
+                )
+            except Exception as exc:
+                logger.warning(
+                    "sharepoint_research_failed",
+                    ticker=resolved_ticker,
+                    error=str(exc),
+                )
+
         # Phase 2: AI qualitative analysis with real data context
+        research_section = ""
+        if research_context:
+            research_section = (
+                "\n=== RESEARCH CONTEXT (from web search) ===\n"
+                f"{research_context}\n"
+            )
+
         user_prompt = _USER_PROMPT_TEMPLATE.format(
             ticker=resolved_ticker,
             company_name=quote.get("company_name", resolved_ticker),
@@ -174,6 +204,7 @@ class AIAnalysisService:
             rsi_14=technicals.rsi_14 or "N/A",
             macd_line=technicals.macd_line or "N/A",
             macd_signal=technicals.macd_signal or "N/A",
+            research_section=research_section,
         )
 
         try:
@@ -192,7 +223,9 @@ class AIAnalysisService:
 
         # Phase 3: Merge real data + AI qualitative
         response = self._merge_response(
-            resolved_ticker, quote, history, technicals, ai_result
+            resolved_ticker, quote, history, technicals, ai_result,
+            research_context=research_context,
+            research_sources=research_sources,
         )
         logger.info(
             "analysis_complete",
@@ -208,15 +241,19 @@ class AIAnalysisService:
         history: list[HistoricalPrice],
         technicals: TechnicalSnapshot,
         ai_data: dict,
+        research_context: str = "",
+        research_sources: list[str] | None = None,
     ) -> StockAnalysisResponse:
         """Merge real market data with AI qualitative analysis.
 
         Args:
             ticker: Resolved ticker symbol.
-            quote: Real quote data from yfinance.
+            quote: Real quote data from FMP.
             history: Real historical OHLC data.
             technicals: Computed technical indicators.
             ai_data: Qualitative analysis from AI.
+            research_context: Research text from SharePoint agent.
+            research_sources: URLs consulted by the research agent.
 
         Returns:
             Fully populated ``StockAnalysisResponse``.
@@ -312,6 +349,8 @@ class AIAnalysisService:
                         **predictions_data["three_months"]
                     ),
                 ),
+                research_context=research_context,
+                research_sources=research_sources or [],
                 analysis_timestamp=datetime.now(timezone.utc),
             )
         except (KeyError, TypeError, ValueError) as exc:
