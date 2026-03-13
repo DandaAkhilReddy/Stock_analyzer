@@ -15,6 +15,7 @@ import { TechnicalSummary } from '../components/technical/TechnicalSummary';
 import { SupportResistance } from '../components/technical/SupportResistance';
 import { CompanyAbout } from '../components/about/CompanyAbout';
 import { ResearchSources } from '../components/analysis/ResearchSources';
+import { InvestmentOutlook } from '../components/invest/InvestmentOutlook';
 
 export function StockAnalysis() {
   const currentTicker = useStockStore((s) => s.currentTicker);
@@ -154,6 +155,20 @@ export function StockAnalysis() {
                 researchContext={analysis.research_context ?? ''}
                 researchSources={analysis.research_sources ?? []}
               />
+            </div>
+          )}
+
+          {activeTab === 'invest' && analysis.long_term_outlook && (
+            <InvestmentOutlook
+              outlook={analysis.long_term_outlook}
+              currentPrice={analysis.current_price}
+              ticker={analysis.ticker}
+            />
+          )}
+
+          {activeTab === 'invest' && !analysis.long_term_outlook && (
+            <div className="text-center py-12 text-stone-400">
+              <p className="text-sm">Long-term outlook data not available for this stock.</p>
             </div>
           )}
         </motion.div>
