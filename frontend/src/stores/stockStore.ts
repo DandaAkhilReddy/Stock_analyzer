@@ -17,10 +17,10 @@ export const useStockStore = create<StockState>((set) => ({
   analysis: null,
   isLoading: false,
   error: null,
-  activeTab: 'chart',
+  activeTab: 'invest',
 
   fetchAnalysis: async (ticker: string) => {
-    set({ currentTicker: ticker, isLoading: true, error: null, analysis: null, activeTab: 'chart' });
+    set({ currentTicker: ticker, isLoading: true, error: null, analysis: null, activeTab: 'invest' });
     try {
       const analysis = await analyzeStock(ticker);
       set({ analysis, isLoading: false, currentTicker: analysis.ticker });
