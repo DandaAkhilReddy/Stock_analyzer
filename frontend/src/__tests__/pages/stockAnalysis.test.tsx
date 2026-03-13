@@ -57,6 +57,13 @@ vi.mock('lightweight-charts', () => ({
   HistogramSeries: 'HistogramSeries',
 }));
 
+// Stub ResizeObserver for chart tests (jsdom doesn't provide it)
+vi.stubGlobal('ResizeObserver', class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+});
+
 const mockFetchAnalysis = vi.fn();
 const mockSetActiveTab = vi.fn();
 

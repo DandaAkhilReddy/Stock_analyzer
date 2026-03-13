@@ -120,7 +120,7 @@ vi.mock('framer-motion', () => {
 import { PriceChart } from '../../components/charts/PriceChart';
 
 // ---------------------------------------------------------------------------
-// Test data — dates within the last year so they survive the default 1Y filter
+// Test data — ALL is the default range so all dates are shown
 // ---------------------------------------------------------------------------
 
 const mockData: HistoricalPrice[] = [
@@ -313,10 +313,10 @@ describe('PriceChart', () => {
   // -------------------------------------------------------------------------
 
   describe('range button interaction', () => {
-    it('applies active styles to the default 1Y button on mount', () => {
+    it('applies active styles to the default ALL button on mount', () => {
       renderChart();
-      const btn1Y = screen.getByRole('button', { name: '1Y' });
-      expect(btn1Y.className).toContain('bg-indigo-600');
+      const btnAll = screen.getByRole('button', { name: 'ALL' });
+      expect(btnAll.className).toContain('bg-indigo-600');
     });
 
     it('applies inactive styles to non-selected range buttons on mount', () => {
@@ -332,16 +332,18 @@ describe('PriceChart', () => {
       expect(btn1M.className).toContain('bg-indigo-600');
     });
 
-    it('switching to 1M removes active styles from 1Y', () => {
+    it('switching to 1M removes active styles from ALL', () => {
       renderChart();
       fireEvent.click(screen.getByRole('button', { name: '1M' }));
-      expect(screen.getByRole('button', { name: '1Y' }).className).not.toContain(
+      expect(screen.getByRole('button', { name: 'ALL' }).className).not.toContain(
         'bg-indigo-600',
       );
     });
 
-    it('clicking ALL creates a new chart for all data points', () => {
+    it('clicking ALL after switching away creates a new chart for all data points', () => {
       renderChart();
+      // Switch away from ALL first
+      fireEvent.click(screen.getByRole('button', { name: '1M' }));
       vi.clearAllMocks();
       fireEvent.click(screen.getByRole('button', { name: 'ALL' }));
       // useEffect re-runs with new filtered data → createChart is called again

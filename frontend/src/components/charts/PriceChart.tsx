@@ -24,7 +24,7 @@ function filterByRange(data: HistoricalPrice[], range: TimeRange): HistoricalPri
 export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
-  const [range, setRange] = useState<TimeRange>('1Y');
+  const [range, setRange] = useState<TimeRange>('ALL');
 
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
   const filtered = filterByRange(sorted, range);
