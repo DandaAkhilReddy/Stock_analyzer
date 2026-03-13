@@ -41,7 +41,7 @@ export const useStockStore = create<StockState>()(
         currentTicker: state.currentTicker,
         activeTab: state.activeTab,
       }),
-      onRehydrate: () => (state) => {
+      onRehydrateStorage: () => (state?: StockState) => {
         if (state?.currentTicker) {
           state.fetchAnalysis(state.currentTicker);
         }

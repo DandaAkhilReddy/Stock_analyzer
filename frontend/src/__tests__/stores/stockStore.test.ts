@@ -381,7 +381,7 @@ describe('onRehydrate', () => {
     const state = { currentTicker: 'AAPL', fetchAnalysis: mockFetch } as any;
 
     const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrate();
+    const rehydrateCallback = options.onRehydrateStorage();
     rehydrateCallback(state);
 
     expect(mockFetch).toHaveBeenCalledOnce();
@@ -393,7 +393,7 @@ describe('onRehydrate', () => {
     const state = { currentTicker: null, fetchAnalysis: mockFetch } as any;
 
     const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrate();
+    const rehydrateCallback = options.onRehydrateStorage();
     rehydrateCallback(state);
 
     expect(mockFetch).not.toHaveBeenCalled();
@@ -401,7 +401,7 @@ describe('onRehydrate', () => {
 
   it('handles undefined state gracefully without throwing', () => {
     const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrate();
+    const rehydrateCallback = options.onRehydrateStorage();
 
     expect(() => rehydrateCallback(undefined)).not.toThrow();
   });
@@ -411,7 +411,7 @@ describe('onRehydrate', () => {
     const state = { currentTicker: '', fetchAnalysis: mockFetch } as any;
 
     const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrate();
+    const rehydrateCallback = options.onRehydrateStorage();
     rehydrateCallback(state);
 
     expect(mockFetch).not.toHaveBeenCalled();
