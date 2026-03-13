@@ -72,7 +72,6 @@ class OpenAIProvider:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                temperature=temperature,
                 max_completion_tokens=max_tokens,
                 timeout=180.0,
             )
