@@ -11,13 +11,15 @@ services:
       - key: AZURE_OPENAI_API_KEY
         sync: false
       - key: AZURE_OPENAI_DEPLOYMENT
-        value: Kimi-K2.5
+        value: gpt-4.1
       - key: AZURE_OPENAI_API_VERSION
         value: 2024-05-01-preview
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: INFO
+      - key: FMP_API_KEY
+        sync: false
       - key: CORS_ORIGINS
         value: "*"
     healthCheckPath: /health
