@@ -3,7 +3,7 @@ import type { SearchResult } from '../types/analysis';
 import { searchStocks } from '../services/stockApi';
 
 const DEBOUNCE_MS = 300;
-const MIN_QUERY_LENGTH = 2;
+const MIN_QUERY_LENGTH = 1;
 
 interface UseStockSearchReturn {
   query: string;
