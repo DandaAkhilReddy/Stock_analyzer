@@ -184,10 +184,13 @@ class TestChatCompletionJsonEmptyContent:
 
 
 class TestChatCompletionJsonInvalidJSON:
+    """Invalid JSON tests — provider retries once, so mock returns bad JSON twice."""
+
     @pytest.mark.asyncio
     async def test_raises_ai_analysis_error_for_plain_text(self) -> None:
         provider, create_mock = _make_provider()
-        create_mock.return_value = _make_response("I cannot provide analysis right now.")
+        bad = _make_response("I cannot provide analysis right now.")
+        create_mock.side_effect = [bad, bad]
 
         with pytest.raises(AIAnalysisError, match="Invalid JSON response"):
             await provider.chat_completion_json("sys", "usr")
@@ -195,17 +198,17 @@ class TestChatCompletionJsonInvalidJSON:
     @pytest.mark.asyncio
     async def test_raises_ai_analysis_error_for_truncated_json(self) -> None:
         provider, create_mock = _make_provider()
-        create_mock.return_value = _make_response('{"key": "val')  # unterminated
+        bad = _make_response('{"key": "val')  # unterminated
+        create_mock.side_effect = [bad, bad]
 
         with pytest.raises(AIAnalysisError, match="Invalid JSON response"):
             await provider.chat_completion_json("sys", "usr")
 
     @pytest.mark.asyncio
     async def test_raises_ai_analysis_error_for_json_with_unbalanced_braces(self) -> None:
-        # Braces are present so _extract_json slices text[start:end+1], but the
-        # slice itself is not valid JSON, so json.loads raises JSONDecodeError.
         provider, create_mock = _make_provider()
-        create_mock.return_value = _make_response("{broken key: no quotes}")
+        bad = _make_response("{broken key: no quotes}")
+        create_mock.side_effect = [bad, bad]
 
         with pytest.raises(AIAnalysisError, match="Invalid JSON response"):
             await provider.chat_completion_json("sys", "usr")
@@ -213,7 +216,8 @@ class TestChatCompletionJsonInvalidJSON:
     @pytest.mark.asyncio
     async def test_original_json_decode_error_is_chained(self) -> None:
         provider, create_mock = _make_provider()
-        create_mock.return_value = _make_response("not json at all !!!")
+        bad = _make_response("not json at all !!!")
+        create_mock.side_effect = [bad, bad]
 
         with pytest.raises(AIAnalysisError) as exc_info:
             await provider.chat_completion_json("sys", "usr")
@@ -221,6 +225,38 @@ class TestChatCompletionJsonInvalidJSON:
         import json
 
         assert isinstance(exc_info.value.__cause__, json.JSONDecodeError)
+
+    @pytest.mark.asyncio
+    async def test_retries_once_on_json_failure(self) -> None:
+        provider, create_mock = _make_provider()
+        bad = _make_response("not json")
+        good = _make_response('{"ok": true}')
+        create_mock.side_effect = [bad, good]
+
+        result = await provider.chat_completion_json("sys", "usr")
+
+        assert result == {"ok": True}
+        assert create_mock.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_repairs_trailing_comma(self) -> None:
+        provider, create_mock = _make_provider()
+        create_mock.return_value = _make_response('{"a": 1, "b": 2,}')
+
+        result = await provider.chat_completion_json("sys", "usr")
+
+        assert result == {"a": 1, "b": 2}
+
+    @pytest.mark.asyncio
+    async def test_repairs_js_comments(self) -> None:
+        provider, create_mock = _make_provider()
+        create_mock.return_value = _make_response(
+            '{"a": 1, // this is a comment\n"b": 2}'
+        )
+
+        result = await provider.chat_completion_json("sys", "usr")
+
+        assert result == {"a": 1, "b": 2}
 
 
 # ---------------------------------------------------------------------------
@@ -316,6 +352,16 @@ class TestChatCompletionJsonCallArguments:
         messages: list[dict[str, str]] = kwargs["messages"]
         assert messages[0]["role"] == "system"
         assert messages[1]["role"] == "user"
+
+    @pytest.mark.asyncio
+    async def test_response_format_is_json_object(self) -> None:
+        provider, create_mock = _make_provider()
+        create_mock.return_value = _make_response('{"ok": true}')
+
+        await provider.chat_completion_json("sys", "usr")
+
+        _, kwargs = create_mock.call_args
+        assert kwargs["response_format"] == {"type": "json_object"}
 
     @pytest.mark.asyncio
     async def test_timeout_is_180_seconds(self) -> None:
