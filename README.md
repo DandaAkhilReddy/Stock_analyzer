@@ -261,52 +261,56 @@ Stock Analyzer combines **real-time market data** from Yahoo Finance with **AI-p
 
 ### Prerequisites
 
-| Tool | Version | Link |
-|:-----|:--------|:-----|
+| Tool | Version | Where to get it |
+|:-----|:--------|:----------------|
 | Python | 3.10+ | [python.org](https://python.org) |
 | Node.js | 18+ | [nodejs.org](https://nodejs.org) |
-| Azure OpenAI | Any tier | [azure.microsoft.com](https://azure.microsoft.com/en-us/products/ai-services/openai-service) |
+| FMP API key | Free tier | [financialmodelingprep.com](https://financialmodelingprep.com/developer) |
+| Azure OpenAI | Any tier | [portal.azure.com](https://portal.azure.com) |
 
 ### Quick Start
 
-**1. Clone**
+**1. Clone & paste your keys**
 
 ```bash
 git clone https://github.com/DandaAkhilReddy/Stock_analyzer.git
 cd Stock_analyzer
+cp backend/.env.example backend/.env
 ```
 
-**2. Backend**
+Open `backend/.env` and paste your API keys:
+
+```env
+AZURE_OPENAI_ENDPOINT=https://YOUR-RESOURCE.openai.azure.com/
+AZURE_OPENAI_API_KEY=paste-your-key-here
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_API_VERSION=2024-05-01-preview
+FMP_API_KEY=paste-your-key-here
+```
+
+**2. Run with Docker** (recommended)
 
 ```bash
+docker compose up --build       # App at http://localhost:8000
+```
+
+**Or run manually:**
+
+```bash
+# Terminal 1 — Backend
 cd backend
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-Create `backend/.env`:
-
-```env
-AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_DEPLOYMENT=Kimi-K2.5
-AZURE_OPENAI_API_VERSION=2024-05-01-preview
-```
-
-```bash
 uvicorn main:app --reload       # API at http://localhost:8000
-```
 
-**3. Frontend**
-
-```bash
+# Terminal 2 — Frontend
 cd frontend
 npm install
 npm run dev                     # App at http://localhost:5173
 ```
 
-**4. Open** `http://localhost:5173` and search any US stock (AAPL, MSFT, TSLA, NVDA...)
+**3. Open** `http://localhost:5173` (manual) or `http://localhost:8000` (Docker) and search any US stock
 
 <br/>
 
@@ -478,8 +482,9 @@ Multi-stage build: Node 20 compiles frontend &rarr; Python 3.13 serves everythin
 |:---------|:--------:|:------------|
 | `AZURE_OPENAI_ENDPOINT` | Yes | Azure OpenAI endpoint URL |
 | `AZURE_OPENAI_API_KEY` | Yes | Azure OpenAI API key |
-| `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name |
+| `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name (e.g. `gpt-4.1`) |
 | `AZURE_OPENAI_API_VERSION` | Yes | API version string |
+| `FMP_API_KEY` | Yes | Financial Modeling Prep API key ([free tier](https://financialmodelingprep.com/developer)) |
 | `ENVIRONMENT` | &mdash; | `production` / `development` |
 | `LOG_LEVEL` | &mdash; | `DEBUG` / `INFO` / `WARNING` / `ERROR` |
 | `CORS_ORIGINS` | &mdash; | Comma-separated allowed origins |
