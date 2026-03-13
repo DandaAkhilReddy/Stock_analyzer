@@ -1,95 +1,244 @@
 <div align="center">
 
-# Stock Analyzer
+<!-- Animated SVG Header -->
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:667eea,100:764ba2&height=220&section=header&text=Stock%20Analyzer&fontSize=50&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=AI-Powered%20Stock%20Analysis%20%E2%80%A2%20Real-Time%20Market%20Data%20%E2%80%A2%20Technical%20Indicators&descAlignY=55&descSize=16" width="100%" />
 
-### AI-Powered Stock Analysis with Real-Time Market Data
+<br/>
 
-[![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.2-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
+<!-- Animated typing effect -->
+<a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=22&duration=3000&pause=1000&color=667EEA&center=true&vCenter=true&multiline=true&repeat=true&width=700&height=80&lines=Search+any+US+stock+%E2%86%92+Get+AI-powered+insights+instantly;Real-time+quotes+%2B+Technical+analysis+%2B+Growth+projections" alt="Typing SVG" /></a>
 
-[![Tests](https://img.shields.io/badge/Tests-1%2C571+-22c55e?style=for-the-badge&logo=vitest&logoColor=white)](#testing)
-[![Coverage](https://img.shields.io/badge/Coverage-97%25+-22c55e?style=for-the-badge&logo=codecov&logoColor=white)](#testing)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#deployment)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](#license)
+<br/>
+<br/>
 
----
+<!-- Tech Stack Badges -->
+<p>
+<img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" />
+<img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+<img src="https://img.shields.io/badge/Vite-7.3-646CFF?style=flat-square&logo=vite&logoColor=white" />
+<img src="https://img.shields.io/badge/Tailwind-4.2-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+<img src="https://img.shields.io/badge/Framer_Motion-12-FF0050?style=flat-square&logo=framer&logoColor=white" />
+<img src="https://img.shields.io/badge/Zustand-5-443E38?style=flat-square&logo=react&logoColor=white" />
+</p>
+<p>
+<img src="https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white" />
+<img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white" />
+<img src="https://img.shields.io/badge/Pydantic-v2-E92063?style=flat-square&logo=pydantic&logoColor=white" />
+<img src="https://img.shields.io/badge/Azure_OpenAI-Kimi_K2.5-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
+<img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white" />
+</p>
 
-**Real-time stock quotes** from Financial Modeling Prep | **AI analysis** powered by Azure OpenAI | **Interactive charts** with TradingView
+<!-- Status Badges -->
+<p>
+<img src="https://img.shields.io/badge/tests-1%2C571_passing-22c55e?style=for-the-badge&labelColor=1a1a2e" />
+<img src="https://img.shields.io/badge/coverage-97%25+-22c55e?style=for-the-badge&labelColor=1a1a2e" />
+<img src="https://img.shields.io/badge/license-MIT-eab308?style=for-the-badge&labelColor=1a1a2e" />
+</p>
 
-[Getting Started](#getting-started) | [Features](#features) | [Architecture](#architecture) | [API](#api-endpoints) | [Deployment](#deployment)
+<br/>
+
+[**Getting Started**](#-getting-started) &nbsp;&bull;&nbsp; [**Features**](#-features) &nbsp;&bull;&nbsp; [**Architecture**](#-architecture) &nbsp;&bull;&nbsp; [**API**](#-api-endpoints) &nbsp;&bull;&nbsp; [**Deploy**](#-deployment)
+
+<br/>
 
 </div>
 
----
+## About
 
-## What It Does
+Stock Analyzer combines **real-time market data** from Financial Modeling Prep with **AI-powered qualitative analysis** from Azure OpenAI to give you a comprehensive view of any US stock — price data, technical indicators, investment insights, news sentiment, and long-term growth projections — all in one beautiful interface.
 
-Stock Analyzer combines **real-time market data** with **AI-powered qualitative analysis** to give you a comprehensive view of any US stock. Search a ticker, get instant price data, technical indicators, AI-generated investment insights, news sentiment, and long-term growth projections — all in one place.
+<br/>
 
 ## Features
 
-### Real-Time Market Intelligence
-- **Live Stock Quotes** — Current price, day range, 52-week high/low, market cap, P/E ratio, EPS
-- **Full Historical Charts** — Interactive candlestick + volume charts from IPO to today (1W, 1M, 3M, 6M, 1Y, 5Y, ALL)
-- **Technical Indicators** — SMA (20/50/200), EMA (12/26), RSI-14, MACD, Bollinger Bands, support & resistance levels
-- **Stock Search** — Autocomplete search with US market filtering and debounced suggestions
+<table>
+<tr>
+<td width="50%">
+
+### Market Intelligence
+- Live stock quotes with day/52-week ranges
+- Interactive candlestick + volume charts (IPO to today)
+- 7 time ranges: 1W, 1M, 3M, 6M, 1Y, 5Y, ALL
+- Technical indicators: SMA, EMA, RSI, MACD, Bollinger
+- Support & resistance levels
+- Autocomplete stock search (US market)
+
+</td>
+<td width="50%">
 
 ### AI-Powered Analysis
-- **Investment Recommendation** — Strong Buy / Buy / Hold / Sell / Strong Sell with confidence scoring
-- **Bull vs Bear Case** — Narrative analysis of both sides
-- **Price Predictions** — Short-term (1W, 1M, 3M) and long-term (1Y, 5Y, 10Y) forecasts with CAGR
-- **Risk Assessment** — Risk score with detailed risk factor breakdown
-- **News Sentiment** — AI-synthesized headlines tagged as positive, negative, or neutral
-- **Quarterly Earnings** — Revenue, net income, EPS, and YoY growth
+- Investment recommendations with confidence scores
+- Bull vs Bear case narratives
+- Price predictions (1W to 10Y) with CAGR
+- Risk assessment with factor breakdown
+- News sentiment analysis (positive/negative/neutral)
+- Quarterly earnings: revenue, EPS, YoY growth
 
-### Polished UI/UX
-- **3D Animated Landing Page** — Mesh gradient background, floating elements, dot grid overlay
-- **Tabbed Analysis Interface** — Chart, News, Financials, About, Invest tabs with smooth Framer Motion transitions
-- **Investment Growth Calculator** — Project returns for $10K, $50K, $100K over multiple horizons
-- **Smart Loading States** — 13 rotating AI agent messages while analysis runs
-- **Persistent State** — Zustand with localStorage keeps your last analysis across sessions
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### Beautiful UI
+- 3D animated landing with mesh gradients
+- Floating elements & dot grid overlays
+- Smooth Framer Motion tab transitions
+- TradingView-quality interactive charts
+- Responsive design across all devices
+
+</td>
+<td width="50%">
+
+### Investment Tools
+- Long-term outlook (1Y, 5Y, 10Y horizons)
+- Growth projections with CAGR estimates
+- Investment calculator ($10K, $50K, $100K)
+- Catalyst & risk factor analysis
+- Persistent state across sessions
+
+</td>
+</tr>
+</table>
+
+<br/>
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
+<div align="center">
+<table>
+<tr>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=react" width="48" height="48" alt="React" />
+<br/><b>React 19</b>
+</td>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=ts" width="48" height="48" alt="TypeScript" />
+<br/><b>TypeScript</b>
+</td>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=vite" width="48" height="48" alt="Vite" />
+<br/><b>Vite 7</b>
+</td>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=tailwind" width="48" height="48" alt="Tailwind" />
+<br/><b>Tailwind 4</b>
+</td>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=python" width="48" height="48" alt="Python" />
+<br/><b>Python 3.13</b>
+</td>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=fastapi" width="48" height="48" alt="FastAPI" />
+<br/><b>FastAPI</b>
+</td>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=docker" width="48" height="48" alt="Docker" />
+<br/><b>Docker</b>
+</td>
+<td align="center" width="110">
+<img src="https://skillicons.dev/icons?i=azure" width="48" height="48" alt="Azure" />
+<br/><b>Azure AI</b>
+</td>
+</tr>
+</table>
+</div>
+
+<br/>
+
+<details>
+<summary><b>Full dependency list</b></summary>
+<br/>
+
+| Layer | Technologies |
+|:------|:------------|
 | **Frontend** | React 19, TypeScript 5.9, Vite 7.3, Tailwind CSS 4.2 |
-| **State** | Zustand 5 with persist middleware |
+| **State** | Zustand 5 with persist middleware + localStorage |
 | **Charts** | TradingView Lightweight Charts 5.1 |
-| **Animation** | Framer Motion 12 |
-| **Backend** | Python 3.13, FastAPI 0.115, Pydantic v2 |
-| **AI** | Azure OpenAI (Kimi K2.5) |
+| **Animation** | Framer Motion 12 (page transitions, tab underlines, card tilt) |
+| **Icons** | Lucide React |
+| **Backend** | Python 3.13, FastAPI 0.115, Pydantic v2, httpx |
+| **AI** | Azure OpenAI SDK (Kimi K2.5 model) |
 | **Market Data** | Financial Modeling Prep API |
-| **Logging** | structlog (JSON in prod, console in dev) |
-| **Testing** | Vitest + React Testing Library, pytest |
-| **Deployment** | Docker multi-stage, Render.com |
+| **Logging** | structlog (JSON in production, console in dev) |
+| **Testing** | Vitest + React Testing Library + jsdom, pytest |
+| **Deployment** | Docker multi-stage build, Render.com |
+
+</details>
+
+<br/>
+
+## Architecture
+
+```
+                         +------------------------+
+                         |     React Frontend     |
+                         |  Vite + Zustand + TW4  |
+                         +-----------+------------+
+                                     |
+                              POST /api/analyze/{ticker}
+                                     |
+                         +-----------v------------+
+                         |     FastAPI Router      |
+                         +-----------+------------+
+                                     |
+                    +----------------+----------------+
+                    |                                 |
+          +---------v-----------+          +----------v----------+
+          |  MarketDataService  |          |  AIAnalysisService  |
+          |     (FMP API)       |          |   (Azure OpenAI)    |
+          +---------+-----------+          +----------+----------+
+                    |                                 |
+          +---------v-----------+          +----------v----------+
+          |  - Real-time quotes |          |  - Buy/Sell/Hold    |
+          |  - Historical OHLC  |          |  - Price predictions|
+          |  - Technical calc   |          |  - Risk assessment  |
+          |  - Company profile  |          |  - News sentiment   |
+          +---------------------+          +---------------------+
+                    |                                 |
+                    +----------------+----------------+
+                                     |
+                         +-----------v------------+
+                         | StockAnalysisResponse   |
+                         |    (merged result)      |
+                         +-------------------------+
+```
+
+**Three-phase pipeline:**
+
+> **Phase 1** &mdash; Real Data: Live quotes + historical OHLC + technical indicators (SMA, EMA, RSI, MACD, Bollinger) computed locally
+>
+> **Phase 2** &mdash; AI Analysis: Structured prompt &rarr; Azure OpenAI &rarr; JSON with recommendations, predictions, sentiment
+>
+> **Phase 3** &mdash; Merge: Real market data + AI insights = unified response
+
+<br/>
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+
-- [FMP API key](https://financialmodelingprep.com/developer) (free tier available)
-- [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service) endpoint (or compatible API)
+| Tool | Version | Link |
+|:-----|:--------|:-----|
+| Python | 3.10+ | [python.org](https://python.org) |
+| Node.js | 18+ | [nodejs.org](https://nodejs.org) |
+| FMP API key | Free tier | [financialmodelingprep.com](https://financialmodelingprep.com/developer) |
+| Azure OpenAI | Any tier | [azure.microsoft.com](https://azure.microsoft.com/en-us/products/ai-services/openai-service) |
 
-### 1. Clone the repo
+### Quick Start
+
+**1. Clone**
 
 ```bash
 git clone https://github.com/DandaAkhilReddy/Stock_analyzer.git
 cd Stock_analyzer
 ```
 
-### 2. Backend setup
+**2. Backend**
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -103,126 +252,50 @@ AZURE_OPENAI_API_VERSION=2024-05-01-preview
 FMP_API_KEY=your-fmp-api-key
 ```
 
-Start the API server:
-
 ```bash
-uvicorn main:app --reload  # http://localhost:8000
+uvicorn main:app --reload       # API at http://localhost:8000
 ```
 
-### 3. Frontend setup
+**3. Frontend**
 
 ```bash
 cd frontend
 npm install
-npm run dev  # http://localhost:5173
+npm run dev                     # App at http://localhost:5173
 ```
 
-The Vite dev server proxies `/api` requests to the backend automatically.
+**4. Open** `http://localhost:5173` and search any US stock (AAPL, MSFT, TSLA, NVDA...)
 
-### 4. Open the app
-
-Navigate to `http://localhost:5173`, search for any US stock ticker (AAPL, MSFT, TSLA, ...) and explore.
-
-## Architecture
-
-```
-                    +-------------------+
-                    |   React Frontend  |
-                    |  (Vite + Zustand) |
-                    +--------+----------+
-                             |
-                        /api/analyze/{ticker}
-                             |
-                    +--------v----------+
-                    |   FastAPI Router   |
-                    +--------+----------+
-                             |
-              +--------------+--------------+
-              |                             |
-     +--------v----------+       +----------v--------+
-     | MarketDataService  |       | AIAnalysisService  |
-     | (FMP API)          |       | (Azure OpenAI)     |
-     +--------+----------+       +----------+--------+
-              |                             |
-     +--------v----------+       +----------v--------+
-     | Real-time quotes   |       | Investment recs    |
-     | Historical OHLC    |       | Price predictions  |
-     | Technical analysis |       | Risk assessment    |
-     | Company profile    |       | News sentiment     |
-     +--------------------+       +--------------------+
-              |                             |
-              +--------------+--------------+
-                             |
-                    +--------v----------+
-                    | StockAnalysisResponse |
-                    |  (merged result)      |
-                    +-----------------------+
-```
-
-### Two-Phase Analysis Pipeline
-
-1. **Phase 1 — Real Data**: Fetches live quotes, historical prices, and company profile from FMP. Computes technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands) locally.
-2. **Phase 2 — AI Analysis**: Packages Phase 1 data into a structured prompt, sends to Azure OpenAI, receives JSON with recommendations, predictions, and sentiment.
-3. **Phase 3 — Merge**: Combines real market data with AI analysis into a unified response.
-
-## Project Structure
-
-```
-Stock_analyzer/
-+-- backend/
-|   +-- main.py                          # FastAPI app, CORS, exception handlers
-|   +-- requirements.txt
-|   +-- app/
-|   |   +-- routers/analysis.py          # /api/search, /api/analyze endpoints
-|   |   +-- services/
-|   |   |   +-- market_data_service.py   # FMP API client + technical analysis
-|   |   |   +-- ai_analysis_service.py   # Azure OpenAI orchestration
-|   |   +-- providers/
-|   |   |   +-- openai_provider.py       # LLM client + JSON repair
-|   |   |   +-- sharepoint_agent.py      # Optional research enrichment
-|   |   +-- models/analysis.py           # Pydantic v2 response schemas
-|   |   +-- core/                        # Config, exceptions, logging, DI
-|   +-- tests/                           # 16 test files, 745+ tests
-+-- frontend/
-|   +-- src/
-|   |   +-- pages/StockAnalysis.tsx      # Main analysis page
-|   |   +-- components/
-|   |   |   +-- landing/                 # Hero, search bar, 3D animations
-|   |   |   +-- charts/                  # Candlestick, MACD, RSI charts
-|   |   |   +-- analysis/               # Recommendations, predictions, risk
-|   |   |   +-- invest/                  # Long-term outlook, growth calc
-|   |   |   +-- news/                    # Sentiment-tagged news feed
-|   |   |   +-- financials/              # Earnings, key metrics
-|   |   |   +-- stock/                   # Price header, signal banner
-|   |   |   +-- technical/               # Support/resistance, indicators
-|   |   |   +-- about/                   # Company profile
-|   |   +-- stores/stockStore.ts         # Zustand state management
-|   |   +-- services/                    # API client with retry logic
-|   |   +-- hooks/                       # useStockSearch custom hook
-|   |   +-- types/analysis.ts            # Full TypeScript interfaces
-|   +-- __tests__/                       # 24 test files, 826+ tests
-+-- Dockerfile                           # Multi-stage production build
-+-- render.yaml                          # One-click Render deployment
-```
+<br/>
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+|:-------|:---------|:------------|
 | `GET` | `/api/search?q=apple` | Search stocks by name or ticker |
 | `POST` | `/api/analyze/{ticker}` | Full analysis (real data + AI) |
 | `GET` | `/health` | Liveness probe |
 | `GET` | `/ready` | Readiness probe |
 
-### Example: Analyze a stock
+<details>
+<summary><b>Example response</b></summary>
 
 ```bash
 curl -X POST http://localhost:8000/api/analyze/AAPL
 ```
 
-Response includes: current price, technical indicators, AI recommendation, price predictions, risk assessment, news sentiment, quarterly earnings, company profile, and long-term outlook.
+Returns: current price, technical indicators, AI recommendation with confidence, bull/bear cases, price predictions (1W-10Y), risk assessment, news sentiment, quarterly earnings, company profile, and long-term outlook with CAGR.
 
-### Error Responses
+</details>
+
+<details>
+<summary><b>Error codes</b></summary>
+
+| Status | Code | Meaning |
+|:-------|:-----|:--------|
+| 404 | `TICKER_NOT_FOUND` | Invalid ticker or no results |
+| 502 | `EXTERNAL_API_ERROR` | Market data provider unreachable |
+| 500 | `AI_ANALYSIS_ERROR` | AI provider failure |
 
 ```json
 {
@@ -233,40 +306,90 @@ Response includes: current price, technical indicators, AI recommendation, price
 }
 ```
 
-| Status | Code | Meaning |
-|--------|------|---------|
-| 404 | `TICKER_NOT_FOUND` | Invalid ticker or no results |
-| 502 | `EXTERNAL_API_ERROR` | Market data provider unreachable |
-| 500 | `AI_ANALYSIS_ERROR` | AI provider failure |
+</details>
+
+<br/>
+
+## Project Structure
+
+```
+Stock_analyzer/
+├── backend/
+│   ├── main.py                         # FastAPI app entry point
+│   ├── requirements.txt
+│   ├── app/
+│   │   ├── routers/analysis.py         # API route handlers
+│   │   ├── services/
+│   │   │   ├── market_data_service.py  # FMP API + technical analysis
+│   │   │   └── ai_analysis_service.py  # Azure OpenAI orchestration
+│   │   ├── providers/
+│   │   │   ├── openai_provider.py      # LLM client + JSON repair
+│   │   │   └── sharepoint_agent.py     # Optional research enrichment
+│   │   ├── models/analysis.py          # Pydantic v2 response schemas
+│   │   └── core/                       # Config, exceptions, logging, DI
+│   └── tests/                          # 16 test files
+├── frontend/
+│   ├── src/
+│   │   ├── pages/                      # StockAnalysis page
+│   │   ├── components/
+│   │   │   ├── landing/                # 3D hero, search, animations
+│   │   │   ├── charts/                 # Candlestick, MACD, RSI
+│   │   │   ├── analysis/              # Recommendations, risk, predictions
+│   │   │   ├── invest/                # Growth projections, outlook
+│   │   │   ├── news/                  # Sentiment-tagged feed
+│   │   │   ├── financials/            # Earnings, metrics
+│   │   │   ├── stock/                 # Price header, signals
+│   │   │   └── ...                    # technical, about, common, layout
+│   │   ├── stores/                    # Zustand state management
+│   │   ├── services/                  # API client with retry logic
+│   │   ├── hooks/                     # useStockSearch hook
+│   │   └── types/                     # TypeScript interfaces
+│   └── __tests__/                     # 24 test files
+├── Dockerfile                         # Multi-stage production build
+└── render.yaml                        # One-click Render deployment
+```
+
+<br/>
 
 ## Testing
 
-**1,571 tests** across frontend and backend with **97%+ line coverage**.
+<div align="center">
 
-### Run all tests
-
-```bash
-# Backend (745+ tests, ~1 second)
-cd backend
-python -m pytest tests/ -v
-
-# Frontend (826+ tests, ~6 seconds)
-cd frontend
-npx vitest run
-
-# With coverage
-npx vitest run --coverage
-```
-
-### Coverage breakdown
-
-| Area | Tests | Coverage |
-|------|-------|----------|
-| Frontend | 826+ | 97.85% |
-| Backend | 745+ | 99% |
+| | Tests | Line Coverage |
+|:--|:-----:|:------------:|
+| **Frontend** (Vitest + RTL) | 826+ | 97.85% |
+| **Backend** (pytest) | 745+ | 99% |
 | **Total** | **1,571+** | **97%+** |
 
-Test coverage includes: API client retry/timeout logic, Zustand store persistence, chart rendering, keyboard navigation, technical indicator math, AI response parsing, JSON repair, Pydantic model validation, and error propagation.
+</div>
+
+```bash
+# Backend — 745+ tests in ~1 second
+cd backend && python -m pytest tests/ -v
+
+# Frontend — 826+ tests in ~6 seconds
+cd frontend && npx vitest run
+
+# Coverage report
+cd frontend && npx vitest run --coverage
+```
+
+<details>
+<summary><b>What's tested</b></summary>
+
+- API client retry/timeout/backoff logic
+- Zustand store persistence & rehydration
+- Chart rendering with TradingView mocks
+- Keyboard navigation & accessibility
+- Technical indicator math (SMA, EMA, RSI, MACD, Bollinger)
+- AI response JSON parsing & repair
+- Pydantic model validation boundaries
+- Error propagation through all layers
+- Component rendering for all 14 feature areas
+
+</details>
+
+<br/>
 
 ## Deployment
 
@@ -277,58 +400,75 @@ docker build -t stock-analyzer .
 docker run -p 8000:8000 --env-file backend/.env stock-analyzer
 ```
 
-The multi-stage Dockerfile builds the React frontend, then copies it into the FastAPI backend for single-container deployment.
+Multi-stage build: Node 20 compiles frontend &rarr; Python 3.13 serves everything.
 
-### Render.com (one-click)
-
-The included `render.yaml` configures automatic deployment:
+### Render.com
 
 1. Fork this repo
-2. Connect to [Render](https://render.com)
-3. Create a new **Blueprint** and point it at your fork
-4. Set the environment variables (API keys) in the Render dashboard
-5. Deploy
+2. Create a **Blueprint** on [Render](https://render.com)
+3. Set API keys in the dashboard
+4. Deploy &mdash; health checks on `/health` are pre-configured
 
-Health checks hit `/health` automatically.
+<br/>
 
 ## Environment Variables
 
 | Variable | Required | Description |
-|----------|----------|-------------|
+|:---------|:--------:|:------------|
 | `AZURE_OPENAI_ENDPOINT` | Yes | Azure OpenAI endpoint URL |
 | `AZURE_OPENAI_API_KEY` | Yes | Azure OpenAI API key |
-| `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name (e.g., `gpt-4.1`) |
-| `AZURE_OPENAI_API_VERSION` | Yes | API version (e.g., `2024-05-01-preview`) |
+| `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name |
+| `AZURE_OPENAI_API_VERSION` | Yes | API version string |
 | `FMP_API_KEY` | Yes | Financial Modeling Prep API key |
-| `ENVIRONMENT` | No | `production` or `development` (default) |
-| `LOG_LEVEL` | No | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
-| `CORS_ORIGINS` | No | Comma-separated allowed origins |
+| `ENVIRONMENT` | &mdash; | `production` / `development` |
+| `LOG_LEVEL` | &mdash; | `DEBUG` / `INFO` / `WARNING` / `ERROR` |
+| `CORS_ORIGINS` | &mdash; | Comma-separated allowed origins |
+
+<br/>
 
 ## Contributing
 
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feat/your-feature`)
-3. Commit with conventional format (`feat(scope): description`)
-4. Push and open a PR
+```bash
+# 1. Fork & clone
+git clone https://github.com/YOUR_USERNAME/Stock_analyzer.git
 
-### Commit conventions
+# 2. Create feature branch
+git checkout -b feat/your-feature
 
+# 3. Commit (conventional format)
+git commit -m "feat(scope): add awesome feature"
+
+# 4. Push & open PR
+git push origin feat/your-feature
 ```
-type(scope): description
 
-Types: feat, fix, refactor, test, docs, chore, perf, ci
-```
+Commit types: `feat` `fix` `refactor` `test` `docs` `chore` `perf` `ci`
+
+<br/>
 
 ## License
 
-This project is licensed under the MIT License.
+Released under the [MIT License](LICENSE).
 
----
+<br/>
 
 <div align="center">
 
-Built by [Danda Akhil Reddy](https://github.com/DandaAkhilReddy)
+---
 
-**If you found this useful, give it a star!**
+<br/>
+
+**Built with passion by [Danda Akhil Reddy](https://github.com/DandaAkhilReddy)**
+
+<br/>
+
+<a href="https://github.com/DandaAkhilReddy/Stock_analyzer/stargazers"><img src="https://img.shields.io/github/stars/DandaAkhilReddy/Stock_analyzer?style=social" alt="Stars" /></a>
+&nbsp;&nbsp;
+<a href="https://github.com/DandaAkhilReddy/Stock_analyzer/network/members"><img src="https://img.shields.io/github/forks/DandaAkhilReddy/Stock_analyzer?style=social" alt="Forks" /></a>
+
+<br/>
+<br/>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:667eea,100:764ba2&height=120&section=footer" width="100%" />
 
 </div>
