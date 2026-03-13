@@ -372,3 +372,165 @@ class TestChatCompletionJsonCallArguments:
 
         _, kwargs = create_mock.call_args
         assert kwargs["timeout"] == pytest.approx(180.0)
+
+
+# ---------------------------------------------------------------------------
+# New: trailing commas in arrays (repair path)
+# ---------------------------------------------------------------------------
+
+
+class TestChatCompletionJsonRepairTrailingCommaArray:
+    @pytest.mark.asyncio
+    async def test_repairs_trailing_comma_in_array(self) -> None:
+        provider, create_mock = _make_provider()
+        create_mock.return_value = _make_response('{"items": [1, 2, 3,]}')
+
+        result = await provider.chat_completion_json("sys", "usr")
+
+        assert result == {"items": [1, 2, 3]}
+
+    @pytest.mark.asyncio
+    async def test_repairs_trailing_comma_in_nested_array(self) -> None:
+        provider, create_mock = _make_provider()
+        create_mock.return_value = _make_response(
+            '{"data": {"scores": [10, 20,], "labels": ["a", "b",]}}'
+        )
+
+        result = await provider.chat_completion_json("sys", "usr")
+
+        assert result == {"data": {"scores": [10, 20], "labels": ["a", "b"]}}
+
+    @pytest.mark.asyncio
+    async def test_repairs_trailing_comma_in_fenced_array(self) -> None:
+        provider, create_mock = _make_provider()
+        create_mock.return_value = _make_response(
+            '```json\n{"tags": ["buy", "hold",]}\n```'
+        )
+
+        result = await provider.chat_completion_json("sys", "usr")
+
+        assert result == {"tags": ["buy", "hold"]}
+
+
+# ---------------------------------------------------------------------------
+# New: block comments are NOT repaired (documents implementation limit)
+# ---------------------------------------------------------------------------
+
+
+class TestChatCompletionJsonBlockCommentNotRepaired:
+    @pytest.mark.asyncio
+    async def test_block_comment_causes_json_decode_error_after_retries(self) -> None:
+        """/* */ block comments are not stripped by _repair_json; parse fails."""
+        provider, create_mock = _make_provider()
+        bad = _make_response('{"key": /* comment */ "value"}')
+        create_mock.side_effect = [bad, bad]
+
+        with pytest.raises(AIAnalysisError, match="Invalid JSON response"):
+            await provider.chat_completion_json("sys", "usr")
+
+
+# ---------------------------------------------------------------------------
+# New: single-quoted JSON is NOT repaired (documents implementation limit)
+# ---------------------------------------------------------------------------
+
+
+class TestChatCompletionJsonSingleQuotesNotRepaired:
+    @pytest.mark.asyncio
+    async def test_single_quoted_json_raises_after_retries(self) -> None:
+        """Single-quoted dicts are not converted to double-quoted; parse fails."""
+        provider, create_mock = _make_provider()
+        bad = _make_response("{'key': 'value'}")
+        create_mock.side_effect = [bad, bad]
+
+        with pytest.raises(AIAnalysisError, match="Invalid JSON response"):
+            await provider.chat_completion_json("sys", "usr")
+
+
+# ---------------------------------------------------------------------------
+# New: asyncio.TimeoutError and rate-limit error handling
+# ---------------------------------------------------------------------------
+
+
+class TestChatCompletionJsonErrorVariants:
+    @pytest.mark.asyncio
+    async def test_asyncio_timeout_error_wraps_as_ai_analysis_error(self) -> None:
+        import asyncio
+
+        provider, create_mock = _make_provider()
+        create_mock.side_effect = asyncio.TimeoutError()
+
+        with pytest.raises(AIAnalysisError, match="API call failed"):
+            await provider.chat_completion_json("sys", "usr")
+
+    @pytest.mark.asyncio
+    async def test_asyncio_timeout_error_is_chained(self) -> None:
+        import asyncio
+
+        provider, create_mock = _make_provider()
+        original = asyncio.TimeoutError()
+        create_mock.side_effect = original
+
+        with pytest.raises(AIAnalysisError) as exc_info:
+            await provider.chat_completion_json("sys", "usr")
+
+        assert exc_info.value.__cause__ is original
+
+    @pytest.mark.asyncio
+    async def test_rate_limit_error_wraps_as_ai_analysis_error(self) -> None:
+        provider, create_mock = _make_provider()
+        create_mock.side_effect = Exception("rate limit exceeded: 429")
+
+        with pytest.raises(AIAnalysisError, match="rate limit exceeded"):
+            await provider.chat_completion_json("sys", "usr")
+
+    @pytest.mark.asyncio
+    async def test_api_error_does_not_retry(self) -> None:
+        """API exceptions short-circuit immediately — no retry loop."""
+        provider, create_mock = _make_provider()
+        create_mock.side_effect = RuntimeError("network failure")
+
+        with pytest.raises(AIAnalysisError):
+            await provider.chat_completion_json("sys", "usr")
+
+        assert create_mock.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# New: retry exhaustion — call count is exactly MAX_RETRIES + 1
+# ---------------------------------------------------------------------------
+
+
+class TestChatCompletionJsonRetryExhaustion:
+    @pytest.mark.asyncio
+    async def test_api_called_twice_when_both_attempts_yield_bad_json(self) -> None:
+        """_MAX_RETRIES == 1, so the API is invoked exactly 2 times on failure."""
+        provider, create_mock = _make_provider()
+        bad = _make_response("not json at all")
+        create_mock.side_effect = [bad, bad]
+
+        with pytest.raises(AIAnalysisError):
+            await provider.chat_completion_json("sys", "usr")
+
+        assert create_mock.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_error_message_includes_attempt_count(self) -> None:
+        provider, create_mock = _make_provider()
+        bad = _make_response("garbage")
+        create_mock.side_effect = [bad, bad]
+
+        with pytest.raises(AIAnalysisError, match="2 attempts"):
+            await provider.chat_completion_json("sys", "usr")
+
+    @pytest.mark.asyncio
+    async def test_second_attempt_good_json_returns_result(self) -> None:
+        """Verify retry succeeds: first call bad JSON, second call valid JSON."""
+        provider, create_mock = _make_provider()
+        bad = _make_response("not valid json !!!")
+        good = _make_response('{"recovered": true, "attempt": 2}')
+        create_mock.side_effect = [bad, good]
+
+        result = await provider.chat_completion_json("sys", "usr")
+
+        assert result == {"recovered": True, "attempt": 2}
+        assert create_mock.call_count == 2
