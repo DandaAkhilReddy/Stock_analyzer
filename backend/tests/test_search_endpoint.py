@@ -159,3 +159,110 @@ class TestSearchEndpoint:
                 resp = await client.get("/api/search", params={"q": "apple"})
 
         assert resp.status_code == 502
+
+    @pytest.mark.asyncio
+    async def test_single_character_query_returns_200(self) -> None:
+        """A single character query satisfies min_length=1 and returns 200."""
+        with patch.object(
+            MarketDataService,
+            "search_suggestions",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                resp = await client.get("/api/search", params={"q": "A"})
+
+        assert resp.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_max_length_query_returns_200(self) -> None:
+        """A 100-character query is the maximum allowed and must return 200."""
+        long_query = "A" * 100
+        with patch.object(
+            MarketDataService,
+            "search_suggestions",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                resp = await client.get("/api/search", params={"q": long_query})
+
+        assert resp.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_over_max_length_query_returns_422(self) -> None:
+        """A 101-character query exceeds max_length=100 and must return 422."""
+        too_long_query = "A" * 101
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.get("/api/search", params={"q": too_long_query})
+
+        assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_response_is_json_content_type(self) -> None:
+        """Successful search response must have application/json content-type."""
+        with patch.object(
+            MarketDataService,
+            "search_suggestions",
+            new_callable=AsyncMock,
+            return_value=[{"symbol": "AAPL", "name": "Apple Inc."}],
+        ):
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                resp = await client.get("/api/search", params={"q": "apple"})
+
+        assert "application/json" in resp.headers["content-type"]
+
+    @pytest.mark.asyncio
+    async def test_each_result_has_symbol_and_name_keys(self) -> None:
+        """Every object in the result array must contain 'symbol' and 'name' keys."""
+        mock_results = [
+            {"symbol": "AAPL", "name": "Apple Inc."},
+            {"symbol": "MSFT", "name": "Microsoft Corporation"},
+            {"symbol": "GOOGL", "name": "Alphabet Inc."},
+        ]
+        with patch.object(
+            MarketDataService,
+            "search_suggestions",
+            new_callable=AsyncMock,
+            return_value=mock_results,
+        ):
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                resp = await client.get("/api/search", params={"q": "tech"})
+
+        data = resp.json()
+        assert len(data) == 3
+        for item in data:
+            assert "symbol" in item, f"Missing 'symbol' key in result: {item}"
+            assert "name" in item, f"Missing 'name' key in result: {item}"
+
+    @pytest.mark.asyncio
+    async def test_results_symbol_values_are_non_empty_strings(self) -> None:
+        """The search endpoint must return only results whose symbol is non-empty."""
+        mock_results = [
+            {"symbol": "NVDA", "name": "NVIDIA Corporation"},
+        ]
+        with patch.object(
+            MarketDataService,
+            "search_suggestions",
+            new_callable=AsyncMock,
+            return_value=mock_results,
+        ):
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                resp = await client.get("/api/search", params={"q": "nvidia"})
+
+        data = resp.json()
+        for item in data:
+            assert isinstance(item["symbol"], str)
+            assert len(item["symbol"]) > 0
