@@ -37,7 +37,7 @@
 
 <br/>
 
-[**Getting Started**](#-getting-started) &nbsp;&bull;&nbsp; [**Features**](#-features) &nbsp;&bull;&nbsp; [**Architecture**](#-architecture) &nbsp;&bull;&nbsp; [**API**](#-api-endpoints) &nbsp;&bull;&nbsp; [**Deploy**](#-deployment)
+[**Getting Started**](#getting-started) &nbsp;&bull;&nbsp; [**Features**](#features) &nbsp;&bull;&nbsp; [**Architecture**](#architecture) &nbsp;&bull;&nbsp; [**API**](#api-endpoints) &nbsp;&bull;&nbsp; [**Deploy**](#deployment)
 
 <br/>
 
@@ -68,7 +68,7 @@ Stock Analyzer combines **real-time market data** from Financial Modeling Prep w
 
 ### AI-Powered Analysis
 - Investment recommendations with confidence scores
-- Bull vs Bear case narratives
+- Bull vs. Bear case narratives
 - Price predictions (1W to 10Y) with CAGR
 - Risk assessment with factor breakdown
 - News sentiment analysis (positive/negative/neutral)
