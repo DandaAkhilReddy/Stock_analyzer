@@ -135,7 +135,7 @@ describe('Header', () => {
     mockStore.currentTicker = 'AAPL';
     render(<Header />);
     const input = screen.getByPlaceholderText(
-      'Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)',
+      'Search stocks — type to see suggestions (e.g., A for Apple)',
     );
     expect(input).toBeInTheDocument();
   });
@@ -144,7 +144,7 @@ describe('Header', () => {
     render(<Header />);
     expect(
       screen.queryByPlaceholderText(
-        'Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)',
+        'Search stocks — type to see suggestions (e.g., A for Apple)',
       ),
     ).not.toBeInTheDocument();
   });

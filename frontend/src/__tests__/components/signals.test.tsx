@@ -308,7 +308,7 @@ describe('StockSearchBar', () => {
     it('renders an input with the expected placeholder text', () => {
       render(<StockSearchBar />);
       const input = screen.getByPlaceholderText(
-        'Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)',
+        'Search stocks — type to see suggestions (e.g., A for Apple)',
       );
       expect(input).toBeInTheDocument();
     });
