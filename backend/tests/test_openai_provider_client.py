@@ -240,14 +240,14 @@ class TestChatCompletionJsonCallArguments:
         assert kwargs["model"] == _DEPLOYMENT
 
     @pytest.mark.asyncio
-    async def test_passes_custom_temperature(self) -> None:
+    async def test_temperature_not_sent_to_api(self) -> None:
         provider, create_mock = _make_provider()
         create_mock.return_value = _make_response('{"ok": true}')
 
         await provider.chat_completion_json("sys", "usr", temperature=0.9)
 
         _, kwargs = create_mock.call_args
-        assert kwargs["temperature"] == 0.9
+        assert "temperature" not in kwargs
 
     @pytest.mark.asyncio
     async def test_passes_custom_max_tokens(self) -> None:
@@ -260,14 +260,14 @@ class TestChatCompletionJsonCallArguments:
         assert kwargs["max_completion_tokens"] == 512
 
     @pytest.mark.asyncio
-    async def test_default_temperature_is_0_3(self) -> None:
+    async def test_default_call_omits_temperature(self) -> None:
         provider, create_mock = _make_provider()
         create_mock.return_value = _make_response('{"ok": true}')
 
         await provider.chat_completion_json("sys", "usr")
 
         _, kwargs = create_mock.call_args
-        assert kwargs["temperature"] == pytest.approx(0.3)
+        assert "temperature" not in kwargs
 
     @pytest.mark.asyncio
     async def test_default_max_tokens_is_16000(self) -> None:
