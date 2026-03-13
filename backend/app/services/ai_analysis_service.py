@@ -126,7 +126,7 @@ class AIAnalysisService:
                 self._market.get_historical(ticker, period="6mo"),
                 self._market.get_technicals(ticker, period="1y"),
             )
-        except StockNotFoundError:
+        except (StockNotFoundError, ExternalAPIError):
             # Fast-path ticker guess failed — fall back to search
             ticker = await self._market.search_ticker(ticker)
             try:
@@ -141,8 +141,6 @@ class AIAnalysisService:
                 raise AIAnalysisError(
                     f"Failed to fetch market data for {ticker}: {exc}"
                 ) from exc
-        except ExternalAPIError:
-            raise
         except Exception as exc:
             logger.error(
                 "market_data_fetch_failed",
