@@ -1,7 +1,7 @@
 """Router for AI-powered stock analysis."""
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -21,6 +21,21 @@ _sharepoint = (
 _ai_service = AIAnalysisService(
     market_data=_market_service, sharepoint=_sharepoint
 )
+
+
+@router.get("/search")
+async def search_stocks(
+    q: str = Query(min_length=1, max_length=100),
+) -> list[dict[str, str]]:
+    """Return stock search suggestions for autocomplete.
+
+    Args:
+        q: Search query (ticker or company name fragment).
+
+    Returns:
+        List of {symbol, name} dicts matching the query.
+    """
+    return await _market_service.search_suggestions(q)
 
 
 @router.post("/analyze/{ticker}", response_model=StockAnalysisResponse)

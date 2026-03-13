@@ -125,6 +125,22 @@ class MarketDataService:
         logger.info("ticker_search_resolved", query=clean, symbol=symbol)
         return symbol.upper()
 
+    async def search_suggestions(self, query: str) -> list[dict[str, str]]:
+        """Return lightweight search suggestions for autocomplete.
+
+        Args:
+            query: User input to search for.
+
+        Returns:
+            List of dicts with ``symbol`` and ``name`` keys.
+        """
+        results = await self._search_ticker(query.upper().strip())
+        return [
+            {"symbol": r.get("symbol", ""), "name": r.get("name", "")}
+            for r in results
+            if r.get("symbol")
+        ]
+
     async def search_ticker(self, query: str) -> str:
         """Force an FMP search for the query (no fast-path skip).
 
