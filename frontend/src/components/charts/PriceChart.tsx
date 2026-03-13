@@ -7,12 +7,15 @@ interface PriceChartProps {
   currentPrice: number;
 }
 
-type TimeRange = '1W' | '1M' | '3M' | '6M';
+type TimeRange = '1W' | '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL';
 
 function filterByRange(data: HistoricalPrice[], range: TimeRange): HistoricalPrice[] {
   if (data.length === 0) return [];
+  if (range === 'ALL') return data;
   const now = new Date();
-  const days: Record<TimeRange, number> = { '1W': 7, '1M': 30, '3M': 90, '6M': 180 };
+  const days: Record<Exclude<TimeRange, 'ALL'>, number> = {
+    '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, '5Y': 1825,
+  };
   const cutoff = new Date(now.getTime() - days[range] * 24 * 60 * 60 * 1000);
   const cutoffStr = cutoff.toISOString().split('T')[0];
   return data.filter((d) => d.date >= cutoffStr);
@@ -21,7 +24,7 @@ function filterByRange(data: HistoricalPrice[], range: TimeRange): HistoricalPri
 export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
-  const [range, setRange] = useState<TimeRange>('3M');
+  const [range, setRange] = useState<TimeRange>('1Y');
 
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
   const filtered = filterByRange(sorted, range);
@@ -99,7 +102,7 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
     };
   }, [filtered]);
 
-  const ranges: TimeRange[] = ['1W', '1M', '3M', '6M'];
+  const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'];
 
   if (data.length === 0) {
     return (
