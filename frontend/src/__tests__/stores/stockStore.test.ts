@@ -372,6 +372,53 @@ describe('useStockStore', () => {
 });
 
 // ---------------------------------------------------------------------------
+// onRehydrate
+// ---------------------------------------------------------------------------
+
+describe('onRehydrate', () => {
+  it('calls fetchAnalysis when rehydrated state has a currentTicker', () => {
+    const mockFetch = vi.fn();
+    const state = { currentTicker: 'AAPL', fetchAnalysis: mockFetch } as any;
+
+    const options = (useStockStore.persist as any).getOptions();
+    const rehydrateCallback = options.onRehydrate();
+    rehydrateCallback(state);
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    expect(mockFetch).toHaveBeenCalledWith('AAPL');
+  });
+
+  it('does not call fetchAnalysis when rehydrated state has null currentTicker', () => {
+    const mockFetch = vi.fn();
+    const state = { currentTicker: null, fetchAnalysis: mockFetch } as any;
+
+    const options = (useStockStore.persist as any).getOptions();
+    const rehydrateCallback = options.onRehydrate();
+    rehydrateCallback(state);
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('handles undefined state gracefully without throwing', () => {
+    const options = (useStockStore.persist as any).getOptions();
+    const rehydrateCallback = options.onRehydrate();
+
+    expect(() => rehydrateCallback(undefined)).not.toThrow();
+  });
+
+  it('does not call fetchAnalysis when state has an empty string ticker', () => {
+    const mockFetch = vi.fn();
+    const state = { currentTicker: '', fetchAnalysis: mockFetch } as any;
+
+    const options = (useStockStore.persist as any).getOptions();
+    const rehydrateCallback = options.onRehydrate();
+    rehydrateCallback(state);
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Persist middleware
 // ---------------------------------------------------------------------------
 
