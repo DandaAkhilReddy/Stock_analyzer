@@ -14,7 +14,7 @@ const INITIAL_STATE = {
   analysis: null,
   isLoading: false,
   error: null,
-  activeTab: 'chart' as const,
+  activeTab: 'invest' as const,
 };
 
 const mockAnalysis: StockAnalysisResponse = {
@@ -120,8 +120,8 @@ describe('useStockStore', () => {
       expect(useStockStore.getState().error).toBeNull();
     });
 
-    it('has activeTab as chart', () => {
-      expect(useStockStore.getState().activeTab).toBe('chart');
+    it('has activeTab as invest', () => {
+      expect(useStockStore.getState().activeTab).toBe('invest');
     });
   });
 
@@ -186,12 +186,12 @@ describe('useStockStore', () => {
       await promise;
     });
 
-    it('resets activeTab to chart when called', async () => {
+    it('resets activeTab to invest when called', async () => {
       useStockStore.setState({ activeTab: 'financials' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       const promise = useStockStore.getState().fetchAnalysis('AAPL');
-      expect(useStockStore.getState().activeTab).toBe('chart');
+      expect(useStockStore.getState().activeTab).toBe('invest');
       await promise;
     });
   });
@@ -321,22 +321,22 @@ describe('useStockStore', () => {
   // -------------------------------------------------------------------------
 
   describe('fetchAnalysis — activeTab reset', () => {
-    it('resets activeTab to chart even when previously on financials', async () => {
+    it('resets activeTab to invest even when previously on financials', async () => {
       useStockStore.setState({ activeTab: 'financials' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       await useStockStore.getState().fetchAnalysis('AAPL');
 
-      expect(useStockStore.getState().activeTab).toBe('chart');
+      expect(useStockStore.getState().activeTab).toBe('invest');
     });
 
-    it('resets activeTab to chart even when previously on about', async () => {
+    it('resets activeTab to invest even when previously on about', async () => {
       useStockStore.setState({ activeTab: 'about' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       await useStockStore.getState().fetchAnalysis('AAPL');
 
-      expect(useStockStore.getState().activeTab).toBe('chart');
+      expect(useStockStore.getState().activeTab).toBe('invest');
     });
   });
 
