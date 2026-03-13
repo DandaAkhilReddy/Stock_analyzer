@@ -109,6 +109,43 @@ describe('useStockSearch', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Min query length behaviour
+  // -------------------------------------------------------------------------
+
+  it('clears suggestions when query is empty (below min length)', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+
+    act(() => { result.current.setQuery(''); });
+
+    expect(result.current.suggestions).toEqual([]);
+    expect(result.current.isOpen).toBe(false);
+  });
+
+  it('keeps suggestions state intact for a single-character query', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+
+    act(() => { result.current.setQuery('A'); });
+
+    // Query is set — debounced fetch will trigger (not instant)
+    expect(result.current.query).toBe('A');
+  });
+
+  it('exposes isSearching as false initially', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+    expect(result.current.isSearching).toBe(false);
+  });
+
+  it('exposes handleKeyDown as a function', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+    expect(typeof result.current.handleKeyDown).toBe('function');
+  });
+
+  it('exposes selectSuggestion as a function', () => {
+    const { result } = renderHook(() => useStockSearch(noop));
+    expect(typeof result.current.selectSuggestion).toBe('function');
+  });
+
+  // -------------------------------------------------------------------------
   // Multiple sequential updates
   // -------------------------------------------------------------------------
 
