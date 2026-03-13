@@ -61,6 +61,12 @@ function setupDefaultStore(): void {
     (selector: (s: typeof store) => unknown) => selector(store),
   );
   (useStockStore as unknown as { getState: () => typeof store }).getState = () => store;
+
+  // Persist middleware API used by hydration guard
+  (useStockStore as unknown as Record<string, unknown>).persist = {
+    hasHydrated: () => true,
+    onFinishHydration: () => () => {},
+  };
 }
 
 import App from '../App';
