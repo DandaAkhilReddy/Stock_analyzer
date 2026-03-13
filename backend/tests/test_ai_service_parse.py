@@ -9,6 +9,7 @@ import pytest
 from app.core.exceptions import AIAnalysisError
 from app.models.analysis import (
     HistoricalPrice,
+    LongTermOutlook,
     NewsItem,
     PriceForecast,
     PricePredictions,
@@ -977,3 +978,108 @@ class TestMergeResponseCodeAttribute:
                 "AAPL", _mock_quote(), [], TechnicalSnapshot(), ai_data
             )
         assert exc_info.value.code == "AI_ANALYSIS_ERROR"
+
+
+# ---------------------------------------------------------------------------
+# TestParseLongTerm
+# ---------------------------------------------------------------------------
+
+
+def _long_term_outlook_dict(**overrides: Any) -> dict[str, Any]:
+    """Return a valid long_term_outlook dict for testing."""
+    base: dict[str, Any] = {
+        "one_year": _price_forecast_dict(170, 200, 230, 0.70),
+        "five_year": _price_forecast_dict(200, 300, 400, 0.55),
+        "ten_year": _price_forecast_dict(250, 450, 650, 0.40),
+        "verdict": "buy",
+        "verdict_rationale": "Strong long-term growth potential.",
+        "catalysts": ["AI integration", "Services expansion"],
+        "long_term_risks": ["Regulatory pressure"],
+        "compound_annual_return": 12.5,
+    }
+    base.update(overrides)
+    return base
+
+
+class TestParseLongTerm:
+    """Tests for AIAnalysisService._parse_long_term()."""
+
+    def test_returns_long_term_outlook_on_valid_data(self) -> None:
+        result = AIAnalysisService._parse_long_term(_long_term_outlook_dict())
+        assert isinstance(result, LongTermOutlook)
+        assert result.verdict == "buy"
+        assert result.compound_annual_return == pytest.approx(12.5)
+
+    def test_returns_none_when_data_is_none(self) -> None:
+        assert AIAnalysisService._parse_long_term(None) is None
+
+    def test_returns_none_when_data_is_empty_dict(self) -> None:
+        assert AIAnalysisService._parse_long_term({}) is None
+
+    def test_returns_none_when_data_is_not_dict(self) -> None:
+        assert AIAnalysisService._parse_long_term("invalid") is None  # type: ignore[arg-type]
+
+    def test_returns_none_when_required_key_missing(self) -> None:
+        data = _long_term_outlook_dict()
+        del data["one_year"]
+        assert AIAnalysisService._parse_long_term(data) is None
+
+    def test_returns_none_when_verdict_missing(self) -> None:
+        data = _long_term_outlook_dict()
+        del data["verdict"]
+        assert AIAnalysisService._parse_long_term(data) is None
+
+    def test_catalysts_defaults_to_empty_list(self) -> None:
+        data = _long_term_outlook_dict()
+        del data["catalysts"]
+        result = AIAnalysisService._parse_long_term(data)
+        assert result is not None
+        assert result.catalysts == []
+
+    def test_long_term_risks_defaults_to_empty_list(self) -> None:
+        data = _long_term_outlook_dict()
+        del data["long_term_risks"]
+        result = AIAnalysisService._parse_long_term(data)
+        assert result is not None
+        assert result.long_term_risks == []
+
+    def test_compound_annual_return_defaults_to_zero(self) -> None:
+        data = _long_term_outlook_dict()
+        del data["compound_annual_return"]
+        result = AIAnalysisService._parse_long_term(data)
+        assert result is not None
+        assert result.compound_annual_return == pytest.approx(0.0)
+
+    def test_verdict_rationale_defaults_to_empty_string(self) -> None:
+        data = _long_term_outlook_dict()
+        del data["verdict_rationale"]
+        result = AIAnalysisService._parse_long_term(data)
+        assert result is not None
+        assert result.verdict_rationale == ""
+
+    def test_forecast_values_preserved(self) -> None:
+        result = AIAnalysisService._parse_long_term(_long_term_outlook_dict())
+        assert result is not None
+        assert result.one_year.mid == pytest.approx(200.0)
+        assert result.five_year.mid == pytest.approx(300.0)
+        assert result.ten_year.mid == pytest.approx(450.0)
+
+    def test_merge_response_includes_long_term_outlook(self) -> None:
+        """_merge_response populates long_term_outlook when ai_data includes it."""
+        service = _make_service()
+        ai_data = _minimal_valid_ai_data(
+            long_term_outlook=_long_term_outlook_dict()
+        )
+        result = service._merge_response(
+            "AAPL", _mock_quote(), [], TechnicalSnapshot(), ai_data
+        )
+        assert result.long_term_outlook is not None
+        assert result.long_term_outlook.verdict == "buy"
+
+    def test_merge_response_long_term_none_when_absent(self) -> None:
+        """_merge_response sets long_term_outlook=None when key is absent."""
+        service = _make_service()
+        result = service._merge_response(
+            "AAPL", _mock_quote(), [], TechnicalSnapshot(), _minimal_valid_ai_data()
+        )
+        assert result.long_term_outlook is None

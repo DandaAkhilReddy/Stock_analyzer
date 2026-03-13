@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.core.exceptions import AIAnalysisError, ExternalAPIError, StockNotFoundError
-from app.models.analysis import HistoricalPrice, StockAnalysisResponse, TechnicalSnapshot
+from app.models.analysis import HistoricalPrice, LongTermOutlook, StockAnalysisResponse, TechnicalSnapshot
 from app.services.ai_analysis_service import AIAnalysisService
 
 # ---------------------------------------------------------------------------
@@ -81,6 +81,16 @@ _MOCK_AI_RESPONSE: dict = {
     "signal": "buy",
     "ceo": "Tim Cook",
     "founded": "1976",
+    "long_term_outlook": {
+        "one_year": {"low": 170.0, "mid": 200.0, "high": 230.0, "confidence": 0.70},
+        "five_year": {"low": 200.0, "mid": 300.0, "high": 400.0, "confidence": 0.55},
+        "ten_year": {"low": 250.0, "mid": 450.0, "high": 650.0, "confidence": 0.40},
+        "verdict": "buy",
+        "verdict_rationale": "Strong ecosystem and services growth support long-term appreciation.",
+        "catalysts": ["AI integration", "Services expansion"],
+        "long_term_risks": ["Regulatory pressure", "Hardware saturation"],
+        "compound_annual_return": 12.5,
+    },
 }
 
 
@@ -506,6 +516,33 @@ class TestSuccessfulResponse:
         assert result.technical is not None
         assert 190.0 in result.technical.resistance_levels
         assert 195.0 in result.technical.resistance_levels
+
+    @pytest.mark.asyncio
+    async def test_analyze_returns_long_term_outlook(
+        self, service: AIAnalysisService
+    ) -> None:
+        """Long-term outlook is parsed from the AI response when present."""
+        result = await service.analyze("AAPL")
+
+        assert result.long_term_outlook is not None
+        assert isinstance(result.long_term_outlook, LongTermOutlook)
+        assert result.long_term_outlook.verdict == "buy"
+        assert result.long_term_outlook.compound_annual_return == pytest.approx(12.5)
+        assert result.long_term_outlook.one_year.mid == pytest.approx(200.0)
+
+    @pytest.mark.asyncio
+    async def test_analyze_long_term_outlook_none_when_absent(
+        self, mock_provider: AsyncMock, mock_market: AsyncMock
+    ) -> None:
+        """Long-term outlook is None when the AI response omits the field."""
+        ai_response = dict(_MOCK_AI_RESPONSE)
+        del ai_response["long_term_outlook"]
+        mock_provider.chat_completion_json = AsyncMock(return_value=ai_response)
+        service = AIAnalysisService(provider=mock_provider, market_data=mock_market)
+
+        result = await service.analyze("AAPL")
+
+        assert result.long_term_outlook is None
 
 
 # ---------------------------------------------------------------------------

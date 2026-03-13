@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.models.analysis import (
+    LongTermOutlook,
     NewsItem,
     PriceForecast,
     PricePredictions,
@@ -489,3 +490,98 @@ class TestStockAnalysisResponse:
         resp = StockAnalysisResponse(**_make_response(quarterly_earnings=earnings))
         assert len(resp.quarterly_earnings) == 2
         assert resp.quarterly_earnings[1].eps == 2.05
+
+    def test_long_term_outlook_defaults_to_none(self) -> None:
+        resp = StockAnalysisResponse(**_make_response())
+        assert resp.long_term_outlook is None
+
+    def test_long_term_outlook_populated(self) -> None:
+        outlook = {
+            "one_year": _make_forecast(),
+            "five_year": _make_forecast(mid=200.0),
+            "ten_year": _make_forecast(mid=350.0),
+            "verdict": "strong_buy",
+            "verdict_rationale": "Excellent long-term growth.",
+            "catalysts": ["AI", "Cloud"],
+            "long_term_risks": ["Regulation"],
+            "compound_annual_return": 15.0,
+        }
+        resp = StockAnalysisResponse(**_make_response(long_term_outlook=outlook))
+        assert resp.long_term_outlook is not None
+        assert isinstance(resp.long_term_outlook, LongTermOutlook)
+        assert resp.long_term_outlook.verdict == "strong_buy"
+        assert resp.long_term_outlook.compound_annual_return == 15.0
+
+
+# ===========================================================================
+# LongTermOutlook
+# ===========================================================================
+
+
+def _make_outlook(**overrides: Any) -> dict[str, Any]:
+    """Minimal valid LongTermOutlook payload."""
+    base: dict[str, Any] = {
+        "one_year": _make_forecast(),
+        "five_year": _make_forecast(),
+        "ten_year": _make_forecast(),
+        "verdict": "buy",
+        "verdict_rationale": "Solid growth trajectory.",
+        "catalysts": ["innovation"],
+        "long_term_risks": ["competition"],
+        "compound_annual_return": 10.0,
+    }
+    return {**base, **overrides}
+
+
+class TestLongTermOutlook:
+    def test_all_fields_populated(self) -> None:
+        outlook = LongTermOutlook(**_make_outlook())
+        assert outlook.verdict == "buy"
+        assert outlook.compound_annual_return == 10.0
+        assert isinstance(outlook.one_year, PriceForecast)
+
+    @pytest.mark.parametrize(
+        "verdict",
+        ["strong_buy", "buy", "hold", "sell", "strong_sell"],
+    )
+    def test_each_verdict_value_accepted(self, verdict: str) -> None:
+        outlook = LongTermOutlook(**_make_outlook(verdict=verdict))
+        assert outlook.verdict == verdict
+
+    def test_invalid_verdict_raises_validation_error(self) -> None:
+        with pytest.raises(ValidationError) as exc_info:
+            LongTermOutlook(**_make_outlook(verdict="maybe"))
+        errors = exc_info.value.errors()
+        assert any(e["loc"] == ("verdict",) for e in errors)
+
+    def test_catalysts_defaults_to_empty_list(self) -> None:
+        payload = _make_outlook()
+        del payload["catalysts"]
+        outlook = LongTermOutlook(**payload)
+        assert outlook.catalysts == []
+
+    def test_long_term_risks_defaults_to_empty_list(self) -> None:
+        payload = _make_outlook()
+        del payload["long_term_risks"]
+        outlook = LongTermOutlook(**payload)
+        assert outlook.long_term_risks == []
+
+    def test_missing_required_forecast_raises(self) -> None:
+        payload = _make_outlook()
+        del payload["five_year"]
+        with pytest.raises(ValidationError) as exc_info:
+            LongTermOutlook(**payload)
+        errors = exc_info.value.errors()
+        assert any(e["loc"] == ("five_year",) for e in errors)
+
+    def test_nested_forecasts_preserved(self) -> None:
+        outlook = LongTermOutlook(
+            **_make_outlook(
+                one_year=_make_forecast(mid=150.0),
+                five_year=_make_forecast(mid=250.0),
+                ten_year=_make_forecast(mid=400.0),
+            )
+        )
+        assert outlook.one_year.mid == 150.0
+        assert outlook.five_year.mid == 250.0
+        assert outlook.ten_year.mid == 400.0
