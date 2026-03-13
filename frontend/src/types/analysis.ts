@@ -98,6 +98,8 @@ export interface StockAnalysisResponse {
   bear_case: string;
   risk_assessment: RiskAssessment;
   price_predictions: PricePredictions;
+  research_context: string;
+  research_sources: string[];
   analysis_timestamp: string;
   model_used: string;
   disclaimer: string;
