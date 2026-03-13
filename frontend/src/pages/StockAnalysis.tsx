@@ -39,12 +39,23 @@ export function StockAnalysis() {
     return <LandingHero />;
   }
 
-  const loadingMessage =
-    loadingSeconds < 10
-      ? 'AI is crunching the data'
-      : loadingSeconds < 30
-        ? 'Still working... generating detailed analysis'
-        : 'Almost there... large responses take a bit longer';
+  const agentMessages = [
+    'Your AI agent is analyzing market data...',
+    'Scanning SEC filings and earnings reports...',
+    'AI agents are debating bull vs bear cases...',
+    'Crunching technical indicators and chart patterns...',
+    'Your AI agent is reading analyst reports...',
+    'Cross-referencing news sentiment across sources...',
+    'Building price prediction models...',
+    'AI agents are stress-testing risk scenarios...',
+    'Evaluating competitive landscape and moat strength...',
+    'Running Monte Carlo simulations on price targets...',
+    'Your AI agent is consulting Wall Street consensus...',
+    'Analyzing insider trading patterns and institutional flows...',
+    'Almost done — assembling the final report...',
+  ];
+  const messageIndex = Math.floor(loadingSeconds / 10) % agentMessages.length;
+  const loadingMessage = agentMessages[messageIndex];
 
   if (isLoading) {
     return (
