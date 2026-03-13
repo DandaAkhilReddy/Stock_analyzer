@@ -8,6 +8,7 @@ from app.core.exceptions import AIAnalysisError, ExternalAPIError, StockNotFound
 from app.core.logging import get_logger
 from app.models.analysis import (
     HistoricalPrice,
+    LongTermOutlook,
     NewsItem,
     PriceForecast,
     PricePredictions,
@@ -78,6 +79,16 @@ Based on the above real data, provide your qualitative analysis as JSON:
     {{"quarter": "<e.g. Q1 2025>", "revenue": <float in millions USD or null>, "net_income": <float in millions USD or null>, "eps": <float or null>, "yoy_revenue_growth": <float as decimal like 0.12 for 12% or null>}},
     ... (last 4 reported quarters, most recent first)
   ],
+  "long_term_outlook": {{
+    "one_year": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float 0-1>}},
+    "five_year": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float 0-1>}},
+    "ten_year": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float 0-1>}},
+    "verdict": "strong_buy" | "buy" | "hold" | "sell" | "strong_sell",
+    "verdict_rationale": "<2-3 sentences: why this stock is or isn't a good long-term hold>",
+    "catalysts": ["<growth driver 1>", "<growth driver 2>", ...up to 5],
+    "long_term_risks": ["<risk 1>", "<risk 2>", ...up to 5],
+    "compound_annual_return": <estimated CAGR as percent e.g. 12.5>
+  }},
   "support_levels": [<float>, ...],
   "resistance_levels": [<float>, ...],
   "signal": "strong_buy" | "buy" | "neutral" | "sell" | "strong_sell",
@@ -349,6 +360,9 @@ class AIAnalysisService:
                         **predictions_data["three_months"]
                     ),
                 ),
+                long_term_outlook=self._parse_long_term(
+                    ai_data.get("long_term_outlook")
+                ),
                 research_context=research_context,
                 research_sources=research_sources or [],
                 analysis_timestamp=datetime.now(timezone.utc),
@@ -363,3 +377,29 @@ class AIAnalysisService:
             raise AIAnalysisError(
                 f"Failed to parse AI response: {exc}"
             ) from exc
+
+    @staticmethod
+    def _parse_long_term(
+        data: dict | None,
+    ) -> LongTermOutlook | None:
+        """Parse long-term outlook from AI response, returning None on failure."""
+        if not data or not isinstance(data, dict):
+            return None
+        try:
+            return LongTermOutlook(
+                one_year=PriceForecast(**data["one_year"]),
+                five_year=PriceForecast(**data["five_year"]),
+                ten_year=PriceForecast(**data["ten_year"]),
+                verdict=data["verdict"],
+                verdict_rationale=data.get("verdict_rationale", ""),
+                catalysts=data.get("catalysts", []),
+                long_term_risks=data.get("long_term_risks", []),
+                compound_annual_return=float(
+                    data.get("compound_annual_return", 0)
+                ),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.warning(
+                "long_term_outlook_parse_failed", error=str(exc)
+            )
+            return None
