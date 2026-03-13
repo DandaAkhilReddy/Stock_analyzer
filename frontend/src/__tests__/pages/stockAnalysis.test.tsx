@@ -45,8 +45,7 @@ vi.mock('framer-motion', () => {
 // Mock lightweight-charts so PriceChart renders without a real DOM canvas
 vi.mock('lightweight-charts', () => ({
   createChart: () => ({
-    addCandlestickSeries: () => ({ setData: vi.fn() }),
-    addHistogramSeries: () => ({ setData: vi.fn() }),
+    addSeries: () => ({ setData: vi.fn() }),
     priceScale: () => ({ applyOptions: vi.fn() }),
     timeScale: () => ({ fitContent: vi.fn(), borderColor: '' }),
     applyOptions: vi.fn(),
@@ -54,6 +53,8 @@ vi.mock('lightweight-charts', () => ({
   }),
   ColorType: { Solid: 'solid' },
   CrosshairMode: { Normal: 1 },
+  CandlestickSeries: 'CandlestickSeries',
+  HistogramSeries: 'HistogramSeries',
 }));
 
 const mockFetchAnalysis = vi.fn();
@@ -307,6 +308,38 @@ describe('StockAnalysis', () => {
       render(<StockAnalysis />);
       fireEvent.click(screen.getByRole('button', { name: /financials/i }));
       expect(mockSetActiveTab).toHaveBeenCalledWith('financials');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 4b. Chart with historical price data — time range buttons
+  // -------------------------------------------------------------------------
+
+  describe('chart time range buttons', () => {
+    const priceData = [
+      { date: '2020-01-02', open: 74, high: 75, low: 73, close: 74.5, volume: 1000 },
+      { date: '2023-06-15', open: 180, high: 182, low: 179, close: 181, volume: 2000 },
+      { date: '2025-03-10', open: 185, high: 186, low: 184, close: 185.5, volume: 3000 },
+    ];
+
+    beforeEach(() =>
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: { ...mockAnalysis, historical_prices: priceData },
+        activeTab: 'chart',
+      }),
+    );
+
+    it('renders all 7 time range buttons including 1Y, 5Y, ALL', () => {
+      render(<StockAnalysis />);
+      for (const label of ['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL']) {
+        expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+      }
+    });
+
+    it('renders Price Chart heading when data is available', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('Price Chart')).toBeInTheDocument();
     });
   });
 
