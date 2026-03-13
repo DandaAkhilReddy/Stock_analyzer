@@ -163,6 +163,12 @@ function setupStore(overrides: Partial<StoreSlice> = {}): void {
 
   // Imperative getState used by the Retry button
   (useStockStore as unknown as { getState: () => StoreSlice }).getState = () => store;
+
+  // Persist middleware API used by hydration guard
+  (useStockStore as unknown as Record<string, unknown>).persist = {
+    hasHydrated: () => true,
+    onFinishHydration: () => () => {},
+  };
 }
 
 // ===========================================================================
