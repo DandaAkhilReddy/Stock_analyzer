@@ -69,7 +69,7 @@ export function StockSearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Enter ticker or company name (e.g., AAPL, Microsoft, Tesla)"
+          placeholder="Search stocks — type to see suggestions (e.g., A for Apple)"
           className="bg-transparent border-none outline-none text-stone-900 placeholder:text-stone-400 ml-2 w-full text-sm"
         />
         {isLoading || isSearching ? (
