@@ -370,3 +370,75 @@ describe('useStockStore', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Persist middleware
+// ---------------------------------------------------------------------------
+
+describe('persist middleware', () => {
+  const STORAGE_KEY = 'stock-analyzer-state';
+
+  beforeEach(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    useStockStore.setState({
+      currentTicker: null,
+      analysis: null,
+      isLoading: false,
+      error: null,
+      activeTab: 'invest',
+    });
+    vi.clearAllMocks();
+  });
+
+  it('writes currentTicker to localStorage when set', async () => {
+    vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.currentTicker).toBe('AAPL');
+  });
+
+  it('writes activeTab to localStorage when changed', () => {
+    useStockStore.getState().setActiveTab('financials');
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.activeTab).toBe('financials');
+  });
+
+  it('does not persist analysis object to localStorage', async () => {
+    vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.analysis).toBeUndefined();
+  });
+
+  it('does not persist isLoading to localStorage', async () => {
+    vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+    const promise = useStockStore.getState().fetchAnalysis('AAPL');
+    // isLoading is true in store but should not be in storage
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.isLoading).toBeUndefined();
+    await promise;
+  });
+
+  it('does not persist error to localStorage', async () => {
+    vi.mocked(analyzeStock).mockRejectedValue(new Error('fail'));
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.error).toBeUndefined();
+  });
+
+  it('stores data under the key "stock-analyzer-state"', async () => {
+    vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+
+    expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+  });
+});
