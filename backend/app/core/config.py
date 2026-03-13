@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # Financial Modeling Prep
     fmp_api_key: str = ""
 
+    # Azure AI Foundry SharePoint Agent
+    sharepoint_agent_endpoint: str = ""
+
     # App
     environment: str = "development"
     log_level: str = "DEBUG"
