@@ -557,6 +557,63 @@ class TestSearchTicker:
 
 
 # ---------------------------------------------------------------------------
+# MarketDataService._search_ticker — US exchange filtering
+# ---------------------------------------------------------------------------
+
+
+class TestSearchTickerUSFilter:
+    """Tests for _search_ticker US-only exchange filtering."""
+
+    @pytest.mark.asyncio
+    async def test_filters_out_foreign_symbols_with_dots(self) -> None:
+        service = MarketDataService()
+        mixed_results = [
+            {"symbol": "TSLA", "name": "Tesla Inc"},
+            {"symbol": "TSLA.NE", "name": "Tesla Inc (NEO)"},
+            {"symbol": "TSLA.DE", "name": "Tesla Inc (Frankfurt)"},
+        ]
+        with patch.object(service, "_get_json", new_callable=AsyncMock) as mock:
+            mock.return_value = mixed_results
+            result = await service._search_ticker("TESLA")
+        assert len(result) == 1
+        assert result[0]["symbol"] == "TSLA"
+
+    @pytest.mark.asyncio
+    async def test_keeps_all_us_symbols(self) -> None:
+        service = MarketDataService()
+        us_results = [
+            {"symbol": "AAPL", "name": "Apple Inc"},
+            {"symbol": "MSFT", "name": "Microsoft Corp"},
+        ]
+        with patch.object(service, "_get_json", new_callable=AsyncMock) as mock:
+            mock.return_value = us_results
+            result = await service._search_ticker("TECH")
+        assert len(result) == 2
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_when_all_foreign(self) -> None:
+        service = MarketDataService()
+        foreign_only = [
+            {"symbol": "SAP.DE", "name": "SAP SE"},
+            {"symbol": "NESN.SW", "name": "Nestle SA"},
+        ]
+        with patch.object(service, "_get_json", new_callable=AsyncMock) as mock:
+            mock.return_value = foreign_only
+            result = await service._search_ticker("SAP")
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_handles_missing_symbol_key(self) -> None:
+        service = MarketDataService()
+        bad_results = [{"name": "No Symbol Co"}, {"symbol": "AAPL", "name": "Apple"}]
+        with patch.object(service, "_get_json", new_callable=AsyncMock) as mock:
+            mock.return_value = bad_results
+            result = await service._search_ticker("MISSING")
+        # Entry without symbol has "" which has no dot, so it passes filter
+        assert len(result) == 2
+
+
+# ---------------------------------------------------------------------------
 # MarketDataService._get_json
 # ---------------------------------------------------------------------------
 
