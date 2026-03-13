@@ -1,3 +1,8 @@
+export interface SearchResult {
+  symbol: string;
+  name: string;
+}
+
 export type Recommendation = 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell';
 export type RiskLevel = 'low' | 'medium' | 'high' | 'very_high';
 export type TechnicalSignal = 'strong_buy' | 'buy' | 'neutral' | 'sell' | 'strong_sell';
