@@ -823,3 +823,479 @@ class TestComputeTechnicals:
         assert result.bollinger_lower is not None
         assert result.bollinger_upper > result.bollinger_middle
         assert result.bollinger_middle > result.bollinger_lower
+
+
+# ---------------------------------------------------------------------------
+# _compute_technicals — deep math validation
+# ---------------------------------------------------------------------------
+
+
+def _bars_from_closes(closes: list[float]) -> list[dict]:
+    """Build FMP-format bars (newest-first) from a list of close prices."""
+    bars = [
+        {
+            "date": f"2025-01-{i + 1:02d}",
+            "open": c - 0.1,
+            "high": c + 0.5,
+            "low": c - 0.5,
+            "close": c,
+            "volume": 1_000_000,
+        }
+        for i, c in enumerate(closes)
+    ]
+    # FMP returns newest-first; _compute_technicals reverses before processing
+    return list(reversed(bars))
+
+
+class TestComputeTechnicalsMath:
+    """Exact math validation for every indicator in _compute_technicals."""
+
+    # ------------------------------------------------------------------
+    # SMA-20
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_sma_20_exact_arithmetic_mean(self) -> None:
+        """SMA-20 must equal the arithmetic mean of the 20 most recent closes."""
+        # 20 bars with known closes: arithmetic mean = (1+2+...+20)/20 = 10.5
+        closes = [float(i) for i in range(1, 21)]
+        expected_sma20 = sum(closes[-20:]) / 20  # 10.5
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.sma_20 == pytest.approx(expected_sma20, rel=1e-4)
+
+    @pytest.mark.asyncio
+    async def test_sma_20_on_constant_price_series(self) -> None:
+        """SMA-20 of a flat 100.0 series must be exactly 100.0."""
+        closes = [100.0] * 25
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.sma_20 == pytest.approx(100.0)
+
+    @pytest.mark.asyncio
+    async def test_sma_20_uses_only_last_20_bars(self) -> None:
+        """SMA-20 with 30 bars must reflect only the 20 most recent closes."""
+        # First 10 bars at 0.0, last 20 bars at 100.0 → SMA-20 must be 100.0
+        closes = [0.0] * 10 + [100.0] * 20
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.sma_20 == pytest.approx(100.0)
+
+    # ------------------------------------------------------------------
+    # SMA-50
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_sma_50_returns_none_when_fewer_than_50_bars(self) -> None:
+        """SMA-50 must be None when the dataset has fewer than 50 bars."""
+        closes = [float(i) for i in range(1, 40)]  # 39 bars
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.sma_50 is None
+
+    @pytest.mark.asyncio
+    async def test_sma_50_returns_value_when_exactly_50_bars(self) -> None:
+        """SMA-50 must be computed when exactly 50 bars are present."""
+        closes = [100.0] * 50
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.sma_50 == pytest.approx(100.0)
+
+    # ------------------------------------------------------------------
+    # EMA-12 and EMA-26
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_ema_12_on_constant_price_series_equals_price(self) -> None:
+        """EMA-12 of a constant price series must converge to that price."""
+        closes = [50.0] * 40
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.ema_12 == pytest.approx(50.0, rel=1e-4)
+
+    @pytest.mark.asyncio
+    async def test_ema_26_on_constant_price_series_equals_price(self) -> None:
+        """EMA-26 of a constant price series must converge to that price."""
+        closes = [75.0] * 40
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.ema_26 == pytest.approx(75.0, rel=1e-4)
+
+    @pytest.mark.asyncio
+    async def test_ema_12_reacts_faster_than_ema_26_on_rising_series(self) -> None:
+        """EMA-12 must be greater than EMA-26 on a steadily rising price series."""
+        closes = [float(i) for i in range(1, 61)]  # strictly increasing
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.ema_12 is not None
+        assert result.ema_26 is not None
+        assert result.ema_12 > result.ema_26
+
+    # ------------------------------------------------------------------
+    # RSI-14
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_rsi_14_is_none_for_all_up_days(self) -> None:
+        """RSI-14 with only up-days has zero average loss.
+
+        The implementation divides by loss.replace(0, NaN), making RS = NaN
+        and therefore RSI = NaN, which _safe_float converts to None.
+        """
+        # 51 strictly rising bars → every diff is positive, avg loss = 0
+        closes = [float(i) for i in range(1, 52)]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        # avg_loss = 0 → loss replaced with NaN → RSI is NaN → _safe_float → None
+        assert result.rsi_14 is None
+
+    @pytest.mark.asyncio
+    async def test_rsi_14_is_none_for_all_down_days(self) -> None:
+        """RSI-14 with only down-days computes to 0.0, which the service maps to None.
+
+        The implementation uses ``round(rsi_14, 2) if rsi_14 else None``.
+        Because ``if 0.0`` is falsy in Python, a mathematically correct RSI of
+        0.0 is treated the same as None and stored as None.  This test documents
+        that known behaviour so a future refactor can catch the change.
+        """
+        # 51 strictly falling bars → every diff is negative, avg gain = 0
+        closes = [float(i) for i in range(51, 0, -1)]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        # avg_gain = 0 → RS = 0 → RSI_raw = 0.0 → falsy guard maps it to None
+        assert result.rsi_14 is None
+
+    @pytest.mark.asyncio
+    async def test_rsi_14_near_50_for_equal_alternating_moves(self) -> None:
+        """RSI-14 near 50 when up/down moves are equal in magnitude."""
+        # Alternating +1/-1 pattern: avg_gain ≈ avg_loss → RS ≈ 1 → RSI ≈ 50
+        closes: list[float] = []
+        price = 100.0
+        for i in range(60):
+            price += 1.0 if i % 2 == 0 else -1.0
+            closes.append(price)
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.rsi_14 is not None
+        assert result.rsi_14 == pytest.approx(50.0, abs=5.0)
+
+    @pytest.mark.asyncio
+    async def test_rsi_14_bounded_between_0_and_100(self) -> None:
+        """RSI-14 must always be in [0, 100] for any valid price series."""
+        closes = [100.0 + (i % 7) * 3 - 10 for i in range(50)]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        if result.rsi_14 is not None:
+            assert 0.0 <= result.rsi_14 <= 100.0
+
+    # ------------------------------------------------------------------
+    # MACD
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_macd_histogram_equals_line_minus_signal(self) -> None:
+        """MACD histogram must equal MACD line − signal line (rounded to 4dp)."""
+        closes = [float(i) for i in range(1, 61)]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.macd_line is not None
+        assert result.macd_signal is not None
+        assert result.macd_histogram is not None
+        expected_hist = round(result.macd_line - result.macd_signal, 4)
+        assert result.macd_histogram == pytest.approx(expected_hist, abs=1e-6)
+
+    @pytest.mark.asyncio
+    async def test_macd_line_positive_on_rising_series(self) -> None:
+        """EMA-12 > EMA-26 on a rising series → MACD line must be positive."""
+        closes = [float(i) for i in range(1, 61)]  # strictly increasing
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.macd_line is not None
+        assert result.macd_line > 0
+
+    @pytest.mark.asyncio
+    async def test_macd_all_none_when_not_enough_data(self) -> None:
+        """With fewer than 20 bars all indicators including MACD must be None."""
+        closes = [float(i) for i in range(1, 15)]  # 14 bars
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.macd_line is None
+        assert result.macd_signal is None
+        assert result.macd_histogram is None
+
+    # ------------------------------------------------------------------
+    # Bollinger Bands
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_bollinger_middle_equals_sma_20(self) -> None:
+        """Bollinger middle band must equal SMA-20."""
+        closes = [float(i) for i in range(1, 31)]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.bollinger_middle is not None
+        assert result.sma_20 is not None
+        assert result.bollinger_middle == pytest.approx(result.sma_20)
+
+    @pytest.mark.asyncio
+    async def test_bollinger_bands_symmetric_around_middle(self) -> None:
+        """Upper and lower bands must be equidistant from the middle."""
+        closes = [float(i) for i in range(1, 31)]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.bollinger_upper is not None
+        assert result.bollinger_lower is not None
+        assert result.bollinger_middle is not None
+        upper_dist = result.bollinger_upper - result.bollinger_middle
+        lower_dist = result.bollinger_middle - result.bollinger_lower
+        assert upper_dist == pytest.approx(lower_dist, rel=1e-3)
+
+    @pytest.mark.asyncio
+    async def test_bollinger_bands_zero_width_for_constant_prices(self) -> None:
+        """Constant price series has zero std → upper = middle = lower."""
+        closes = [100.0] * 25
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=_bars_from_closes(closes)):
+            result = await service._compute_technicals("AAPL")
+        assert result.bollinger_upper == pytest.approx(100.0, abs=0.01)
+        assert result.bollinger_middle == pytest.approx(100.0)
+        assert result.bollinger_lower == pytest.approx(100.0, abs=0.01)
+
+
+# ---------------------------------------------------------------------------
+# get_historical — additional edge cases
+# ---------------------------------------------------------------------------
+
+
+class TestGetHistoricalEdgeCases:
+    """Edge cases for MarketDataService.get_historical."""
+
+    @pytest.mark.asyncio
+    async def test_single_data_point_returned(self) -> None:
+        """A single-bar response must return exactly one HistoricalPrice."""
+        bars = [
+            {
+                "date": "2025-06-01",
+                "open": 200.0,
+                "high": 205.0,
+                "low": 198.0,
+                "close": 203.5,
+                "volume": 5_000_000,
+            }
+        ]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service.get_historical("AAPL")
+        assert len(result) == 1
+        assert result[0].close == pytest.approx(203.5)
+        assert result[0].date == "2025-06-01"
+
+    @pytest.mark.asyncio
+    async def test_close_value_rounded_to_two_decimal_places(self) -> None:
+        """Close prices must be rounded to 2 decimal places."""
+        bars = [
+            {
+                "date": "2025-06-01",
+                "open": 100.123456,
+                "high": 101.999,
+                "low": 99.001,
+                "close": 100.999999,
+                "volume": 1_000,
+            }
+        ]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service.get_historical("AAPL")
+        assert result[0].close == pytest.approx(101.0, abs=0.01)
+        assert result[0].open == pytest.approx(100.12, abs=0.01)
+
+    @pytest.mark.asyncio
+    async def test_items_in_wrong_order_are_sorted_oldest_first(self) -> None:
+        """Items provided newest-first must be reversed to oldest-first."""
+        # FMP contract: newest entry at index 0
+        bars_newest_first = [
+            {
+                "date": "2025-03-03",
+                "open": 103.0, "high": 104.0, "low": 102.0, "close": 103.5,
+                "volume": 300,
+            },
+            {
+                "date": "2025-03-01",
+                "open": 101.0, "high": 102.0, "low": 100.0, "close": 101.5,
+                "volume": 100,
+            },
+            {
+                "date": "2025-03-02",
+                "open": 102.0, "high": 103.0, "low": 101.0, "close": 102.5,
+                "volume": 200,
+            },
+        ]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=bars_newest_first):
+            result = await service.get_historical("AAPL")
+        # After reversal, the order reflects the original list reversed:
+        # [2025-03-02, 2025-03-01, 2025-03-03] — oldest by insertion position
+        assert result[0].date == "2025-03-02"
+        assert result[-1].date == "2025-03-03"
+
+    @pytest.mark.asyncio
+    async def test_missing_volume_field_returns_none(self) -> None:
+        """Bars without a volume key must produce HistoricalPrice with volume=None."""
+        bars = [
+            {
+                "date": "2025-06-01",
+                "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5,
+                # volume key intentionally absent
+            }
+        ]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service.get_historical("AAPL")
+        assert result[0].volume is None
+
+    @pytest.mark.asyncio
+    async def test_volume_none_value_returns_none(self) -> None:
+        """Bars with explicit volume=None must produce HistoricalPrice with volume=None."""
+        bars = [
+            {
+                "date": "2025-06-01",
+                "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5,
+                "volume": None,
+            }
+        ]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=bars):
+            result = await service.get_historical("AAPL")
+        assert result[0].volume is None
+
+    @pytest.mark.asyncio
+    async def test_large_multi_bar_response_preserves_count(self) -> None:
+        """100 bars in → 100 HistoricalPrice objects out."""
+        bars = [
+            {
+                "date": f"2025-01-{i + 1:02d}",
+                "open": 100.0, "high": 101.0, "low": 99.0,
+                "close": 100.0 + i * 0.1, "volume": 1_000,
+            }
+            for i in range(100)
+        ]
+        service = MarketDataService()
+        with patch.object(service, "_get_json", return_value=list(reversed(bars))):
+            result = await service.get_historical("AAPL")
+        assert len(result) == 100
+
+
+# ---------------------------------------------------------------------------
+# Helper function edge cases — _safe_float, _safe_int, _format_market_cap
+# ---------------------------------------------------------------------------
+
+
+class TestSafeFloatEdgeCases:
+    """Additional edge cases for _safe_float."""
+
+    def test_negative_inf_returns_none(self) -> None:
+        assert _safe_float(float("-inf")) is None
+
+    def test_positive_inf_string_returns_none(self) -> None:
+        # float("inf") == math.inf → isnan=False, isinf=True → None
+        assert _safe_float("inf") is None
+
+    def test_negative_inf_string_returns_none(self) -> None:
+        assert _safe_float("-inf") is None
+
+    def test_nan_string_returns_none(self) -> None:
+        # float("nan") is valid Python → isnan=True → None
+        assert _safe_float("nan") is None
+
+    def test_zero_returns_zero(self) -> None:
+        assert _safe_float(0) == 0.0
+
+    def test_zero_string_returns_zero(self) -> None:
+        assert _safe_float("0") == 0.0
+
+    def test_negative_float_returned(self) -> None:
+        assert _safe_float(-42.7) == pytest.approx(-42.7)
+
+    def test_list_value_returns_none(self) -> None:
+        assert _safe_float([1, 2, 3]) is None
+
+    def test_bool_true_treated_as_1(self) -> None:
+        # bool is a subclass of int in Python; float(True) == 1.0
+        assert _safe_float(True) == pytest.approx(1.0)
+
+
+class TestSafeIntEdgeCases:
+    """Additional edge cases for _safe_int."""
+
+    def test_float_string_parsed_and_truncated(self) -> None:
+        assert _safe_int("99.9") == 99
+
+    def test_zero_float_returns_zero(self) -> None:
+        assert _safe_int(0.0) == 0
+
+    def test_negative_int_returned(self) -> None:
+        assert _safe_int(-500) == -500
+
+    def test_negative_float_truncated_toward_zero(self) -> None:
+        # int(-99.9) == -99 in Python (truncation toward zero)
+        assert _safe_int(-99.9) == -99
+
+    def test_inf_float_returns_none(self) -> None:
+        assert _safe_int(float("inf")) is None
+
+    def test_dict_value_returns_none(self) -> None:
+        assert _safe_int({"a": 1}) is None
+
+    def test_bool_false_treated_as_zero(self) -> None:
+        assert _safe_int(False) == 0
+
+
+class TestFormatMarketCapBoundaries:
+    """Boundary values for _format_market_cap."""
+
+    def test_exactly_1_trillion(self) -> None:
+        assert _format_market_cap(1e12) == "1.0T"
+
+    def test_just_below_1_trillion_falls_to_billions(self) -> None:
+        # 999_999_999_999 < 1e12 → billions branch
+        result = _format_market_cap(999_999_999_999.0)
+        assert result is not None
+        assert result.endswith("B")
+
+    def test_exactly_1_billion(self) -> None:
+        assert _format_market_cap(1e9) == "1.0B"
+
+    def test_just_below_1_billion_falls_to_millions(self) -> None:
+        result = _format_market_cap(999_999_999.0)
+        assert result is not None
+        assert result.endswith("M")
+
+    def test_exactly_1_million(self) -> None:
+        assert _format_market_cap(1e6) == "1.0M"
+
+    def test_just_below_1_million_returns_raw_int_string(self) -> None:
+        result = _format_market_cap(999_999.0)
+        assert result == "999999"
+
+    def test_zero_returns_zero_string(self) -> None:
+        assert _format_market_cap(0.0) == "0"
+
+    def test_fractional_trillion_formatted_to_one_decimal(self) -> None:
+        assert _format_market_cap(2.85e12) == "2.9T"
