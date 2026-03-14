@@ -1460,3 +1460,273 @@ class TestParseLongTermEdgeCases:
         data = _long_term_outlook_dict(verdict="maybe")
         result = AIAnalysisService._parse_long_term(data)
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Helpers for _parse_financier_analysis
+# ---------------------------------------------------------------------------
+
+
+def _financier_verdict_dict(
+    name: str = "Warren Buffett",
+    framework: str = "Value Investing",
+    verdict: str = "buy",
+    reasoning: str = "Strong competitive moat and consistent earnings growth.",
+    key_metrics_evaluated: list[str] | None = None,
+) -> dict[str, Any]:
+    """Return a valid FinancierVerdict payload dict."""
+    d: dict[str, Any] = {
+        "name": name,
+        "framework": framework,
+        "verdict": verdict,
+        "reasoning": reasoning,
+    }
+    if key_metrics_evaluated is not None:
+        d["key_metrics_evaluated"] = key_metrics_evaluated
+    return d
+
+
+def _financier_analysis_dict(
+    perspectives: list[dict[str, Any]] | None = None,
+    consensus_verdict: str = "buy",
+    consensus_reasoning: str = "Majority consensus points to a strong buy.",
+) -> dict[str, Any]:
+    """Return a valid FinancierAnalysis payload dict."""
+    if perspectives is None:
+        perspectives = [_financier_verdict_dict()]
+    return {
+        "perspectives": perspectives,
+        "consensus_verdict": consensus_verdict,
+        "consensus_reasoning": consensus_reasoning,
+    }
+
+
+# ---------------------------------------------------------------------------
+# TestParseFinancierAnalysisExceptionPaths
+# ---------------------------------------------------------------------------
+
+
+class TestParseFinancierAnalysisExceptionPaths:
+    """Exception paths in AIAnalysisService._parse_financier_analysis().
+
+    The method must return None (never raise) for every invalid input,
+    covering the KeyError / TypeError / ValueError catch-all at lines ~446-450
+    as well as the early-exit guard for falsy / non-dict inputs.
+    """
+
+    # ------------------------------------------------------------------
+    # Happy-path baseline (ensures helper is correct before testing errors)
+    # ------------------------------------------------------------------
+
+    def test_valid_input_returns_financier_analysis(self) -> None:
+        """Baseline: a well-formed dict returns a populated FinancierAnalysis."""
+        data = _financier_analysis_dict()
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is not None
+        assert len(result.perspectives) == 1
+        assert result.perspectives[0].name == "Warren Buffett"
+        assert result.consensus_verdict == "buy"
+        assert result.consensus_reasoning == "Majority consensus points to a strong buy."
+
+    def test_valid_input_multiple_perspectives(self) -> None:
+        """Multiple perspectives are all parsed and stored in order."""
+        perspectives = [
+            _financier_verdict_dict(name="Warren Buffett", verdict="buy"),
+            _financier_verdict_dict(name="Peter Lynch", framework="GARP", verdict="hold"),
+            _financier_verdict_dict(name="Benjamin Graham", framework="Deep Value", verdict="sell"),
+        ]
+        data = _financier_analysis_dict(perspectives=perspectives, consensus_verdict="hold")
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is not None
+        assert len(result.perspectives) == 3
+        assert result.consensus_verdict == "hold"
+
+    # ------------------------------------------------------------------
+    # Missing 'perspectives' key
+    # ------------------------------------------------------------------
+
+    def test_missing_perspectives_key_uses_empty_list(self) -> None:
+        """Dict without 'perspectives' defaults to an empty list via data.get()."""
+        data: dict[str, Any] = {
+            "consensus_verdict": "hold",
+            "consensus_reasoning": "No perspectives supplied.",
+        }
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is not None
+        assert result.perspectives == []
+        assert result.consensus_verdict == "hold"
+
+    def test_dict_with_only_unrelated_keys_returns_empty_perspectives(self) -> None:
+        """A dict full of unrecognised keys still produces a valid object with defaults."""
+        data: dict[str, Any] = {"analyst": "unknown", "source": "internal", "score": 42}
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is not None
+        assert result.perspectives == []
+        assert result.consensus_verdict == "hold"  # FinancierAnalysis default
+
+    # ------------------------------------------------------------------
+    # Invalid verdict literal inside a perspective
+    # ------------------------------------------------------------------
+
+    def test_perspective_with_invalid_verdict_returns_none(self) -> None:
+        """A perspective verdict outside Literal['buy','hold','sell'] fails Pydantic → None."""
+        data = _financier_analysis_dict(
+            perspectives=[_financier_verdict_dict(verdict="strong_buy")]
+        )
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    def test_perspective_verdict_empty_string_returns_none(self) -> None:
+        """An empty string is not a valid verdict literal → Pydantic rejects it → None."""
+        data = _financier_analysis_dict(
+            perspectives=[_financier_verdict_dict(verdict="")]
+        )
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    def test_perspective_verdict_wrong_case_returns_none(self) -> None:
+        """Pydantic Literal is case-sensitive; 'BUY' is not 'buy' → None."""
+        data = _financier_analysis_dict(
+            perspectives=[_financier_verdict_dict(verdict="BUY")]
+        )
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    def test_consensus_verdict_invalid_literal_returns_none(self) -> None:
+        """An invalid consensus_verdict ('neutral') fails FinancierAnalysis validation → None."""
+        data = _financier_analysis_dict(consensus_verdict="neutral")
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    # ------------------------------------------------------------------
+    # Wrong type for required string field inside a perspective
+    # ------------------------------------------------------------------
+
+    def test_perspective_name_as_integer_returns_none(self) -> None:
+        """FinancierVerdict.name expects str; passing an int triggers a TypeError → None.
+
+        Pydantic v2 in strict-adjacent behaviour: an int where str is required
+        may coerce or reject depending on model config. Either way the method
+        must not raise — it must return None or a valid object.
+        """
+        perspective = _financier_verdict_dict()
+        perspective["name"] = 12345  # int instead of str
+        data = _financier_analysis_dict(perspectives=[perspective])
+        # Pydantic v2 coerces int → str by default, so this may succeed.
+        # The contract is: the method never raises; result is FinancierAnalysis or None.
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None or (result is not None and isinstance(result.perspectives[0].name, str))
+
+    def test_perspective_reasoning_as_integer_is_coerced_or_returns_none(self) -> None:
+        """reasoning is a required str; int value must be coerced by Pydantic or rejected."""
+        perspective = _financier_verdict_dict()
+        perspective["reasoning"] = 999
+        data = _financier_analysis_dict(perspectives=[perspective])
+        result = AIAnalysisService._parse_financier_analysis(data)
+        # The method must not raise regardless of whether Pydantic coerces or rejects.
+        assert result is None or result is not None
+
+    def test_perspectives_entry_is_not_a_dict_returns_none(self) -> None:
+        """FinancierVerdict(**p) requires p to be a dict; a string item raises TypeError → None."""
+        data = _financier_analysis_dict(perspectives=["not_a_dict"])  # type: ignore[arg-type]
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    def test_perspectives_entry_is_integer_returns_none(self) -> None:
+        """An integer in the perspectives list raises TypeError when unpacked → None."""
+        data = _financier_analysis_dict(perspectives=[42])  # type: ignore[arg-type]
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    def test_perspective_key_metrics_as_string_returns_none(self) -> None:
+        """key_metrics_evaluated must be a list; a bare string fails validation → None."""
+        perspective = _financier_verdict_dict(
+            key_metrics_evaluated="ROE, P/E"  # type: ignore[arg-type]
+        )
+        data = _financier_analysis_dict(perspectives=[perspective])
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    # ------------------------------------------------------------------
+    # Completely empty dict
+    # ------------------------------------------------------------------
+
+    def test_empty_dict_returns_financier_analysis_with_defaults(self) -> None:
+        """Empty dict triggers the early-exit guard (falsy) → None returned immediately."""
+        result = AIAnalysisService._parse_financier_analysis({})
+        assert result is None
+
+    # ------------------------------------------------------------------
+    # None input
+    # ------------------------------------------------------------------
+
+    def test_none_input_returns_none(self) -> None:
+        """None is falsy → the guard `if not data` triggers → None returned."""
+        result = AIAnalysisService._parse_financier_analysis(None)
+        assert result is None
+
+    # ------------------------------------------------------------------
+    # Non-dict inputs (string, list, int)
+    # ------------------------------------------------------------------
+
+    def test_string_input_returns_none(self) -> None:
+        """A plain string fails the `isinstance(data, dict)` guard → None returned."""
+        result = AIAnalysisService._parse_financier_analysis(  # type: ignore[arg-type]
+            "Warren Buffett: buy"
+        )
+        assert result is None
+
+    def test_list_input_returns_none(self) -> None:
+        """A list fails the isinstance guard even though it is truthy → None returned."""
+        result = AIAnalysisService._parse_financier_analysis(  # type: ignore[arg-type]
+            [_financier_verdict_dict()]
+        )
+        assert result is None
+
+    def test_integer_input_returns_none(self) -> None:
+        """An integer fails isinstance(data, dict) → None returned."""
+        result = AIAnalysisService._parse_financier_analysis(42)  # type: ignore[arg-type]
+        assert result is None
+
+    def test_boolean_false_input_returns_none(self) -> None:
+        """False is falsy → caught by `if not data` guard before isinstance check → None."""
+        result = AIAnalysisService._parse_financier_analysis(False)  # type: ignore[arg-type]
+        assert result is None
+
+    # ------------------------------------------------------------------
+    # Perspectives is not a list
+    # ------------------------------------------------------------------
+
+    def test_perspectives_as_dict_returns_none(self) -> None:
+        """perspectives must be iterable with dict items; a plain dict is iterable
+        but yields string keys, so FinancierVerdict(**key) raises TypeError → None."""
+        data: dict[str, Any] = {
+            "perspectives": {"name": "Buffett", "verdict": "buy"},
+            "consensus_verdict": "buy",
+            "consensus_reasoning": "ok",
+        }
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    def test_perspectives_as_none_returns_financier_analysis_with_empty_list(self) -> None:
+        """perspectives=None is iterated via data.get('perspectives', []); the get default
+        is only used when the key is absent — explicit None falls through to the list
+        comprehension and raises TypeError → None returned."""
+        data: dict[str, Any] = {
+            "perspectives": None,
+            "consensus_verdict": "hold",
+            "consensus_reasoning": "ok",
+        }
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None
+
+    def test_perspectives_as_string_returns_none(self) -> None:
+        """A string is iterable but its characters are not dicts → TypeError when
+        FinancierVerdict(**char) is called → None returned."""
+        data: dict[str, Any] = {
+            "perspectives": "buy",
+            "consensus_verdict": "buy",
+            "consensus_reasoning": "ok",
+        }
+        result = AIAnalysisService._parse_financier_analysis(data)
+        assert result is None

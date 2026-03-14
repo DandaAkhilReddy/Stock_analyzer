@@ -101,6 +101,23 @@ describe('Card', () => {
       fireEvent.mouseLeave(div);
     }).not.toThrow();
   });
+
+  it('wraps card in gradient div when gradient={true}', () => {
+    const { container } = render(<Card gradient={true}>content</Card>);
+    // gradient=true adds a wrapper div with the gradient class outside the motion.div
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.tagName).toBe('DIV');
+    expect(wrapper).toHaveClass('bg-gradient-to-r');
+    // The inner card (motion.div → rendered as div) should contain children
+    expect(wrapper.querySelector('div')).toBeInTheDocument();
+    expect(wrapper).toHaveTextContent('content');
+  });
+
+  it('does not wrap card in gradient div when gradient is omitted', () => {
+    const { container } = render(<Card>content</Card>);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).not.toHaveClass('bg-gradient-to-r');
+  });
 });
 
 // ---------------------------------------------------------------------------

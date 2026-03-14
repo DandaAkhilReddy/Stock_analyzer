@@ -819,3 +819,547 @@ describe('InvestmentOutlook — formatCurrency via HorizonCard', () => {
     expect(screen.getByText('High: $12.5K')).toBeInTheDocument();
   });
 });
+
+// ===========================================================================
+// InvestmentOutlook — Additional Edge Cases (uncovered paths)
+// ===========================================================================
+
+describe('InvestmentOutlook — Additional Edge Cases', () => {
+  it('formats an extreme price above $100K with K suffix', () => {
+    // mid = 150000 → "$150.0K"
+    const extremeOutlook: LongTermOutlook = {
+      ...baseOutlook,
+      ten_year: { low: 100000, mid: 150000, high: 200000, confidence: 0.3 },
+    };
+    render(
+      <InvestmentOutlook
+        outlook={extremeOutlook}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    expect(screen.getByText('$150.0K')).toBeInTheDocument();
+  });
+
+  it('calculates investment growth correctly: $10K at $100 → $200 target yields $20K', () => {
+    // shares = 10000 / 100 = 100, futureVal = 100 * 200 = 20000 → "$20.0K"
+    const growthOutlook: LongTermOutlook = {
+      ...baseOutlook,
+      one_year: { low: 180, mid: 200, high: 220, confidence: 0.7 },
+    };
+    render(
+      <InvestmentOutlook
+        outlook={growthOutlook}
+        currentPrice={100}
+        ticker={TICKER}
+      />,
+    );
+    expect(screen.getByText('$20.0K')).toBeInTheDocument();
+  });
+
+  it('renders very small confidence (0.01) as "1%"', () => {
+    const tinyConfidenceOutlook: LongTermOutlook = {
+      ...baseOutlook,
+      one_year: { low: 180, mid: 190, high: 200, confidence: 0.01 },
+    };
+    render(
+      <InvestmentOutlook
+        outlook={tinyConfidenceOutlook}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    expect(screen.getByText('Confidence: 1%')).toBeInTheDocument();
+  });
+
+  it('applies red border accent for HorizonCard when forecast mid is below current price', () => {
+    // one_year.mid = 100 < CURRENT_PRICE (185.5) → border-l-red-500
+    const bearOutlook: LongTermOutlook = {
+      ...baseOutlook,
+      one_year: { low: 80, mid: 100, high: 130, confidence: 0.6 },
+    };
+    const { container } = render(
+      <InvestmentOutlook
+        outlook={bearOutlook}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    const redAccentCard = container.querySelector('.border-l-red-500');
+    expect(redAccentCard).toBeInTheDocument();
+  });
+
+  it('applies emerald border accent for HorizonCard when forecast mid is above current price', () => {
+    // one_year.mid = 210 > CURRENT_PRICE (185.5) → border-l-emerald-500
+    const { container } = render(
+      <InvestmentOutlook
+        outlook={baseOutlook}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    const emeraldAccentCard = container.querySelector('.border-l-emerald-500');
+    expect(emeraldAccentCard).toBeInTheDocument();
+  });
+
+  it('renders only verdict and trajectory when both catalysts and risks are empty', () => {
+    render(
+      <InvestmentOutlook
+        outlook={{ ...baseOutlook, catalysts: [], long_term_risks: [] }}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    expect(screen.getByText('BUY FOR LONG TERM')).toBeInTheDocument();
+    expect(screen.getByText('Price Trajectory')).toBeInTheDocument();
+    expect(screen.queryByText('Growth Catalysts')).not.toBeInTheDocument();
+    expect(screen.queryByText('Long-Term Risks')).not.toBeInTheDocument();
+  });
+
+  it('renders correct label for strong_buy verdict in the banner', () => {
+    render(
+      <InvestmentOutlook
+        outlook={{ ...baseOutlook, verdict: 'strong_buy' }}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    expect(screen.getByText('STRONG BUY FOR LONG TERM')).toBeInTheDocument();
+  });
+
+  it('renders correct label for sell verdict in the banner', () => {
+    render(
+      <InvestmentOutlook
+        outlook={{ ...baseOutlook, verdict: 'sell' }}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    expect(screen.getByText('SELL FOR LONG TERM')).toBeInTheDocument();
+  });
+
+  it('renders correct label for strong_sell verdict in the banner', () => {
+    render(
+      <InvestmentOutlook
+        outlook={{ ...baseOutlook, verdict: 'strong_sell' }}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    expect(screen.getByText('STRONG SELL FOR LONG TERM')).toBeInTheDocument();
+  });
+
+  it('falls back to HOLD styling for an unknown verdict string', () => {
+    const { container } = render(
+      <InvestmentOutlook
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        outlook={{ ...baseOutlook, verdict: 'garbage' as any }}
+        currentPrice={CURRENT_PRICE}
+        ticker={TICKER}
+      />,
+    );
+    // verdictBg fallback → bg-amber-50 border-amber-200 (hold)
+    const holdBg = container.querySelector('.bg-amber-50');
+    expect(holdBg).toBeInTheDocument();
+  });
+});
+
+// ===========================================================================
+// FinancierInsights component tests
+// ===========================================================================
+
+import { FinancierInsights } from '../../components/invest/FinancierInsights';
+import type { FinancierAnalysis, FinancierPerspective } from '../../types/analysis';
+
+// ---------------------------------------------------------------------------
+// Fixtures
+// ---------------------------------------------------------------------------
+
+const makePerspective = (
+  overrides: Partial<FinancierPerspective> = {},
+): FinancierPerspective => ({
+  name: 'Warren Buffett',
+  framework: 'Value Investing',
+  verdict: 'buy',
+  reasoning: 'Strong moat and consistent cash flows.',
+  key_metrics_evaluated: ['ROE', 'P/E ratio'],
+  ...overrides,
+});
+
+const baseFinancierAnalysis: FinancierAnalysis = {
+  perspectives: [
+    makePerspective({ name: 'Warren Buffett', verdict: 'buy' }),
+    makePerspective({ name: 'Peter Lynch', framework: 'Growth at Reasonable Price', verdict: 'buy' }),
+    makePerspective({ name: 'Benjamin Graham', framework: 'Deep Value', verdict: 'hold' }),
+    makePerspective({ name: 'Ray Dalio', framework: 'Risk Parity', verdict: 'hold' }),
+    makePerspective({ name: 'Cathie Wood', framework: 'Disruptive Innovation', verdict: 'sell' }),
+  ],
+  consensus_verdict: 'hold',
+  consensus_reasoning: 'Mixed signals across frameworks suggest a cautious hold.',
+};
+
+// ===========================================================================
+// FinancierInsights — Empty perspectives (returns null)
+// ===========================================================================
+
+describe('FinancierInsights — Empty perspectives', () => {
+  it('renders nothing when perspectives array is empty', () => {
+    const { container } = render(
+      <FinancierInsights
+        analysis={{ ...baseFinancierAnalysis, perspectives: [] }}
+        ticker="AAPL"
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+});
+
+// ===========================================================================
+// FinancierInsights — Header and consensus
+// ===========================================================================
+
+describe('FinancierInsights — Header and consensus', () => {
+  it('renders the "Legendary Investor Analysis" heading', () => {
+    render(<FinancierInsights analysis={baseFinancierAnalysis} ticker="AAPL" />);
+    expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
+  });
+
+  it('renders the consensus verdict badge', () => {
+    render(<FinancierInsights analysis={baseFinancierAnalysis} ticker="AAPL" />);
+    expect(screen.getByText('Consensus: HOLD')).toBeInTheDocument();
+  });
+
+  it('renders consensus_reasoning when it is non-empty', () => {
+    render(<FinancierInsights analysis={baseFinancierAnalysis} ticker="AAPL" />);
+    // The reasoning text is a sibling text node to the ticker <span>,
+    // so match with a regex against the containing paragraph.
+    expect(
+      screen.getByText(/Mixed signals across frameworks suggest a cautious hold\./),
+    ).toBeInTheDocument();
+  });
+
+  it('does not render consensus summary section when consensus_reasoning is empty', () => {
+    render(
+      <FinancierInsights
+        analysis={{ ...baseFinancierAnalysis, consensus_reasoning: '' }}
+        ticker="AAPL"
+      />,
+    );
+    // The ticker + reasoning paragraph only appears inside the consensus Card
+    expect(
+      screen.queryByText(/Mixed signals/),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders the ticker inside the consensus summary', () => {
+    render(<FinancierInsights analysis={baseFinancierAnalysis} ticker="NVDA" />);
+    expect(screen.getByText('NVDA')).toBeInTheDocument();
+  });
+});
+
+// ===========================================================================
+// FinancierInsights — Perspective cards
+// ===========================================================================
+
+describe('FinancierInsights — Perspective cards', () => {
+  it('renders exactly one card when there is a single perspective', () => {
+    const singleAnalysis: FinancierAnalysis = {
+      perspectives: [makePerspective({ name: 'Warren Buffett', verdict: 'buy' })],
+      consensus_verdict: 'buy',
+      consensus_reasoning: 'Only one voice but a strong one.',
+    };
+    render(<FinancierInsights analysis={singleAnalysis} ticker="AAPL" />);
+    expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
+    expect(screen.getByText('Value Investing')).toBeInTheDocument();
+    expect(screen.getByText('Strong moat and consistent cash flows.')).toBeInTheDocument();
+  });
+
+  it('renders the correct BUY badge for a buy verdict', () => {
+    const buyOnlyAnalysis: FinancierAnalysis = {
+      perspectives: [makePerspective({ verdict: 'buy' })],
+      consensus_verdict: 'buy',
+      consensus_reasoning: '',
+    };
+    render(<FinancierInsights analysis={buyOnlyAnalysis} ticker="AAPL" />);
+    // Both the perspective card badge and the consensus badge say "BUY"
+    const buyBadges = screen.getAllByText('BUY');
+    expect(buyBadges.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders the correct SELL badge for a sell verdict', () => {
+    const sellAnalysis: FinancierAnalysis = {
+      perspectives: [makePerspective({ verdict: 'sell' })],
+      consensus_verdict: 'sell',
+      consensus_reasoning: '',
+    };
+    render(<FinancierInsights analysis={sellAnalysis} ticker="AAPL" />);
+    const sellBadges = screen.getAllByText('SELL');
+    expect(sellBadges.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders the correct HOLD badge for a hold verdict', () => {
+    const holdAnalysis: FinancierAnalysis = {
+      perspectives: [makePerspective({ verdict: 'hold' })],
+      consensus_verdict: 'hold',
+      consensus_reasoning: '',
+    };
+    render(<FinancierInsights analysis={holdAnalysis} ticker="AAPL" />);
+    const holdBadges = screen.getAllByText('HOLD');
+    expect(holdBadges.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('uses Users fallback icon for an unknown financier name', () => {
+    // The Users icon is used for the component header and as the fallback icon.
+    // With an unknown name we cannot distinguish the icon visually in JSDOM,
+    // but the card must render the name and not throw.
+    render(
+      <FinancierInsights
+        analysis={{
+          ...baseFinancierAnalysis,
+          perspectives: [
+            makePerspective({ name: 'Unknown Guru', verdict: 'hold' }),
+          ],
+        }}
+        ticker="AAPL"
+      />,
+    );
+    expect(screen.getByText('Unknown Guru')).toBeInTheDocument();
+  });
+
+  it('renders metric pills when key_metrics_evaluated is non-empty', () => {
+    render(
+      <FinancierInsights
+        analysis={{
+          ...baseFinancierAnalysis,
+          perspectives: [
+            makePerspective({ key_metrics_evaluated: ['P/E', 'ROE', 'FCF'] }),
+          ],
+        }}
+        ticker="AAPL"
+      />,
+    );
+    expect(screen.getByText('P/E')).toBeInTheDocument();
+    expect(screen.getByText('ROE')).toBeInTheDocument();
+    expect(screen.getByText('FCF')).toBeInTheDocument();
+  });
+
+  it('does not render any metric pills when key_metrics_evaluated is empty', () => {
+    render(
+      <FinancierInsights
+        analysis={{
+          ...baseFinancierAnalysis,
+          perspectives: [
+            makePerspective({ key_metrics_evaluated: [] }),
+          ],
+        }}
+        ticker="AAPL"
+      />,
+    );
+    // No pill-like spans with metric text should appear for the empty array case.
+    // We verify the cards section is present but no metric text renders.
+    expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
+    // The metric container is conditionally rendered; query for a known absent metric.
+    expect(screen.queryByText('P/E')).not.toBeInTheDocument();
+    expect(screen.queryByText('ROE')).not.toBeInTheDocument();
+  });
+
+  it('renders all five perspective cards for full financier set', () => {
+    render(<FinancierInsights analysis={baseFinancierAnalysis} ticker="AAPL" />);
+    expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
+    expect(screen.getByText('Peter Lynch')).toBeInTheDocument();
+    expect(screen.getByText('Benjamin Graham')).toBeInTheDocument();
+    expect(screen.getByText('Ray Dalio')).toBeInTheDocument();
+    expect(screen.getByText('Cathie Wood')).toBeInTheDocument();
+  });
+});
+
+// ===========================================================================
+// FinancierInsights — ConsensusBar segment visibility
+// ===========================================================================
+
+describe('FinancierInsights — ConsensusBar', () => {
+  it('renders only the green segment when all perspectives are buy', () => {
+    const allBuy: FinancierAnalysis = {
+      perspectives: [
+        makePerspective({ name: 'Warren Buffett', verdict: 'buy' }),
+        makePerspective({ name: 'Peter Lynch', verdict: 'buy' }),
+        makePerspective({ name: 'Benjamin Graham', verdict: 'buy' }),
+      ],
+      consensus_verdict: 'buy',
+      consensus_reasoning: 'Unanimous buy.',
+    };
+    const { container } = render(
+      <FinancierInsights analysis={allBuy} ticker="AAPL" />,
+    );
+    // Green bar present, amber and red absent from the consensus bar
+    expect(container.querySelector('.bg-emerald-500')).toBeInTheDocument();
+    // "3 Buy" label visible, no Hold or Sell labels in the bar legend
+    expect(screen.getByText('3 Buy')).toBeInTheDocument();
+    expect(screen.queryByText(/Hold/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sell/)).not.toBeInTheDocument();
+  });
+
+  it('renders only the red segment when all perspectives are sell', () => {
+    const allSell: FinancierAnalysis = {
+      perspectives: [
+        makePerspective({ name: 'Warren Buffett', verdict: 'sell' }),
+        makePerspective({ name: 'Peter Lynch', verdict: 'sell' }),
+        makePerspective({ name: 'Benjamin Graham', verdict: 'sell' }),
+      ],
+      consensus_verdict: 'sell',
+      consensus_reasoning: 'Unanimous sell.',
+    };
+    const { container } = render(
+      <FinancierInsights analysis={allSell} ticker="AAPL" />,
+    );
+    expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
+    expect(screen.getByText('3 Sell')).toBeInTheDocument();
+    expect(screen.queryByText(/Buy/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Hold/)).not.toBeInTheDocument();
+  });
+
+  it('renders all three segments when verdicts are mixed', () => {
+    // baseFinancierAnalysis has 2 buy, 2 hold, 1 sell
+    const { container } = render(
+      <FinancierInsights analysis={baseFinancierAnalysis} ticker="AAPL" />,
+    );
+    expect(container.querySelector('.bg-emerald-500')).toBeInTheDocument();
+    expect(container.querySelector('.bg-amber-400')).toBeInTheDocument();
+    expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
+    expect(screen.getByText('2 Buy')).toBeInTheDocument();
+    expect(screen.getByText('2 Hold')).toBeInTheDocument();
+    expect(screen.getByText('1 Sell')).toBeInTheDocument();
+  });
+
+  it('renders bar widths proportional to verdict counts', () => {
+    // 3 perspectives: 2 buy (66.67%), 1 hold (33.33%), 0 sell
+    const twoOneZero: FinancierAnalysis = {
+      perspectives: [
+        makePerspective({ name: 'Warren Buffett', verdict: 'buy' }),
+        makePerspective({ name: 'Peter Lynch', verdict: 'buy' }),
+        makePerspective({ name: 'Benjamin Graham', verdict: 'hold' }),
+      ],
+      consensus_verdict: 'buy',
+      consensus_reasoning: '',
+    };
+    const { container } = render(
+      <FinancierInsights analysis={twoOneZero} ticker="AAPL" />,
+    );
+    const greenBar = container.querySelector<HTMLElement>('.bg-emerald-500[style]');
+    const amberBar = container.querySelector<HTMLElement>('.bg-amber-400[style]');
+    expect(greenBar?.style.width).toBe('66.66666666666666%');
+    expect(amberBar?.style.width).toBe('33.33333333333333%');
+  });
+});
+
+// ===========================================================================
+// FinancierInsights — uncovered line gaps
+// ===========================================================================
+
+describe('FinancierInsights — PerspectiveCard with unknown financier name (line 64)', () => {
+  // financierIcons lookup falls back to Users when the name is not in the map.
+  // The card must still render and not throw, and the name must be visible.
+  it('renders perspective card for a completely unknown financier name', () => {
+    render(
+      <FinancierInsights
+        analysis={{
+          perspectives: [
+            {
+              name: 'Unknown Legend',
+              framework: 'Mystery Framework',
+              verdict: 'buy',
+              reasoning: 'Unknown reasons.',
+              key_metrics_evaluated: [],
+            },
+          ],
+          consensus_verdict: 'buy',
+          consensus_reasoning: '',
+        }}
+        ticker="AAPL"
+      />,
+    );
+    expect(screen.getByText('Unknown Legend')).toBeInTheDocument();
+    expect(screen.getByText('Mystery Framework')).toBeInTheDocument();
+    expect(screen.getByText('Unknown reasons.')).toBeInTheDocument();
+  });
+
+  it('renders a BUY badge for the unknown-name perspective card', () => {
+    render(
+      <FinancierInsights
+        analysis={{
+          perspectives: [
+            {
+              name: 'Ghost Investor',
+              framework: 'Quantum Investing',
+              verdict: 'buy',
+              reasoning: 'Vibes.',
+              key_metrics_evaluated: ['EV/EBITDA'],
+            },
+          ],
+          consensus_verdict: 'buy',
+          consensus_reasoning: '',
+        }}
+        ticker="TSLA"
+      />,
+    );
+    // Both the perspective badge and consensus badge say BUY
+    const buyBadges = screen.getAllByText('BUY');
+    expect(buyBadges.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('FinancierInsights — consensusStyle fallback for unknown verdict (line 112)', () => {
+  // verdictStyles lookup falls back to verdictStyles.hold when consensus_verdict
+  // is not one of buy/hold/sell. The component must render without throwing.
+  it('falls back to HOLD styling when consensus_verdict is an unknown string', () => {
+    const { container } = render(
+      <FinancierInsights
+        analysis={{
+          perspectives: [
+            {
+              name: 'Warren Buffett',
+              framework: 'Value Investing',
+              verdict: 'buy',
+              reasoning: 'Strong moat.',
+              key_metrics_evaluated: [],
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          consensus_verdict: 'unknown_verdict' as any,
+          consensus_reasoning: 'Mixed signals.',
+        }}
+        ticker="AAPL"
+      />,
+    );
+    // The consensus badge should display "HOLD" (fallback label)
+    expect(screen.getByText('Consensus: HOLD')).toBeInTheDocument();
+    // The badge should carry the amber hold background class
+    const holdBadge = container.querySelector('.bg-amber-100');
+    expect(holdBadge).toBeInTheDocument();
+  });
+
+  it('renders the component body correctly when consensus_verdict falls back to hold', () => {
+    render(
+      <FinancierInsights
+        analysis={{
+          perspectives: [
+            {
+              name: 'Peter Lynch',
+              framework: 'Growth',
+              verdict: 'sell',
+              reasoning: 'Overvalued.',
+              key_metrics_evaluated: ['PEG'],
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          consensus_verdict: 'garbage' as any,
+          consensus_reasoning: '',
+        }}
+        ticker="NVDA"
+      />,
+    );
+    // Header and perspective card must still render
+    expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Peter Lynch')).toBeInTheDocument();
+  });
+});

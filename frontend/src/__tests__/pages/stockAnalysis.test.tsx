@@ -15,8 +15,8 @@
  *   7. Analysis available, activeTab = 'about'      → CompanyAbout visible
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Module mocks — must appear before any import of the mocked modules
@@ -681,6 +681,414 @@ describe('StockAnalysis', () => {
       expect(
         screen.queryByText('Long-term outlook data not available for this stock.'),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 13. Message index calculation — verify correct message at 0s, 5s, 10s
+  // -------------------------------------------------------------------------
+
+  describe('loading state — message index calculation via fake timers', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      setupStore({ currentTicker: 'MSFT', isLoading: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('shows message index 0 at second 0 (before any tick)', () => {
+      render(<StockAnalysis />);
+      // loadingSeconds = 0 → Math.floor(0/5) % 13 = 0
+      expect(
+        screen.getByText('Your AI agent is analyzing market data...'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows message index 1 at second 5 (one rotation)', () => {
+      render(<StockAnalysis />);
+      // Advance clock by 5 ticks of 1000ms each → loadingSeconds = 5
+      act(() => { vi.advanceTimersByTime(5000); });
+      // Math.floor(5/5) % 13 = 1
+      expect(
+        screen.getByText('Scanning SEC filings and earnings reports...'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows message index 2 at second 10 (two rotations)', () => {
+      render(<StockAnalysis />);
+      act(() => { vi.advanceTimersByTime(10000); });
+      // Math.floor(10/5) % 13 = 2
+      expect(
+        screen.getByText('AI agents are debating bull vs bear cases...'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows message index 12 at second 60 (wraps at 13 messages)', () => {
+      render(<StockAnalysis />);
+      act(() => { vi.advanceTimersByTime(60000); });
+      // Math.floor(60/5) % 13 = 12 % 13 = 12
+      expect(
+        screen.getByText('Almost done — assembling the final report...'),
+      ).toBeInTheDocument();
+    });
+
+    it('wraps back to index 0 at second 65 (full cycle + 1)', () => {
+      render(<StockAnalysis />);
+      act(() => { vi.advanceTimersByTime(65000); });
+      // Math.floor(65/5) % 13 = 13 % 13 = 0
+      expect(
+        screen.getByText('Your AI agent is analyzing market data...'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 14. Loading state — AgentLoadingAnimation receives ticker and elapsed seconds
+  // -------------------------------------------------------------------------
+
+  describe('loading state — AgentLoadingAnimation prop passthrough', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('passes the current ticker to AgentLoadingAnimation (renders "Analyzing NVDA...")', () => {
+      setupStore({ currentTicker: 'NVDA', isLoading: true });
+      render(<StockAnalysis />);
+      expect(screen.getByText('Analyzing NVDA...')).toBeInTheDocument();
+    });
+
+    it('displays elapsed seconds counter starting at 0s', () => {
+      setupStore({ currentTicker: 'NVDA', isLoading: true });
+      render(<StockAnalysis />);
+      expect(screen.getByText('0s')).toBeInTheDocument();
+    });
+
+    it('increments elapsed seconds counter as time passes', () => {
+      setupStore({ currentTicker: 'NVDA', isLoading: true });
+      render(<StockAnalysis />);
+      act(() => { vi.advanceTimersByTime(3000); });
+      expect(screen.getByText('3s')).toBeInTheDocument();
+    });
+
+    it('resets elapsed seconds to 0 when isLoading becomes false', () => {
+      // Start loading
+      setupStore({ currentTicker: 'NVDA', isLoading: true });
+      const { rerender } = render(<StockAnalysis />);
+      act(() => { vi.advanceTimersByTime(7000); });
+      // Switch to analysis-ready state — isLoading false, analysis present
+      setupStore({
+        currentTicker: 'NVDA',
+        isLoading: false,
+        analysis: { ...mockAnalysis, ticker: 'NVDA' },
+        activeTab: 'chart',
+      });
+      rerender(<StockAnalysis />);
+      // The ticker header should appear and the elapsed counter should be gone
+      expect(screen.queryByText('7s')).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 15. Error state — AnalysisError component renders with correct ticker
+  // -------------------------------------------------------------------------
+
+  describe('error state — AnalysisError component rendering', () => {
+    it('renders the AnalysisError heading with the failed ticker', () => {
+      setupStore({ currentTicker: 'BADTICKER', isLoading: false, error: 'not found' });
+      render(<StockAnalysis />);
+      expect(screen.getByText(/Couldn.*t analyze.*BADTICKER/)).toBeInTheDocument();
+    });
+
+    it('maps a 404 error string to a friendly "could not find" message', () => {
+      setupStore({ currentTicker: 'XYZ', isLoading: false, error: '404 not found' });
+      render(<StockAnalysis />);
+      expect(screen.getByText(/couldn.*t find that stock/i)).toBeInTheDocument();
+    });
+
+    it('maps a 502 error string to a data-provider message', () => {
+      setupStore({ currentTicker: 'XYZ', isLoading: false, error: '502 Bad Gateway' });
+      render(<StockAnalysis />);
+      expect(screen.getByText(/data provider is temporarily unavailable/i)).toBeInTheDocument();
+    });
+
+    it('maps a timeout error string to a retry message', () => {
+      setupStore({ currentTicker: 'XYZ', isLoading: false, error: 'timeout exceeded' });
+      render(<StockAnalysis />);
+      expect(screen.getByText(/took too long/i)).toBeInTheDocument();
+    });
+
+    it('renders a "Try again" retry button for the failed ticker', () => {
+      setupStore({ currentTicker: 'BADTICKER', isLoading: false, error: 'not found' });
+      render(<StockAnalysis />);
+      expect(screen.getByText(/Try.*BADTICKER.*again/)).toBeInTheDocument();
+    });
+
+    it('shows popular stocks when search returns no results', async () => {
+      const { searchStocks: mockSearch } = await import('../../services/stockApi');
+      vi.mocked(mockSearch).mockResolvedValueOnce([]);
+      setupStore({ currentTicker: 'ZZZZ', isLoading: false, error: 'not found' });
+      render(<StockAnalysis />);
+      await waitFor(() => {
+        // Popular stocks fallback — AAPL is always in the POPULAR_STOCKS list
+        expect(screen.getByText('AAPL')).toBeInTheDocument();
+      });
+    });
+
+    it('calls fetchAnalysis with the original ticker when retry button is clicked', async () => {
+      setupStore({ currentTicker: 'BADTICKER', isLoading: false, error: 'not found' });
+      render(<StockAnalysis />);
+      const retryButton = screen.getByText(/Try.*BADTICKER.*again/);
+      fireEvent.click(retryButton);
+      expect(mockFetchAnalysis).toHaveBeenCalledWith('BADTICKER');
+      // Drain any pending state updates from searchStocks resolving
+      await waitFor(() => expect(mockFetchAnalysis).toHaveBeenCalledTimes(1));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 16. invest tab — FinancierInsights renders when financier_analysis exists
+  // -------------------------------------------------------------------------
+
+  const mockFinancierAnalysis = {
+    perspectives: [
+      {
+        name: 'Warren Buffett',
+        framework: 'Value Investing',
+        verdict: 'buy' as const,
+        reasoning: 'Wide economic moat and consistent earnings growth.',
+        key_metrics_evaluated: ['ROE', 'FCF Yield'],
+      },
+      {
+        name: 'Peter Lynch',
+        framework: 'Growth at Reasonable Price',
+        verdict: 'hold' as const,
+        reasoning: 'PEG ratio slightly elevated.',
+        key_metrics_evaluated: ['PEG', 'EPS Growth'],
+      },
+    ],
+    consensus_verdict: 'buy' as const,
+    consensus_reasoning: 'Strong fundamentals with a minor valuation premium.',
+  };
+
+  describe('analysis loaded — invest tab (with financier_analysis, no outlook)', () => {
+    beforeEach(() =>
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: {
+          ...mockAnalysis,
+          long_term_outlook: null,
+          financier_analysis: mockFinancierAnalysis,
+        },
+        activeTab: 'invest',
+      }),
+    );
+
+    it('renders the Legendary Investor Analysis heading', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
+    });
+
+    it('renders the consensus verdict badge', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('Consensus: BUY')).toBeInTheDocument();
+    });
+
+    it('renders each financier perspective card by name', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
+      expect(screen.getByText('Peter Lynch')).toBeInTheDocument();
+    });
+
+    it('renders perspective reasoning text', () => {
+      render(<StockAnalysis />);
+      expect(
+        screen.getByText('Wide economic moat and consistent earnings growth.'),
+      ).toBeInTheDocument();
+    });
+
+    it('renders the consensus reasoning summary', () => {
+      render(<StockAnalysis />);
+      expect(
+        screen.getByText(/Strong fundamentals with a minor valuation premium\./),
+      ).toBeInTheDocument();
+    });
+
+    it('does NOT render InvestmentOutlook (no outlook data)', () => {
+      render(<StockAnalysis />);
+      expect(screen.queryByText('Price Trajectory')).not.toBeInTheDocument();
+    });
+
+    it('does NOT render the "not available" fallback because financier data is present', () => {
+      render(<StockAnalysis />);
+      expect(
+        screen.queryByText('Long-term outlook data not available for this stock.'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 17. invest tab — both outlook AND financier_analysis present simultaneously
+  // -------------------------------------------------------------------------
+
+  describe('analysis loaded — invest tab (both outlook and financier_analysis)', () => {
+    beforeEach(() =>
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: {
+          ...mockAnalysis,
+          long_term_outlook: {
+            one_year: { low: 190, mid: 210, high: 230, confidence: 0.72 },
+            five_year: { low: 240, mid: 290, high: 350, confidence: 0.6 },
+            ten_year: { low: 300, mid: 400, high: 520, confidence: 0.45 },
+            verdict: 'buy' as const,
+            verdict_rationale: 'Solid long-term growth story.',
+            catalysts: ['Services expansion'],
+            long_term_risks: ['Margin compression'],
+            compound_annual_return: 10.0,
+          },
+          financier_analysis: mockFinancierAnalysis,
+        },
+        activeTab: 'invest',
+      }),
+    );
+
+    it('renders InvestmentOutlook (BUY FOR LONG TERM banner)', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('BUY FOR LONG TERM')).toBeInTheDocument();
+    });
+
+    it('renders FinancierInsights (Legendary Investor Analysis heading)', () => {
+      render(<StockAnalysis />);
+      expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
+    });
+
+    it('does NOT render the "not available" fallback when both are present', () => {
+      render(<StockAnalysis />);
+      expect(
+        screen.queryByText('Long-term outlook data not available for this stock.'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 18. invest tab — explicit empty-state check (both null)
+  // -------------------------------------------------------------------------
+
+  describe('analysis loaded — invest tab (empty state: both null)', () => {
+    beforeEach(() =>
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: {
+          ...mockAnalysis,
+          long_term_outlook: null,
+          financier_analysis: null,
+        },
+        activeTab: 'invest',
+      }),
+    );
+
+    it('renders the "not available" fallback paragraph', () => {
+      render(<StockAnalysis />);
+      expect(
+        screen.getByText('Long-term outlook data not available for this stock.'),
+      ).toBeInTheDocument();
+    });
+
+    it('does not render InvestmentOutlook content', () => {
+      render(<StockAnalysis />);
+      expect(screen.queryByText('Price Trajectory')).not.toBeInTheDocument();
+      expect(screen.queryByText(/FOR LONG TERM/)).not.toBeInTheDocument();
+    });
+
+    it('does not render FinancierInsights content', () => {
+      render(<StockAnalysis />);
+      expect(screen.queryByText('Legendary Investor Analysis')).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 19. hydration gate — returns null before persist middleware has hydrated
+  // -------------------------------------------------------------------------
+
+  describe('hydration gate (line 48)', () => {
+    it('renders nothing (returns null) when hasHydrated is false', () => {
+      const store = {
+        currentTicker: 'AAPL',
+        analysis: null,
+        isLoading: false,
+        error: null,
+        activeTab: 'chart' as const,
+        setActiveTab: mockSetActiveTab,
+        fetchAnalysis: mockFetchAnalysis,
+      };
+      vi.mocked(useStockStore).mockImplementation(
+        (selector: (s: typeof store) => unknown) => selector(store),
+      );
+      (useStockStore as unknown as Record<string, unknown>).persist = {
+        // hasHydrated returns false — triggers the early return null on line 48
+        hasHydrated: () => false,
+        onFinishHydration: () => () => {},
+      };
+
+      const { container } = render(<StockAnalysis />);
+      expect(container.firstChild).toBeNull();
+    });
+
+    it('does not render LandingHero while store is not yet hydrated', () => {
+      const store = {
+        currentTicker: null as string | null,
+        analysis: null,
+        isLoading: false,
+        error: null,
+        activeTab: 'chart' as const,
+        setActiveTab: mockSetActiveTab,
+        fetchAnalysis: mockFetchAnalysis,
+      };
+      vi.mocked(useStockStore).mockImplementation(
+        (selector: (s: typeof store) => unknown) => selector(store),
+      );
+      (useStockStore as unknown as Record<string, unknown>).persist = {
+        hasHydrated: () => false,
+        onFinishHydration: () => () => {},
+      };
+
+      render(<StockAnalysis />);
+      expect(screen.queryByText(/AI-Powered/)).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 20. null analysis guard (line 86 coverage)
+  // -------------------------------------------------------------------------
+
+  describe('null analysis guard (line 86)', () => {
+    it('returns null when ticker is set, no loading, no error, analysis is null', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: null,
+        isLoading: false,
+        error: null,
+      });
+      const { container } = render(<StockAnalysis />);
+      expect(container.firstChild).toBeNull();
+    });
+
+    it('does not render any tab content when analysis is null', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: null,
+        isLoading: false,
+        error: null,
+      });
+      render(<StockAnalysis />);
+      expect(screen.queryByRole('button', { name: /chart/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /news/i })).not.toBeInTheDocument();
     });
   });
 });
