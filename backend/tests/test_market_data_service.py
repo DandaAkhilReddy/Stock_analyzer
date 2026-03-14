@@ -1,7 +1,7 @@
 """Tests for MarketDataService — FMP API wrapper."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -1324,3 +1324,416 @@ class TestFormatMarketCapBoundaries:
 
     def test_fractional_trillion_formatted_to_one_decimal(self) -> None:
         assert _format_market_cap(2.85e12) == "2.9T"
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService._parallel_get — raise_for_status paths
+# ---------------------------------------------------------------------------
+
+
+def _http_status_error(status_code: int) -> httpx.HTTPStatusError:
+    """Build an httpx.HTTPStatusError for a given status code."""
+    request = httpx.Request("GET", "https://financialmodelingprep.com/stable/quote")
+    response = httpx.Response(
+        status_code=status_code,
+        content=b"error body",
+        request=request,
+    )
+    return httpx.HTTPStatusError(
+        f"HTTP {status_code}", request=request, response=response
+    )
+
+
+class TestParallelGet:
+    """Tests for MarketDataService._parallel_get raise_for_status coverage."""
+
+    @pytest.mark.asyncio
+    async def test_quote_404_raises_http_status_error(self) -> None:
+        """r1.raise_for_status() on a 404 must propagate HTTPStatusError."""
+        service = MarketDataService()
+        quote_resp = _mock_response([], status_code=404)
+        profile_resp = _mock_response(_MOCK_PROFILE, status_code=200)
+
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = [quote_resp, profile_resp]
+
+        async def fake_gather(*coros):  # type: ignore[no-untyped-def]
+            results = []
+            for coro in coros:
+                results.append(await coro)
+            return results
+
+        with patch("asyncio.gather", side_effect=fake_gather):
+            with pytest.raises(httpx.HTTPStatusError):
+                async with httpx.AsyncClient() as client:
+                    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                    mock_client.__aexit__ = AsyncMock(return_value=False)
+                    with patch("httpx.AsyncClient", return_value=mock_client):
+                        await service._parallel_get(
+                            client,
+                            "https://financialmodelingprep.com/stable/quote",
+                            "https://financialmodelingprep.com/stable/profile",
+                            "AAPL",
+                        )
+
+    @pytest.mark.asyncio
+    async def test_r1_raise_for_status_called_on_404(self) -> None:
+        """_parallel_get must call raise_for_status() on the first response."""
+        service = MarketDataService()
+
+        request = httpx.Request("GET", "https://example.com")
+        r1 = MagicMock(spec=httpx.Response)
+        r1.raise_for_status.side_effect = _http_status_error(404)
+        r2 = MagicMock(spec=httpx.Response)
+        r2.raise_for_status.return_value = None
+
+        mock_client = MagicMock()
+
+        async def mock_gather_r1(*coros: object) -> list:  # type: ignore[return]
+            import inspect
+            for coro in coros:
+                if inspect.iscoroutine(coro):
+                    coro.close()
+            return [r1, r2]
+
+        with patch("asyncio.gather", side_effect=mock_gather_r1):
+            with pytest.raises(httpx.HTTPStatusError):
+                await service._parallel_get(
+                    mock_client,  # type: ignore[arg-type]
+                    "https://financialmodelingprep.com/stable/quote",
+                    "https://financialmodelingprep.com/stable/profile",
+                    "AAPL",
+                )
+        r1.raise_for_status.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_r2_raise_for_status_called_on_500(self) -> None:
+        """_parallel_get must call raise_for_status() on the second response."""
+        service = MarketDataService()
+
+        r1 = MagicMock(spec=httpx.Response)
+        r1.raise_for_status.return_value = None
+        r2 = MagicMock(spec=httpx.Response)
+        r2.raise_for_status.side_effect = _http_status_error(500)
+
+        mock_client = MagicMock()
+
+        async def mock_gather(*coros: object) -> list:  # type: ignore[return]
+            # drain the two coroutines so Python does not warn about unawaited coros
+            for coro in coros:
+                import inspect
+                if inspect.iscoroutine(coro):
+                    coro.close()
+            return [r1, r2]
+
+        with patch("asyncio.gather", side_effect=mock_gather):
+            with pytest.raises(httpx.HTTPStatusError):
+                await service._parallel_get(
+                    mock_client,  # type: ignore[arg-type]
+                    "https://financialmodelingprep.com/stable/quote",
+                    "https://financialmodelingprep.com/stable/profile",
+                    "AAPL",
+                )
+        r2.raise_for_status.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_both_responses_ok_returns_tuple(self) -> None:
+        """When both responses succeed, returns (r1, r2) tuple."""
+        service = MarketDataService()
+
+        r1 = MagicMock(spec=httpx.Response)
+        r1.raise_for_status.return_value = None
+        r2 = MagicMock(spec=httpx.Response)
+        r2.raise_for_status.return_value = None
+
+        mock_client = MagicMock()
+
+        async def mock_gather(*coros: object) -> list:  # type: ignore[return]
+            import inspect
+            for coro in coros:
+                if inspect.iscoroutine(coro):
+                    coro.close()
+            return [r1, r2]
+
+        with patch("asyncio.gather", side_effect=mock_gather):
+            result = await service._parallel_get(
+                mock_client,  # type: ignore[arg-type]
+                "https://financialmodelingprep.com/stable/quote",
+                "https://financialmodelingprep.com/stable/profile",
+                "AAPL",
+            )
+        assert result == (r1, r2)
+
+    @pytest.mark.asyncio
+    async def test_both_raise_for_status_fail_first_wins(self) -> None:
+        """When both raise_for_status() would fail, the first error propagates."""
+        service = MarketDataService()
+
+        r1 = MagicMock(spec=httpx.Response)
+        r1.raise_for_status.side_effect = _http_status_error(403)
+        r2 = MagicMock(spec=httpx.Response)
+        r2.raise_for_status.side_effect = _http_status_error(500)
+
+        mock_client = MagicMock()
+
+        async def mock_gather(*coros: object) -> list:  # type: ignore[return]
+            import inspect
+            for coro in coros:
+                if inspect.iscoroutine(coro):
+                    coro.close()
+            return [r1, r2]
+
+        with patch("asyncio.gather", side_effect=mock_gather):
+            with pytest.raises(httpx.HTTPStatusError) as exc_info:
+                await service._parallel_get(
+                    mock_client,
+                    "https://financialmodelingprep.com/stable/quote",
+                    "https://financialmodelingprep.com/stable/profile",
+                    "AAPL",
+                )
+        assert exc_info.value.response.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# _fetch_quote_and_profile — HTTP error code coverage via _parallel_get
+# ---------------------------------------------------------------------------
+
+
+class TestFetchQuoteAndProfileHttpErrors:
+    """Tests for _fetch_quote_and_profile covering specific HTTP error codes.
+
+    The raise_for_status() calls in _parallel_get raise httpx.HTTPStatusError,
+    which is a subclass of httpx.HTTPError.  _fetch_quote_and_profile catches
+    httpx.HTTPError and converts it to ExternalAPIError.
+    """
+
+    @pytest.mark.asyncio
+    async def test_quote_404_converted_to_external_api_error(self) -> None:
+        """404 from quote endpoint → ExternalAPIError with 'Failed to fetch'."""
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_parallel_get",
+            side_effect=_http_status_error(404),
+        ):
+            with pytest.raises(ExternalAPIError, match="Failed to fetch"):
+                await service._fetch_quote_and_profile("AAPL")
+
+    @pytest.mark.asyncio
+    async def test_profile_500_converted_to_external_api_error(self) -> None:
+        """500 from profile endpoint → ExternalAPIError with 'Failed to fetch'."""
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_parallel_get",
+            side_effect=_http_status_error(500),
+        ):
+            with pytest.raises(ExternalAPIError, match="Failed to fetch"):
+                await service._fetch_quote_and_profile("TSLA")
+
+    @pytest.mark.asyncio
+    async def test_both_endpoints_fail_raises_external_api_error(self) -> None:
+        """When _parallel_get raises, _fetch_quote_and_profile wraps it."""
+        service = MarketDataService()
+        # Simulate asyncio.gather raising because both requests fail;
+        # in practice gather propagates the first exception.
+        with patch.object(
+            service,
+            "_parallel_get",
+            side_effect=_http_status_error(503),
+        ):
+            with pytest.raises(ExternalAPIError):
+                await service._fetch_quote_and_profile("NVDA")
+
+    @pytest.mark.asyncio
+    async def test_403_rate_limit_converted_to_external_api_error(self) -> None:
+        """403 Forbidden → ExternalAPIError."""
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_parallel_get",
+            side_effect=_http_status_error(403),
+        ):
+            with pytest.raises(ExternalAPIError):
+                await service._fetch_quote_and_profile("MSFT")
+
+    @pytest.mark.asyncio
+    async def test_429_too_many_requests_converted_to_external_api_error(
+        self,
+    ) -> None:
+        """429 Too Many Requests → ExternalAPIError."""
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_parallel_get",
+            side_effect=_http_status_error(429),
+        ):
+            with pytest.raises(ExternalAPIError):
+                await service._fetch_quote_and_profile("AMZN")
+
+
+# ---------------------------------------------------------------------------
+# get_quote — HTTP error codes surface as ExternalAPIError
+# ---------------------------------------------------------------------------
+
+
+class TestGetQuoteHttpErrorCodes:
+    """Tests that specific HTTP error codes from FMP surface as ExternalAPIError."""
+
+    @pytest.mark.asyncio
+    async def test_403_forbidden_raises_external_api_error(self) -> None:
+        """A 403 from FMP must result in ExternalAPIError, not a silent failure."""
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            side_effect=ExternalAPIError("FMP API", "HTTP 403: Forbidden"),
+        ):
+            with pytest.raises(ExternalAPIError, match="403"):
+                await service.get_quote("AAPL")
+
+    @pytest.mark.asyncio
+    async def test_429_too_many_requests_raises_external_api_error(self) -> None:
+        """A 429 rate-limit from FMP must result in ExternalAPIError."""
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            side_effect=ExternalAPIError("FMP API", "HTTP 429: Too Many Requests"),
+        ):
+            with pytest.raises(ExternalAPIError, match="429"):
+                await service.get_quote("TSLA")
+
+    @pytest.mark.asyncio
+    async def test_500_internal_server_error_raises_external_api_error(
+        self,
+    ) -> None:
+        """A 500 from FMP must result in ExternalAPIError."""
+        service = MarketDataService()
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            side_effect=ExternalAPIError("FMP API", "HTTP 500: Internal Server Error"),
+        ):
+            with pytest.raises(ExternalAPIError, match="500"):
+                await service.get_quote("NVDA")
+
+    @pytest.mark.asyncio
+    async def test_error_message_preserved_through_layers(self) -> None:
+        """Error detail from FMP must be preserved in the raised ExternalAPIError."""
+        service = MarketDataService()
+        detail = "HTTP 502: upstream connect error"
+        with patch.object(
+            service,
+            "_fetch_quote_and_profile",
+            side_effect=ExternalAPIError("FMP API", detail),
+        ):
+            with pytest.raises(ExternalAPIError) as exc_info:
+                await service.get_quote("AAPL")
+        assert "502" in str(exc_info.value)
+
+
+# ---------------------------------------------------------------------------
+# _COMMON_TICKERS — parametrized coverage of every mapping entry
+# ---------------------------------------------------------------------------
+
+from app.services.market_data_service import _COMMON_TICKERS  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "company_name,expected_ticker",
+    list(_COMMON_TICKERS.items()),
+)
+@pytest.mark.asyncio
+async def test_resolve_ticker_common_mapping(
+    company_name: str, expected_ticker: str
+) -> None:
+    """Every entry in _COMMON_TICKERS must resolve via resolve_ticker."""
+    service = MarketDataService()
+    result = await service.resolve_ticker(company_name)
+    assert result == expected_ticker
+
+
+@pytest.mark.parametrize(
+    "company_name,expected_ticker",
+    list(_COMMON_TICKERS.items()),
+)
+@pytest.mark.asyncio
+async def test_resolve_ticker_common_mapping_lowercase(
+    company_name: str, expected_ticker: str
+) -> None:
+    """All _COMMON_TICKERS entries must resolve correctly when input is lowercase."""
+    service = MarketDataService()
+    result = await service.resolve_ticker(company_name.lower())
+    assert result == expected_ticker
+
+
+@pytest.mark.parametrize(
+    "company_name,expected_ticker",
+    list(_COMMON_TICKERS.items()),
+)
+@pytest.mark.asyncio
+async def test_resolve_ticker_common_mapping_mixed_case(
+    company_name: str, expected_ticker: str
+) -> None:
+    """All _COMMON_TICKERS entries must resolve correctly when input is title-cased."""
+    service = MarketDataService()
+    result = await service.resolve_ticker(company_name.title())
+    assert result == expected_ticker
+
+
+# ---------------------------------------------------------------------------
+# _COMMON_TICKERS — named spot-checks for the most common mixed-case variants
+# ---------------------------------------------------------------------------
+
+
+class TestCommonTickersMixedCase:
+    """Spot-checks for mixed-case variants of _COMMON_TICKERS entries."""
+
+    @pytest.mark.asyncio
+    async def test_google_uppercase(self) -> None:
+        assert await MarketDataService().resolve_ticker("GOOGLE") == "GOOGL"
+
+    @pytest.mark.asyncio
+    async def test_google_lowercase(self) -> None:
+        assert await MarketDataService().resolve_ticker("google") == "GOOGL"
+
+    @pytest.mark.asyncio
+    async def test_google_titlecase(self) -> None:
+        assert await MarketDataService().resolve_ticker("Google") == "GOOGL"
+
+    @pytest.mark.asyncio
+    async def test_amazon_uppercase(self) -> None:
+        assert await MarketDataService().resolve_ticker("AMAZON") == "AMZN"
+
+    @pytest.mark.asyncio
+    async def test_amazon_lowercase(self) -> None:
+        assert await MarketDataService().resolve_ticker("amazon") == "AMZN"
+
+    @pytest.mark.asyncio
+    async def test_amazon_titlecase(self) -> None:
+        assert await MarketDataService().resolve_ticker("Amazon") == "AMZN"
+
+    @pytest.mark.asyncio
+    async def test_nvidia_lowercase(self) -> None:
+        assert await MarketDataService().resolve_ticker("nvidia") == "NVDA"
+
+    @pytest.mark.asyncio
+    async def test_facebook_mixed_case(self) -> None:
+        assert await MarketDataService().resolve_ticker("Facebook") == "META"
+
+    @pytest.mark.asyncio
+    async def test_alphabet_lowercase(self) -> None:
+        assert await MarketDataService().resolve_ticker("alphabet") == "GOOGL"
+
+    @pytest.mark.asyncio
+    async def test_shopify_titlecase(self) -> None:
+        assert await MarketDataService().resolve_ticker("Shopify") == "SHOP"
+
+    @pytest.mark.asyncio
+    async def test_coinbase_mixed_case(self) -> None:
+        assert await MarketDataService().resolve_ticker("Coinbase") == "COIN"
+
+    @pytest.mark.asyncio
+    async def test_snowflake_lowercase(self) -> None:
+        assert await MarketDataService().resolve_ticker("snowflake") == "SNOW"

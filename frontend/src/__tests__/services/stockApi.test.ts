@@ -28,11 +28,13 @@ vi.mock('../../services/api', () => ({
     }
   },
   post: vi.fn(),
+  get: vi.fn(),
 }));
 
 // Import after vi.mock so the resolved module is the mocked version.
-import { post } from '../../services/api';
-import { analyzeStock } from '../../services/stockApi';
+import { post, get } from '../../services/api';
+import { analyzeStock, searchStocks } from '../../services/stockApi';
+import type { SearchResult } from '../../types/analysis';
 
 // ---------------------------------------------------------------------------
 // Fixture — minimal but type-safe StockAnalysisResponse
@@ -105,6 +107,7 @@ const MOCK_ANALYSIS: StockAnalysisResponse = {
 // ---------------------------------------------------------------------------
 
 const mockPost = vi.mocked(post);
+const mockGet = vi.mocked(get);
 
 // ---------------------------------------------------------------------------
 // analyzeStock — URL construction
@@ -385,6 +388,172 @@ describe('analyzeStock — error propagation', () => {
     }
 
     // Verify it is the exact same object reference — analyzeStock adds no wrapper
+    expect(caught).toBe(sentinel);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchStocks — URL construction
+// ---------------------------------------------------------------------------
+
+const MOCK_RESULTS: SearchResult[] = [
+  { symbol: 'AAPL', name: 'Apple Inc.' },
+  { symbol: 'AAPL.MX', name: 'Apple Inc. (Mexico)' },
+];
+
+describe('searchStocks — URL construction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls get with path /api/search?q={query} for a plain ticker query', async () => {
+    mockGet.mockResolvedValue(MOCK_RESULTS);
+
+    await searchStocks('AAPL');
+
+    expect(mockGet).toHaveBeenCalledOnce();
+    expect(mockGet).toHaveBeenCalledWith('/api/search?q=AAPL');
+  });
+
+  it('encodes a space in the query string', async () => {
+    mockGet.mockResolvedValue(MOCK_RESULTS);
+
+    await searchStocks('Apple Inc');
+
+    // encodeURIComponent('Apple Inc') === 'Apple%20Inc'
+    expect(mockGet).toHaveBeenCalledWith('/api/search?q=Apple%20Inc');
+  });
+
+  it('encodes an ampersand in the query string', async () => {
+    mockGet.mockResolvedValue(MOCK_RESULTS);
+
+    await searchStocks('AT&T');
+
+    // encodeURIComponent('AT&T') === 'AT%26T'
+    expect(mockGet).toHaveBeenCalledWith('/api/search?q=AT%26T');
+  });
+
+  it('encodes a plus sign in the query string', async () => {
+    mockGet.mockResolvedValue(MOCK_RESULTS);
+
+    await searchStocks('A+B');
+
+    // encodeURIComponent('A+B') === 'A%2BB'
+    expect(mockGet).toHaveBeenCalledWith('/api/search?q=A%2BB');
+  });
+
+  it('encodes a forward slash in the query string', async () => {
+    mockGet.mockResolvedValue(MOCK_RESULTS);
+
+    await searchStocks('BRK/B');
+
+    // encodeURIComponent('BRK/B') === 'BRK%2FB'
+    expect(mockGet).toHaveBeenCalledWith('/api/search?q=BRK%2FB');
+  });
+
+  it('sends an empty q= parameter when query is an empty string', async () => {
+    mockGet.mockResolvedValue([]);
+
+    await searchStocks('');
+
+    expect(mockGet).toHaveBeenCalledWith('/api/search?q=');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchStocks — return type
+// ---------------------------------------------------------------------------
+
+describe('searchStocks — return type', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the SearchResult[] resolved by get', async () => {
+    mockGet.mockResolvedValue(MOCK_RESULTS);
+
+    const result = await searchStocks('AAPL');
+
+    expect(result).toEqual(MOCK_RESULTS);
+  });
+
+  it('returns the exact object reference from get without mutation', async () => {
+    mockGet.mockResolvedValue(MOCK_RESULTS);
+
+    const result = await searchStocks('AAPL');
+
+    expect(result).toBe(MOCK_RESULTS);
+  });
+
+  it('returns an empty array when get resolves with an empty array', async () => {
+    mockGet.mockResolvedValue([]);
+
+    const result = await searchStocks('NOMATCH');
+
+    expect(result).toHaveLength(0);
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it('returns multiple results preserving order', async () => {
+    const ordered: SearchResult[] = [
+      { symbol: 'MSFT', name: 'Microsoft Corporation' },
+      { symbol: 'MSFTU', name: 'Microsoft Corp Units' },
+    ];
+    mockGet.mockResolvedValue(ordered);
+
+    const result = await searchStocks('Microsoft');
+
+    expect(result[0].symbol).toBe('MSFT');
+    expect(result[1].symbol).toBe('MSFTU');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchStocks — error propagation
+// ---------------------------------------------------------------------------
+
+describe('searchStocks — error propagation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('propagates an ApiError thrown by get', async () => {
+    const apiErr = new ApiError(502, 'EXTERNAL_API_ERROR', 'Data provider unavailable');
+    mockGet.mockRejectedValue(apiErr);
+
+    await expect(searchStocks('AAPL')).rejects.toThrow(ApiError);
+  });
+
+  it('propagates ApiError status and code from the api layer', async () => {
+    const apiErr = new ApiError(502, 'EXTERNAL_API_ERROR', 'Data provider unavailable');
+    mockGet.mockRejectedValue(apiErr);
+
+    await expect(searchStocks('AAPL')).rejects.toSatisfy((err: unknown) => {
+      return (
+        err instanceof ApiError &&
+        err.status === 502 &&
+        err.code === 'EXTERNAL_API_ERROR'
+      );
+    });
+  });
+
+  it('propagates a plain Error thrown by get', async () => {
+    mockGet.mockRejectedValue(new Error('Network unreachable'));
+
+    await expect(searchStocks('AAPL')).rejects.toThrow('Network unreachable');
+  });
+
+  it('does not catch or suppress any error — rejection bubbles unchanged', async () => {
+    const sentinel = new ApiError(503, 'SERVICE_UNAVAILABLE', 'Backend is down');
+    mockGet.mockRejectedValue(sentinel);
+
+    let caught: unknown;
+    try {
+      await searchStocks('AAPL');
+    } catch (err) {
+      caught = err;
+    }
+
     expect(caught).toBe(sentinel);
   });
 });

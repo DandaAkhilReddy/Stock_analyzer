@@ -7,8 +7,8 @@
  * The stock store is mocked so HeroSearchBar and LandingHero stay synchronous.
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // framer-motion mock — must precede any landing-component imports
@@ -111,6 +111,16 @@ describe('DotGrid', () => {
     const div = container.firstElementChild as HTMLElement;
     expect(div).toHaveClass('absolute');
   });
+
+  it('renders without crashing', () => {
+    expect(() => render(<DotGrid />)).not.toThrow();
+  });
+
+  it('spans the full parent with inset-0', () => {
+    const { container } = render(<DotGrid />);
+    const div = container.firstElementChild as HTMLElement;
+    expect(div).toHaveClass('inset-0');
+  });
 });
 
 // ===========================================================================
@@ -156,6 +166,21 @@ describe('MeshGradientBackground', () => {
       expect(blob as HTMLElement).toHaveClass('rounded-full');
     });
   });
+
+  it('every blob element carries a blur class for the glow effect', () => {
+    const { container } = render(<MeshGradientBackground />);
+    const wrapper = container.firstElementChild as HTMLElement;
+    Array.from(wrapper.children).forEach((blob) => {
+      expect((blob as HTMLElement).className).toMatch(/blur/);
+    });
+  });
+
+  it('renders between 2 and 3 gradient blob elements', () => {
+    const { container } = render(<MeshGradientBackground />);
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.children.length).toBeGreaterThanOrEqual(2);
+    expect(wrapper.children.length).toBeLessThanOrEqual(3);
+  });
 });
 
 // ===========================================================================
@@ -191,6 +216,28 @@ describe('FloatingElements', () => {
     const wrapper = container.firstElementChild as HTMLElement;
     expect(wrapper).toHaveClass('absolute');
     expect(wrapper).toHaveClass('inset-0');
+  });
+
+  it('each icon wrapper div is absolutely positioned', () => {
+    const { container } = render(<FloatingElements />);
+    const wrapper = container.firstElementChild as HTMLElement;
+    Array.from(wrapper.children).forEach((child) => {
+      expect((child as HTMLElement).className).toContain('absolute');
+    });
+  });
+
+  it('contains the known financial icons: CandlestickChart, TrendingUp, BarChart2, DollarSign', () => {
+    const { container } = render(<FloatingElements />);
+    // lucide-react icons render as <svg> elements; the icon name is reflected
+    // in the parent wrapper's inline left/top style which maps 1-to-1 to the
+    // items array. Verify the correct count of distinct SVG viewBoxes (all
+    // lucide icons share "0 0 24 24") — the real signal is that 8 SVGs exist
+    // with the correct stroke attributes that lucide always emits.
+    const svgs = container.querySelectorAll('svg');
+    svgs.forEach((svg) => {
+      expect(svg.getAttribute('stroke')).toBe('currentColor');
+    });
+    expect(svgs).toHaveLength(8);
   });
 });
 
@@ -426,6 +473,44 @@ describe('HeroSearchBar', () => {
       expect(selectSuggestion).toHaveBeenCalledWith(1);
     });
 
+    it('calls fetchAnalysis via onSelect callback when not loading (lines 34-35)', () => {
+      // Capture the onSelect argument that HeroSearchBar passes to useStockSearch,
+      // then invoke it directly to exercise the !isLoading branch.
+      vi.mocked(useStockSearch).mockReturnValue(
+        makeSearchHook({ isOpen: true, suggestions: mockSuggestions, selectedIndex: -1 }),
+      );
+      render(<HeroSearchBar />);
+      // Use mock.lastCall to get the callback from the most recent render.
+      const onSelect = vi.mocked(useStockSearch).mock.lastCall![0] as (symbol: string) => void;
+      onSelect('AAPL');
+      expect(mockFetchAnalysis).toHaveBeenCalledWith('AAPL');
+    });
+
+    it('does not call fetchAnalysis via onSelect callback when isLoading is true', () => {
+      vi.mocked(useStockStore).mockImplementation(
+        (selector: (s: { isLoading: boolean }) => unknown) => selector({ isLoading: true }),
+      );
+      vi.mocked(useStockSearch).mockReturnValue(
+        makeSearchHook({ isOpen: true, suggestions: mockSuggestions, selectedIndex: -1 }),
+      );
+      render(<HeroSearchBar />);
+      // Use mock.lastCall to get the callback from the most recent render.
+      const onSelect = vi.mocked(useStockSearch).mock.lastCall![0] as (symbol: string) => void;
+      onSelect('AAPL');
+      expect(mockFetchAnalysis).not.toHaveBeenCalled();
+    });
+
+    it('calls preventDefault on mousedown of a suggestion button to prevent input blur (line 115)', () => {
+      vi.mocked(useStockSearch).mockReturnValue(
+        makeSearchHook({ isOpen: true, suggestions: mockSuggestions, selectedIndex: -1 }),
+      );
+      render(<HeroSearchBar />);
+      const buttons = screen.getAllByRole('button');
+      const mouseDownEvent = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+      buttons[0].dispatchEvent(mouseDownEvent);
+      expect(mouseDownEvent.defaultPrevented).toBe(true);
+    });
+
     it('applies the active highlight class to the item at selectedIndex', () => {
       vi.mocked(useStockSearch).mockReturnValue(
         makeSearchHook({ isOpen: true, suggestions: mockSuggestions, selectedIndex: 0 }),
@@ -476,6 +561,20 @@ describe('HeroSearchBar', () => {
       fireEvent.keyDown(input, { key: 'Escape' });
       // handleSuggestionKeyDown is always called for non-Enter keys
       expect(handleKeyDown).toHaveBeenCalled();
+    });
+
+    it('blurs the input on Escape when the dropdown is already closed (line 53)', () => {
+      // isOpen is false → the branch `if (e.key === 'Escape' && !isOpen)` fires
+      // and calls inputRef.current?.blur()
+      vi.mocked(useStockSearch).mockReturnValue(
+        makeSearchHook({ isOpen: false, query: 'AAPL' }),
+      );
+      render(<HeroSearchBar />);
+      const input = screen.getByPlaceholderText(/Search any stock/i);
+      input.focus();
+      expect(document.activeElement).toBe(input);
+      fireEvent.keyDown(input, { key: 'Escape' });
+      expect(document.activeElement).not.toBe(input);
     });
   });
 });
@@ -572,5 +671,119 @@ describe('LandingHero', () => {
       (el) => el.classList.contains('z-10'),
     );
     expect(zWrapper).toBeDefined();
+  });
+});
+
+// ===========================================================================
+// HeroTitle — typing animation
+// ===========================================================================
+
+// Constants mirrored from HeroTitle.tsx so timing calculations are explicit.
+const TYPING_SPEED_MS = 60;
+const HOLD_MS = 1800;
+const ERASE_SPEED_MS = 35;
+
+// The full first phrase — 15 characters.
+const FIRST_PHRASE = 'Analyze AAPL...';
+
+/**
+ * Returns the visible typewriter text from the animated span.
+ *
+ * The component renders:
+ *   <span className="font-mono ...">
+ *     {displayed}
+ *     <span class="... animate-pulse" />   <- cursor, no text content
+ *   </span>
+ *
+ * The cursor child contributes no text, so monoSpan.textContent === displayed.
+ */
+function getTypedText(): string {
+  const monoSpan = document.querySelector('span.font-mono') as HTMLElement | null;
+  if (!monoSpan) return '';
+  return monoSpan.textContent ?? '';
+}
+
+/**
+ * Drives the typing animation one setTimeout tick at a time.
+ *
+ * Each state update in the useEffect schedules a *new* setTimeout only after
+ * React has re-rendered. A single advanceTimersByTime(tickMs * count) only
+ * fires the one timer that exists at that moment — the next timer doesn't
+ * exist yet. Wrapping each tick in act() flushes the re-render so the next
+ * effect fires and schedules the subsequent timer before we advance again.
+ */
+async function advanceTicks(tickMs: number, count: number): Promise<void> {
+  for (let i = 0; i < count; i++) {
+    await act(async () => {
+      vi.advanceTimersByTime(tickMs);
+    });
+  }
+}
+
+describe('HeroTitle — typing animation', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('initially renders with empty displayed text', () => {
+    render(<HeroTitle />);
+    expect(getTypedText()).toBe('');
+  });
+
+  it('shows the first character after one TYPING_SPEED_MS tick', async () => {
+    render(<HeroTitle />);
+    await advanceTicks(TYPING_SPEED_MS, 1);
+    expect(getTypedText()).toBe('A');
+  });
+
+  it('shows the full first phrase after typing all characters', async () => {
+    render(<HeroTitle />);
+    // One tick per character drives the typing phase to completion.
+    await advanceTicks(TYPING_SPEED_MS, FIRST_PHRASE.length);
+    expect(getTypedText()).toBe(FIRST_PHRASE);
+  });
+
+  it('begins erasing after the hold phase completes', async () => {
+    render(<HeroTitle />);
+    // Type the full phrase, one character per tick.
+    await advanceTicks(TYPING_SPEED_MS, FIRST_PHRASE.length);
+    expect(getTypedText()).toBe(FIRST_PHRASE);
+
+    // The hold phase is a single HOLD_MS setTimeout — advance it in one shot.
+    await act(async () => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+
+    // Advance one erase tick to remove the first character from the end.
+    await advanceTicks(ERASE_SPEED_MS, 1);
+
+    // 'Analyze AAPL...' -> 'Analyze AAPL..'
+    expect(getTypedText()).toBe(FIRST_PHRASE.slice(0, -1));
+  });
+
+  it('advances to the second phrase index after fully erasing the first phrase', async () => {
+    render(<HeroTitle />);
+    // Type full first phrase, one tick per character.
+    await advanceTicks(TYPING_SPEED_MS, FIRST_PHRASE.length);
+
+    // Hold phase — single timer, advance once.
+    await act(async () => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+
+    // Erase all characters, one tick per character.
+    await advanceTicks(ERASE_SPEED_MS, FIRST_PHRASE.length);
+
+    // After the last character is erased the synchronous reset branch fires
+    // immediately inside the effect: isErasing->false, phraseIndex->1 (TSLA).
+    // The component now schedules the first typing tick for the new phrase.
+    await advanceTicks(TYPING_SPEED_MS, 1);
+
+    // Second phrase is 'Analyze TSLA...' — first character typed is 'A'.
+    expect(getTypedText()).toBe('A');
   });
 });

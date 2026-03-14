@@ -98,6 +98,7 @@ vi.mock('../../hooks/useStockSearch', () => ({
 // ---------------------------------------------------------------------------
 
 import { useStockStore } from '../../stores/stockStore';
+import { useStockSearch } from '../../hooks/useStockSearch';
 import { StockSearchBar } from '../../components/search/StockSearchBar';
 
 // Attach imperative getState used inside handleSubmit
@@ -478,6 +479,51 @@ describe('StockSearchBar', () => {
       );
       fireEvent.click(suggestionButtons[suggestionButtons.length - 1]);
       expect(mockSelectSuggestion).toHaveBeenCalledWith(2);
+    });
+
+    it('calls preventDefault on mousedown of a suggestion button to prevent input blur (line 102)', () => {
+      mockHookReturn.isOpen = true;
+      mockHookReturn.suggestions = sampleSuggestions;
+      renderBar();
+      const allButtons = screen.getAllByRole('button');
+      const suggestionButtons = allButtons.filter(
+        (b) => b.getAttribute('aria-label') !== 'Search',
+      );
+      const mouseDownEvent = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+      suggestionButtons[0].dispatchEvent(mouseDownEvent);
+      expect(mouseDownEvent.defaultPrevented).toBe(true);
+    });
+
+    it('onMouseEnter handler is present and callable without error (line 104)', () => {
+      mockHookReturn.isOpen = true;
+      mockHookReturn.suggestions = sampleSuggestions;
+      renderBar();
+      const allButtons = screen.getAllByRole('button');
+      const suggestionButtons = allButtons.filter(
+        (b) => b.getAttribute('aria-label') !== 'Search',
+      );
+      // onMouseEnter is `() => undefined` — verify it fires without throwing
+      expect(() => fireEvent.mouseEnter(suggestionButtons[0])).not.toThrow();
+    });
+  });
+
+  describe('onSelect callback (lines 22-23)', () => {
+    it('calls fetchAnalysis via onSelect when not loading', () => {
+      // Capture the onSelect callback that StockSearchBar passes to useStockSearch
+      // and invoke it directly to exercise the !isLoading guard on lines 22-23.
+      renderBar();
+      // Use mock.lastCall to get the callback from the most recent render.
+      const onSelect = vi.mocked(useStockSearch).mock.lastCall![0] as (symbol: string) => void;
+      onSelect('NVDA');
+      expect(mockFetchAnalysis).toHaveBeenCalledWith('NVDA');
+    });
+
+    it('does not call fetchAnalysis via onSelect when isLoading is true', () => {
+      mockStoreState.isLoading = true;
+      renderBar();
+      const onSelect = vi.mocked(useStockSearch).mock.lastCall![0] as (symbol: string) => void;
+      onSelect('NVDA');
+      expect(mockFetchAnalysis).not.toHaveBeenCalled();
     });
   });
 
