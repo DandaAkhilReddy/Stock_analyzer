@@ -13,6 +13,8 @@ const INITIAL_STATE = {
   currentTicker: null,
   analysis: null,
   isLoading: false,
+  isRefreshing: false,
+  lastFetchedAt: null,
   error: null,
   activeTab: 'invest' as const,
 };
@@ -249,6 +251,106 @@ describe('useStockStore', () => {
   });
 
   // -------------------------------------------------------------------------
+  // fetchAnalysis — lastFetchedAt
+  // -------------------------------------------------------------------------
+
+  describe('fetchAnalysis — lastFetchedAt', () => {
+    it('sets lastFetchedAt to a recent timestamp on success', async () => {
+      vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+      const before = Date.now();
+
+      await useStockStore.getState().fetchAnalysis('AAPL');
+
+      const { lastFetchedAt } = useStockStore.getState();
+      expect(lastFetchedAt).not.toBeNull();
+      expect(lastFetchedAt!).toBeGreaterThanOrEqual(before);
+    });
+
+    it('leaves lastFetchedAt as null on error', async () => {
+      vi.mocked(analyzeStock).mockRejectedValue(new Error('fail'));
+
+      await useStockStore.getState().fetchAnalysis('AAPL');
+
+      expect(useStockStore.getState().lastFetchedAt).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // initial state — isRefreshing and lastFetchedAt
+  // -------------------------------------------------------------------------
+
+  describe('initial state — new fields', () => {
+    it('has isRefreshing as false', () => {
+      expect(useStockStore.getState().isRefreshing).toBe(false);
+    });
+
+    it('has lastFetchedAt as null', () => {
+      expect(useStockStore.getState().lastFetchedAt).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // silentRefresh
+  // -------------------------------------------------------------------------
+
+  describe('silentRefresh', () => {
+    it('updates analysis on success without clearing existing data', async () => {
+      const updatedAnalysis = { ...mockAnalysis, current_price: 200 };
+      useStockStore.setState({ currentTicker: 'AAPL', analysis: mockAnalysis });
+      vi.mocked(analyzeStock).mockResolvedValue(updatedAnalysis);
+
+      await useStockStore.getState().silentRefresh();
+
+      expect(useStockStore.getState().analysis?.current_price).toBe(200);
+    });
+
+    it('sets isRefreshing to false after success', async () => {
+      useStockStore.setState({ currentTicker: 'AAPL', analysis: mockAnalysis });
+      vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+      await useStockStore.getState().silentRefresh();
+
+      expect(useStockStore.getState().isRefreshing).toBe(false);
+    });
+
+    it('sets lastFetchedAt on success', async () => {
+      useStockStore.setState({ currentTicker: 'AAPL', analysis: mockAnalysis });
+      vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+      const before = Date.now();
+
+      await useStockStore.getState().silentRefresh();
+
+      expect(useStockStore.getState().lastFetchedAt!).toBeGreaterThanOrEqual(before);
+    });
+
+    it('keeps existing analysis on error', async () => {
+      useStockStore.setState({ currentTicker: 'AAPL', analysis: mockAnalysis });
+      vi.mocked(analyzeStock).mockRejectedValue(new Error('network error'));
+
+      await useStockStore.getState().silentRefresh();
+
+      expect(useStockStore.getState().analysis).toEqual(mockAnalysis);
+    });
+
+    it('sets isRefreshing to false after error', async () => {
+      useStockStore.setState({ currentTicker: 'AAPL', analysis: mockAnalysis });
+      vi.mocked(analyzeStock).mockRejectedValue(new Error('network error'));
+
+      await useStockStore.getState().silentRefresh();
+
+      expect(useStockStore.getState().isRefreshing).toBe(false);
+    });
+
+    it('does nothing when currentTicker is null', async () => {
+      useStockStore.setState({ currentTicker: null });
+
+      await useStockStore.getState().silentRefresh();
+
+      expect(vi.mocked(analyzeStock)).not.toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // fetchAnalysis — error (Error instance)
   // -------------------------------------------------------------------------
 
@@ -431,6 +533,8 @@ describe('persist middleware', () => {
       currentTicker: null,
       analysis: null,
       isLoading: false,
+      isRefreshing: false,
+      lastFetchedAt: null,
       error: null,
       activeTab: 'invest',
     });
@@ -487,5 +591,23 @@ describe('persist middleware', () => {
     await useStockStore.getState().fetchAnalysis('AAPL');
 
     expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+  });
+
+  it('does not persist isRefreshing to localStorage', async () => {
+    vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.isRefreshing).toBeUndefined();
+  });
+
+  it('does not persist lastFetchedAt to localStorage', async () => {
+    vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.lastFetchedAt).toBeUndefined();
   });
 });

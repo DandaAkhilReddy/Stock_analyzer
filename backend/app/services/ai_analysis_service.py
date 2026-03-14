@@ -483,9 +483,20 @@ class AIAnalysisService:
             List of news item dicts, or empty list if the fetch fails.
         """
         try:
-            return await self._market.get_stock_news(ticker)
-        except Exception:
-            logger.warning("fmp_news_fallback", ticker=ticker)
+            result = await self._market.get_stock_news(ticker)
+            logger.info(
+                "real_news_fetched",
+                ticker=ticker,
+                count=len(result),
+            )
+            return result
+        except Exception as exc:
+            logger.warning(
+                "real_news_failed",
+                ticker=ticker,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             return []
 
     async def _safe_fetch_earnings(self, ticker: str) -> list[dict]:
@@ -498,7 +509,19 @@ class AIAnalysisService:
             List of quarterly earning dicts, or empty list if the fetch fails.
         """
         try:
-            return await self._market.get_income_statement(ticker)
-        except Exception:
-            logger.warning("fmp_earnings_fallback", ticker=ticker)
+            result = await self._market.get_income_statement(ticker)
+            logger.info(
+                "real_earnings_fetched",
+                ticker=ticker,
+                count=len(result),
+                quarters=[r.get("quarter") for r in result],
+            )
+            return result
+        except Exception as exc:
+            logger.warning(
+                "real_earnings_failed",
+                ticker=ticker,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             return []

@@ -19,16 +19,28 @@ import { ResearchSources } from '../components/analysis/ResearchSources';
 import { InvestmentOutlook } from '../components/invest/InvestmentOutlook';
 import { FinancierInsights } from '../components/invest/FinancierInsights';
 
+function formatTimeAgo(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ago`;
+}
+
 export function StockAnalysis() {
   const currentTicker = useStockStore((s) => s.currentTicker);
   const analysis = useStockStore((s) => s.analysis);
   const isLoading = useStockStore((s) => s.isLoading);
+  const isRefreshing = useStockStore((s) => s.isRefreshing);
+  const lastFetchedAt = useStockStore((s) => s.lastFetchedAt);
   const error = useStockStore((s) => s.error);
   const activeTab = useStockStore((s) => s.activeTab);
   const setActiveTab = useStockStore((s) => s.setActiveTab);
 
   const [hasHydrated, setHasHydrated] = useState(useStockStore.persist.hasHydrated());
   const [loadingSeconds, setLoadingSeconds] = useState(0);
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     const unsub = useStockStore.persist.onFinishHydration(() => setHasHydrated(true));
@@ -43,6 +55,11 @@ export function StockAnalysis() {
     const interval = setInterval(() => setLoadingSeconds((s) => s + 1), 1000);
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   // Wait for persist middleware to rehydrate before deciding what to show
   if (!hasHydrated) return null;
@@ -93,6 +110,20 @@ export function StockAnalysis() {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
       <StockHeader analysis={analysis} />
+      {analysis && lastFetchedAt && (
+        <div className="flex items-center gap-2 px-1 -mt-1 mb-1">
+          {isRefreshing && (
+            <motion.div
+              className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            />
+          )}
+          <span className="text-xs text-stone-400">
+            Updated {formatTimeAgo(lastFetchedAt)}
+          </span>
+        </div>
+      )}
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <AnimatePresence mode="wait">
