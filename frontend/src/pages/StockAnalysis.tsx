@@ -8,12 +8,8 @@ import { LandingHero } from '../components/landing/LandingHero';
 import { StockHeader } from '../components/stock/StockHeader';
 import { TabBar } from '../components/navigation/TabBar';
 import { PriceChart } from '../components/charts/PriceChart';
-import { PriceCard } from '../components/stock/PriceCard';
 import { NewsFeed } from '../components/news/NewsFeed';
 import { QuarterlyEarnings } from '../components/financials/QuarterlyEarnings';
-import { PricePrediction } from '../components/analysis/PricePrediction';
-import { TechnicalSummary } from '../components/technical/TechnicalSummary';
-import { SupportResistance } from '../components/technical/SupportResistance';
 import { CompanyAbout } from '../components/about/CompanyAbout';
 import { ResearchSources } from '../components/analysis/ResearchSources';
 import { InvestmentOutlook } from '../components/invest/InvestmentOutlook';
@@ -110,7 +106,7 @@ export function StockAnalysis() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -149,33 +145,10 @@ export function StockAnalysis() {
 
           {activeTab === 'news' && <NewsFeed items={analysis.news} />}
 
-          {activeTab === 'financials' && (
-            <div className="space-y-4">
-              <QuarterlyEarnings earnings={analysis.quarterly_earnings} />
-              <PriceCard analysis={analysis} />
-              {analysis.technical && (
-                <>
-                  <TechnicalSummary
-                    technical={analysis.technical}
-                    currentPrice={analysis.current_price}
-                  />
-                  <SupportResistance
-                    currentPrice={analysis.current_price}
-                    supportLevels={analysis.technical.support_levels}
-                    resistanceLevels={analysis.technical.resistance_levels}
-                  />
-                </>
-              )}
-              <PricePrediction
-                predictions={analysis.price_predictions}
-                currentPrice={analysis.current_price}
-              />
-            </div>
-          )}
-
           {activeTab === 'about' && (
             <div className="space-y-4">
               <CompanyAbout analysis={analysis} />
+              <QuarterlyEarnings earnings={analysis.quarterly_earnings} />
               <ResearchSources
                 researchContext={analysis.research_context ?? ''}
                 researchSources={analysis.research_sources ?? []}

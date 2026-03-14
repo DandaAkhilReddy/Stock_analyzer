@@ -52,7 +52,7 @@ export interface HistoricalPrice {
   volume: number | null;
 }
 
-export type AnalysisTab = 'chart' | 'news' | 'financials' | 'about' | 'invest';
+export type AnalysisTab = 'chart' | 'news' | 'about' | 'invest';
 
 export interface PriceForecast {
   low: number;

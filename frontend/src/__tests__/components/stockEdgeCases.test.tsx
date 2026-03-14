@@ -29,7 +29,6 @@ vi.mock('framer-motion', () => ({
 
 import { NewsCard } from '../../components/news/NewsCard';
 import { KeyStats } from '../../components/stock/KeyStats';
-import { PriceCard } from '../../components/stock/PriceCard';
 import { StockHeader } from '../../components/stock/StockHeader';
 import type { StockAnalysisResponse } from '../../types/analysis';
 
@@ -107,24 +106,6 @@ describe('KeyStats — isolated null branches', () => {
     render(<KeyStats analysis={{ ...baseAnalysis, week_52_low: null }} />);
     const naItems = screen.getAllByText('N/A');
     expect(naItems.length).toBeGreaterThanOrEqual(1);
-  });
-});
-
-// ===========================================================================
-// PriceCard — formatNumber small number branch (line 8: < 1_000)
-// ===========================================================================
-
-describe('PriceCard — formatNumber small volume', () => {
-  it('formats volume < 1000 using toLocaleString (no suffix)', () => {
-    // volume=500 < 1_000 → falls through to n.toLocaleString()
-    render(<PriceCard analysis={{ ...baseAnalysis, volume: 500 }} />);
-    // toLocaleString for 500 in en-US context → "500"
-    expect(screen.getByText('500')).toBeInTheDocument();
-  });
-
-  it('formats volume of exactly 999 without a suffix', () => {
-    render(<PriceCard analysis={{ ...baseAnalysis, volume: 999 }} />);
-    expect(screen.getByText('999')).toBeInTheDocument();
   });
 });
 
