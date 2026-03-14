@@ -1,8 +1,19 @@
 import { useEffect, useRef } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Zap, Brain, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStockStore } from '../../stores/stockStore';
 import { useStockSearch } from '../../hooks/useStockSearch';
+
+interface FeaturePill {
+  icon: React.ReactNode;
+  label: string;
+}
+
+const FEATURE_PILLS: FeaturePill[] = [
+  { icon: <Zap size={12} />, label: 'Real-Time Data' },
+  { icon: <Brain size={12} />, label: 'AI Insights' },
+  { icon: <BarChart3 size={12} />, label: 'Technical Analysis' },
+];
 
 export function HeroSearchBar() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +77,7 @@ export function HeroSearchBar() {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="flex items-center bg-white/80 backdrop-blur-xl border border-stone-200/60 rounded-2xl px-5 py-4 shadow-2xl shadow-indigo-500/10 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20 transition-all duration-300">
+      <div className="flex items-center bg-white/80 backdrop-blur-xl border border-stone-200/60 rounded-2xl px-5 py-4 shadow-2xl shadow-indigo-500/10 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:shadow-xl focus-within:shadow-indigo-500/20 transition-all duration-300">
         <Search size={22} className="text-indigo-500 shrink-0" />
         <input
           ref={inputRef}
@@ -112,6 +123,21 @@ export function HeroSearchBar() {
           ))}
         </div>
       )}
+
+      <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+        {FEATURE_PILLS.map((pill, i) => (
+          <motion.div
+            key={pill.label}
+            className="flex items-center gap-1.5 bg-white/50 backdrop-blur-sm border border-stone-200/50 rounded-full px-3 py-1.5 text-xs text-stone-500"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <span className="text-indigo-400">{pill.icon}</span>
+            {pill.label}
+          </motion.div>
+        ))}
+      </div>
     </motion.div>
   );
 }

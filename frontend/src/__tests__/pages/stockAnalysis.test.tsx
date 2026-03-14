@@ -228,9 +228,9 @@ describe('StockAnalysis', () => {
 
     it('shows the loading spinner (animate-spin class)', () => {
       render(<StockAnalysis />);
-      const svgs = document.querySelectorAll('svg');
-      const spinner = Array.from(svgs).find((svg) => svg.classList.contains('animate-spin'));
-      expect(spinner).toBeInTheDocument();
+      // Loading spinner was replaced by AnalysisSkeleton which uses animate-shimmer divs
+      const skeletonEl = document.querySelector('.animate-shimmer');
+      expect(skeletonEl).toBeInTheDocument();
     });
 
     it('does not show error UI during loading', () => {

@@ -17,6 +17,14 @@ const recommendationConfig: Record<Recommendation, RecommendationConfig> = {
   strong_sell: { icon: TrendingDown, label: 'Strong Sell' },
 };
 
+const topStripGradient: Record<Recommendation, string> = {
+  strong_buy: 'bg-gradient-to-r from-emerald-500 to-emerald-400',
+  buy: 'bg-gradient-to-r from-emerald-500 to-emerald-400',
+  hold: 'bg-gradient-to-r from-amber-500 to-amber-400',
+  sell: 'bg-gradient-to-r from-red-500 to-red-400',
+  strong_sell: 'bg-gradient-to-r from-red-500 to-red-400',
+};
+
 interface AIRecommendationProps {
   analysis: StockAnalysisResponse;
 }
@@ -25,6 +33,7 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
   const config = recommendationConfig[analysis.recommendation];
   const Icon = config.icon;
   const confidencePct = (analysis.confidence_score * 100).toFixed(0);
+  const stripGradient = topStripGradient[analysis.recommendation];
 
   return (
     <motion.div
@@ -32,41 +41,50 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <Brain size={18} className="text-indigo-600" />
-          <h3 className="text-sm font-medium text-stone-500">AI Recommendation</h3>
-          <span className="text-[10px] text-stone-400 ml-auto">
-            Powered by {analysis.model_used}
-          </span>
-        </div>
+      {/* Outer wrapper to layer the gradient strip on top of the Card */}
+      <div className="relative">
+        {/* 4px gradient strip — sits above the card, rounded top corners */}
+        <div className={`h-1 rounded-t-2xl ${stripGradient}`} />
 
-        <div className="flex items-center gap-4 mb-4">
-          <Badge variant={analysis.recommendation} size="lg">
-            <Icon size={16} className="mr-1" />
-            {config.label}
-          </Badge>
+        <Card className="rounded-t-none">
+          <div className="flex items-center gap-2 mb-4">
+            {/* Pulse-glow wrapper around Brain icon */}
+            <span className="animate-pulse-glow rounded-full p-0.5">
+              <Brain size={18} className="text-indigo-600" />
+            </span>
+            <h3 className="text-sm font-medium text-stone-500">AI Recommendation</h3>
+            <span className="text-[10px] text-stone-400 ml-auto">
+              Powered by {analysis.model_used}
+            </span>
+          </div>
 
-          <div>
-            <p className="text-xs text-stone-500">Confidence</p>
-            <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-stone-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500 rounded-full transition-all"
-                  style={{ width: `${analysis.confidence_score * 100}%` }}
-                />
+          <div className="flex items-center gap-4 mb-4">
+            <Badge variant={analysis.recommendation} size="lg">
+              <Icon size={16} className="mr-1" />
+              <span className="text-2xl font-bold leading-none">{config.label}</span>
+            </Badge>
+
+            <div>
+              <p className="text-xs text-stone-500">Confidence</p>
+              <div className="flex items-center gap-2">
+                <div className="w-40 h-2.5 bg-stone-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-500 rounded-full transition-all"
+                    style={{ width: `${analysis.confidence_score * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-stone-900">{confidencePct}%</span>
               </div>
-              <span className="text-sm font-medium text-stone-900">{confidencePct}%</span>
             </div>
           </div>
-        </div>
 
-        <p className="text-sm text-stone-600 leading-relaxed">{analysis.summary}</p>
+          <p className="text-sm text-stone-600 leading-relaxed">{analysis.summary}</p>
 
-        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded mt-4">
-          {analysis.disclaimer}
-        </p>
-      </Card>
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded mt-4">
+            {analysis.disclaimer}
+          </p>
+        </Card>
+      </div>
     </motion.div>
   );
 }

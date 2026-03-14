@@ -57,13 +57,14 @@ function HorizonCard({ label, forecast, currentPrice, delay }: HorizonCardProps)
   const change = ((forecast.mid - currentPrice) / currentPrice) * 100;
   const isUp = change >= 0;
   const color = isUp ? 'text-emerald-600' : 'text-red-600';
-  const bgBar = isUp ? 'bg-emerald-500' : 'text-red-500';
+  const bgBar = isUp ? 'bg-emerald-500' : 'bg-red-500';
+  const borderAccent = isUp ? 'border-l-emerald-500' : 'border-l-red-500';
   const invested = 10_000;
   const futureVal = investmentGrowth(currentPrice, forecast.mid, invested);
 
   return (
     <motion.div
-      className="bg-stone-50 border border-stone-100 rounded-xl p-4"
+      className={`bg-stone-50 border border-stone-100 border-l-4 ${borderAccent} rounded-xl p-4`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay }}
@@ -93,8 +94,10 @@ function HorizonCard({ label, forecast, currentPrice, delay }: HorizonCardProps)
 
       <div className="mt-3 flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
         <DollarSign size={14} className="text-indigo-500 shrink-0" />
-        <p className="text-xs text-indigo-700">
-          <span className="font-medium">$10K today</span> → <span className="font-bold">{futureVal}</span>
+        <p className="text-sm text-indigo-700">
+          <span className="font-bold text-lg">$10K today</span>
+          <span className="mx-1">→</span>
+          <span className="font-bold text-lg">{futureVal}</span>
         </p>
       </div>
 
@@ -114,30 +117,39 @@ export function InvestmentOutlook({ outlook, currentPrice, ticker }: InvestmentO
     <div className="space-y-4">
       {/* Verdict Banner */}
       <Card>
-        <div className={`rounded-xl border p-5 text-center ${bg}`}>
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <span
-              className={`inline-block text-white text-sm font-bold px-4 py-1.5 rounded-full bg-gradient-to-r ${gradient}`}
+        <div className={`relative rounded-xl border p-5 text-center overflow-hidden ${bg}`}>
+          {/* Vibrant gradient background */}
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-15 pointer-events-none`}
+          />
+          {/* Glassmorphism overlay */}
+          <div className="absolute inset-0 backdrop-blur-[1px] bg-white/30 pointer-events-none rounded-xl" />
+
+          <div className="relative z-10">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4 }}
             >
-              {label} FOR LONG TERM
-            </span>
-          </motion.div>
-          <p className="mt-3 text-sm text-stone-700 leading-relaxed max-w-xl mx-auto">
-            {outlook.verdict_rationale}
-          </p>
-          {outlook.compound_annual_return > 0 && (
-            <div className="mt-3 flex items-center justify-center gap-2">
-              <TrendingUp size={16} className="text-emerald-600" />
-              <span className="text-lg font-bold text-emerald-600">
-                ~{outlook.compound_annual_return.toFixed(1)}% CAGR
+              <span
+                className={`inline-block text-white text-sm font-bold px-4 py-1.5 rounded-full bg-gradient-to-r shadow-md ${gradient}`}
+              >
+                {label} FOR LONG TERM
               </span>
-              <span className="text-xs text-stone-500">estimated annual return</span>
-            </div>
-          )}
+            </motion.div>
+            <p className="mt-3 text-sm text-stone-700 leading-relaxed max-w-xl mx-auto">
+              {outlook.verdict_rationale}
+            </p>
+            {outlook.compound_annual_return > 0 && (
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <TrendingUp size={16} className="text-emerald-600" />
+                <span className="text-lg font-bold text-emerald-600">
+                  ~{outlook.compound_annual_return.toFixed(1)}% CAGR
+                </span>
+                <span className="text-xs text-stone-500">estimated annual return</span>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
 
@@ -160,13 +172,13 @@ export function InvestmentOutlook({ outlook, currentPrice, ticker }: InvestmentO
         {outlook.catalysts.length > 0 && (
           <Card>
             <div className="flex items-center gap-2 mb-3">
-              <Zap size={16} className="text-amber-500" />
+              <Zap size={16} className="text-emerald-500" />
               <h4 className="text-sm font-medium text-stone-500">Growth Catalysts</h4>
             </div>
             <ul className="space-y-2">
               {outlook.catalysts.map((c, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
-                  <span className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                  <Zap size={13} className="text-emerald-500 mt-0.5 shrink-0" />
                   {c}
                 </li>
               ))}
@@ -183,7 +195,7 @@ export function InvestmentOutlook({ outlook, currentPrice, ticker }: InvestmentO
             <ul className="space-y-2">
               {outlook.long_term_risks.map((r, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
-                  <span className="mt-1 w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                  <AlertTriangle size={13} className="text-red-400 mt-0.5 shrink-0" />
                   {r}
                 </li>
               ))}

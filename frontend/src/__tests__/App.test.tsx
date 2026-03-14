@@ -86,7 +86,8 @@ describe('App', () => {
 
   it('renders the Header brand title "Stock Analyzer"', () => {
     render(<App />);
-    expect(screen.getByText('Stock Analyzer')).toBeInTheDocument();
+    // Use heading role to distinguish the Header <h1> from the Footer <span>
+    expect(screen.getByRole('heading', { name: 'Stock Analyzer' })).toBeInTheDocument();
   });
 
   it('renders the LandingHero on the root route when no ticker is selected', () => {

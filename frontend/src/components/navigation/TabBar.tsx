@@ -23,7 +23,7 @@ interface TabBarProps {
 
 export function TabBar({ activeTab, onTabChange }: TabBarProps) {
   return (
-    <div className="flex border-b border-stone-200">
+    <div className="bg-stone-100 rounded-2xl p-1 inline-flex gap-1">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -32,22 +32,23 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`relative flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors ${
+            className={`relative flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
               isActive
-                ? 'text-stone-900'
-                : 'text-stone-400 hover:text-stone-600'
+                ? 'text-indigo-600'
+                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
             }`}
           >
-            <Icon size={16} />
-            {tab.label}
-
             {isActive && (
               <motion.div
-                layoutId="tab-underline"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                layoutId="tab-active-pill"
+                className="absolute inset-0 bg-white shadow-sm rounded-xl"
                 transition={{ type: 'spring', stiffness: 500, damping: 35 }}
               />
             )}
+            <span className="relative flex items-center gap-2">
+              <Icon size={16} />
+              {tab.label}
+            </span>
           </button>
         );
       })}

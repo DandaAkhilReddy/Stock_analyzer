@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { AnalysisSkeleton } from '../components/common/Skeleton';
 import { useStockStore } from '../stores/stockStore';
 
 import { LandingHero } from '../components/landing/LandingHero';
@@ -69,16 +70,9 @@ export function StockAnalysis() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-72px)] gap-4">
-        <div className="relative flex items-center justify-center">
-          <motion.div
-            className="absolute w-16 h-16 rounded-full border-2 border-indigo-500/30"
-            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <Loader2 size={32} className="text-indigo-500 animate-spin" />
-        </div>
-        <div className="text-center">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AnalysisSkeleton />
+        <div className="text-center pb-6">
           <p className="text-stone-600 text-sm font-medium">Analyzing {currentTicker}...</p>
           <p className="text-stone-400 text-xs mt-1">{loadingMessage}</p>
         </div>

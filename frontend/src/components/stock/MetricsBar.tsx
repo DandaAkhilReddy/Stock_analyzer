@@ -1,16 +1,27 @@
 import { motion } from 'framer-motion';
 import type { StockAnalysisResponse } from '../../types/analysis';
 
-interface MetricPillProps {
+const ACCENT_COLORS: readonly string[] = [
+  'bg-indigo-400',
+  'bg-violet-400',
+  'bg-emerald-400',
+  'bg-amber-400',
+  'bg-blue-400',
+  'bg-rose-400',
+];
+
+interface MetricCardProps {
   label: string;
   value: string;
+  accentColor: string;
 }
 
-function MetricPill({ label, value }: MetricPillProps) {
+function MetricCard({ label, value, accentColor }: MetricCardProps) {
   return (
-    <div className="bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 min-w-[120px] flex-shrink-0">
-      <p className="text-[11px] text-stone-500 uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-sm font-semibold text-stone-900">{value}</p>
+    <div className="bg-white/70 backdrop-blur-sm border border-stone-200/60 rounded-xl px-4 py-3 min-w-[120px] flex-shrink-0 hover:shadow-md hover:scale-[1.02] transition-all duration-200 overflow-hidden relative">
+      <div className={`absolute top-0 left-0 right-0 h-0.5 ${accentColor}`} />
+      <p className="text-[11px] text-stone-500 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-sm font-bold text-stone-900">{value}</p>
     </div>
   );
 }
@@ -20,7 +31,7 @@ interface MetricsBarProps {
 }
 
 export function MetricsBar({ analysis }: MetricsBarProps) {
-  const metrics: MetricPillProps[] = [
+  const metrics: Array<{ label: string; value: string }> = [
     {
       label: 'Market Cap',
       value: analysis.market_cap ?? 'N/A',
@@ -57,8 +68,13 @@ export function MetricsBar({ analysis }: MetricsBarProps) {
       transition={{ duration: 0.3, delay: 0.1 }}
       className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide md:grid md:grid-cols-6 md:overflow-visible"
     >
-      {metrics.map((m) => (
-        <MetricPill key={m.label} label={m.label} value={m.value} />
+      {metrics.map((m, i) => (
+        <MetricCard
+          key={m.label}
+          label={m.label}
+          value={m.value}
+          accentColor={ACCENT_COLORS[i % ACCENT_COLORS.length] as string}
+        />
       ))}
     </motion.div>
   );

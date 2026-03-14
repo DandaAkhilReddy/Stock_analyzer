@@ -5,9 +5,10 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   title?: string;
+  gradient?: boolean;
 }
 
-export function Card({ children, className = '', title }: CardProps) {
+export function Card({ children, className = '', title, gradient = false }: CardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
@@ -30,10 +31,10 @@ export function Card({ children, className = '', title }: CardProps) {
     y.set(0.5);
   };
 
-  return (
+  const card = (
     <motion.div
       ref={ref}
-      className={`bg-white border border-stone-200 rounded-2xl p-5 shadow-sm transition-shadow duration-200 hover:shadow-md ${className}`}
+      className={`bg-white border border-stone-200 rounded-2xl p-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5 ${className}`}
       style={{ rotateX, rotateY, transformPerspective: 800 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -42,4 +43,14 @@ export function Card({ children, className = '', title }: CardProps) {
       {children}
     </motion.div>
   );
+
+  if (gradient) {
+    return (
+      <div className="bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-indigo-500/10 p-[1px] rounded-2xl">
+        {card}
+      </div>
+    );
+  }
+
+  return card;
 }

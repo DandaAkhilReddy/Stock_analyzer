@@ -63,7 +63,8 @@ describe('AppLayout', () => {
         <span>child</span>
       </AppLayout>,
     );
-    expect(screen.getByText('Stock Analyzer')).toBeInTheDocument();
+    // Use heading role to distinguish the Header <h1> from the Footer <span>
+    expect(screen.getByRole('heading', { name: 'Stock Analyzer' })).toBeInTheDocument();
   });
 
   it('renders a <main> element that wraps children', () => {
