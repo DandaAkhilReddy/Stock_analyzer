@@ -51,30 +51,39 @@ export function HeroTitle() {
     <div className="text-center">
       <motion.h1
         className="text-5xl sm:text-6xl lg:text-7xl font-bold text-stone-900 tracking-tight"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        AI-Powered{' '}
-        <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
-          Stock Analysis
-        </span>
+        Reddy
       </motion.h1>
+
+      <motion.h2
+        className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-stone-800 tracking-tight mt-2"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+      >
+        AI Powered{' '}
+        <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+          Stock Analyzer
+        </span>
+      </motion.h2>
 
       <motion.p
         className="mt-4 text-lg sm:text-xl text-stone-500 max-w-lg mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
       >
-        Technical indicators, price predictions, and real-time news — powered by AI
+        Real-time data, AI insights, and legendary investor analysis
       </motion.p>
 
       <motion.div
         className="mt-5 h-7 flex items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.35 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
         aria-live="polite"
         aria-label="Ticker example animation"
       >

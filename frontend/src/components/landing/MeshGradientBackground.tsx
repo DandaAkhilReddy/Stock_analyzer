@@ -21,6 +21,26 @@ export function MeshGradientBackground() {
         animate={{ x: [0, 60, -80, 0], y: [0, -40, 30, 0], scale: [1, 1.1, 0.95, 1] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
+
+      {/* Sparkle dots */}
+      <motion.div
+        className="absolute w-2 h-2 rounded-full bg-indigo-400/50"
+        style={{ top: "25%", left: "65%" }}
+        animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+        transition={{ duration: 3, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute w-1.5 h-1.5 rounded-full bg-violet-400/40"
+        style={{ top: "60%", left: "20%" }}
+        animate={{ opacity: [0, 0.8, 0], scale: [0.5, 1.2, 0.5] }}
+        transition={{ duration: 4, repeat: Infinity, delay: 1.5, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute w-2 h-2 rounded-full bg-cyan-400/40"
+        style={{ top: "45%", right: "25%" }}
+        animate={{ opacity: [0, 0.9, 0], scale: [0.5, 1, 0.5] }}
+        transition={{ duration: 3.5, repeat: Infinity, delay: 2.5, ease: "easeInOut" }}
+      />
     </div>
   );
 }

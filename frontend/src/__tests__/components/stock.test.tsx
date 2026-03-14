@@ -23,7 +23,6 @@ vi.mock('framer-motion', () => ({
 }));
 
 import { StockHeader } from '../../components/stock/StockHeader';
-import { PriceCard } from '../../components/stock/PriceCard';
 import { KeyStats } from '../../components/stock/KeyStats';
 import { MetricsBar } from '../../components/stock/MetricsBar';
 import type { StockAnalysisResponse } from '../../types/analysis';
@@ -132,101 +131,6 @@ describe('StockHeader', () => {
     const noMarketCap: StockAnalysisResponse = { ...mockAnalysis, market_cap: null };
     render(<StockHeader analysis={noMarketCap} />);
     expect(screen.queryByText(/Mkt Cap:/)).not.toBeInTheDocument();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// PriceCard
-// ---------------------------------------------------------------------------
-
-describe('PriceCard', () => {
-  it('renders the "Price Data" card title', () => {
-    render(<PriceCard analysis={mockAnalysis} />);
-    expect(screen.getByText('Price Data')).toBeInTheDocument();
-  });
-
-  it('renders Open label and formatted value', () => {
-    render(<PriceCard analysis={mockAnalysis} />);
-    expect(screen.getByText('Open')).toBeInTheDocument();
-    expect(screen.getByText('$184.80')).toBeInTheDocument();
-  });
-
-  it('renders High label and formatted value', () => {
-    render(<PriceCard analysis={mockAnalysis} />);
-    expect(screen.getByText('High')).toBeInTheDocument();
-    expect(screen.getByText('$186.10')).toBeInTheDocument();
-  });
-
-  it('renders Low label and formatted value', () => {
-    render(<PriceCard analysis={mockAnalysis} />);
-    expect(screen.getByText('Low')).toBeInTheDocument();
-    expect(screen.getByText('$184.00')).toBeInTheDocument();
-  });
-
-  it('renders Close as current_price', () => {
-    render(<PriceCard analysis={mockAnalysis} />);
-    expect(screen.getByText('Close')).toBeInTheDocument();
-    // current_price = 185.50 — also appears in other components but here it's $185.50
-    const closeValues = screen.getAllByText('$185.50');
-    expect(closeValues.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('renders Prev Close when previous_close is set', () => {
-    render(<PriceCard analysis={mockAnalysis} />);
-    expect(screen.getByText('Prev Close')).toBeInTheDocument();
-    expect(screen.getByText('$184.20')).toBeInTheDocument();
-  });
-
-  it('formats volume >= 1M as "XX.XXM"', () => {
-    // 45_000_000 → "45.00M"
-    render(<PriceCard analysis={mockAnalysis} />);
-    expect(screen.getByText('Volume')).toBeInTheDocument();
-    expect(screen.getByText('45.00M')).toBeInTheDocument();
-  });
-
-  it('formats volume >= 1B as "XX.XXB"', () => {
-    const bigVolume: StockAnalysisResponse = { ...mockAnalysis, volume: 2_500_000_000 };
-    render(<PriceCard analysis={bigVolume} />);
-    expect(screen.getByText('2.50B')).toBeInTheDocument();
-  });
-
-  it('formats volume >= 1K (but < 1M) as "XX.XK"', () => {
-    const smallVolume: StockAnalysisResponse = { ...mockAnalysis, volume: 500_000 };
-    render(<PriceCard analysis={smallVolume} />);
-    expect(screen.getByText('500.0K')).toBeInTheDocument();
-  });
-
-  it('renders "N/A" for null open', () => {
-    const nullOpen: StockAnalysisResponse = { ...mockAnalysis, open: null };
-    render(<PriceCard analysis={nullOpen} />);
-    // At least one N/A must be present
-    const naItems = screen.getAllByText('N/A');
-    expect(naItems.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('renders "N/A" for null volume', () => {
-    const nullVolume: StockAnalysisResponse = { ...mockAnalysis, volume: null };
-    render(<PriceCard analysis={nullVolume} />);
-    const naItems = screen.getAllByText('N/A');
-    expect(naItems.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('renders "N/A" for null previous_close', () => {
-    const nullPrev: StockAnalysisResponse = { ...mockAnalysis, previous_close: null };
-    render(<PriceCard analysis={nullPrev} />);
-    const naItems = screen.getAllByText('N/A');
-    expect(naItems.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('renders "N/A" for null day_high and day_low', () => {
-    const nullHL: StockAnalysisResponse = {
-      ...mockAnalysis,
-      day_high: null,
-      day_low: null,
-    };
-    render(<PriceCard analysis={nullHL} />);
-    const naItems = screen.getAllByText('N/A');
-    expect(naItems.length).toBeGreaterThanOrEqual(2);
   });
 });
 

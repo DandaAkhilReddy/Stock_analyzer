@@ -22,6 +22,9 @@ vi.mock('framer-motion', () => ({
     h1: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }) => (
       <h1 {...props}>{children}</h1>
     ),
+    h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }) => (
+      <h2 {...props}>{children}</h2>
+    ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
       <p {...props}>{children}</p>
     ),
@@ -92,7 +95,8 @@ describe('App', () => {
 
   it('renders the LandingHero on the root route when no ticker is selected', () => {
     render(<App />);
-    expect(screen.getByText(/Stock Analysis/)).toBeInTheDocument();
+    // "Reddy" only appears in HeroTitle, not in the Header
+    expect(screen.getByText('Reddy')).toBeInTheDocument();
   });
 
   it('renders the hero search input on landing', () => {

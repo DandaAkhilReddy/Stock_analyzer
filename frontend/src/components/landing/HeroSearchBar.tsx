@@ -77,7 +77,7 @@ export function HeroSearchBar() {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="flex items-center bg-white/80 backdrop-blur-xl border border-stone-200/60 rounded-2xl px-5 py-4 shadow-2xl shadow-indigo-500/10 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:shadow-xl focus-within:shadow-indigo-500/20 transition-all duration-300">
+      <div className="flex items-center bg-white/80 backdrop-blur-xl border border-stone-200/60 rounded-2xl px-5 py-4 shadow-2xl shadow-indigo-500/10 animate-pulse-glow focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:shadow-xl focus-within:shadow-indigo-500/20 transition-all duration-300">
         <Search size={22} className="text-indigo-500 shrink-0" />
         <input
           ref={inputRef}

@@ -28,6 +28,12 @@ vi.mock('framer-motion', () => ({
     }: React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }) => (
       <h1 {...props}>{children}</h1>
     ),
+    h2: ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }) => (
+      <h2 {...props}>{children}</h2>
+    ),
     p: ({
       children,
       ...props
@@ -138,11 +144,11 @@ describe('MeshGradientBackground', () => {
     expect(wrapper).toHaveClass('overflow-hidden');
   });
 
-  it('renders exactly 3 blob children inside the container', () => {
+  it('renders blob and sparkle children inside the container', () => {
     const { container } = render(<MeshGradientBackground />);
     const wrapper = container.firstElementChild as HTMLElement;
-    // Each blob is a <div> (motion.div → plain div via mock).
-    expect(wrapper.children).toHaveLength(3);
+    // 3 gradient blobs + 3 sparkle dots = 6 children
+    expect(wrapper.children).toHaveLength(6);
   });
 
   it('container is absolutely positioned to fill its parent', () => {
@@ -167,19 +173,19 @@ describe('MeshGradientBackground', () => {
     });
   });
 
-  it('every blob element carries a blur class for the glow effect', () => {
+  it('every gradient blob carries a blur class for the glow effect', () => {
     const { container } = render(<MeshGradientBackground />);
     const wrapper = container.firstElementChild as HTMLElement;
-    Array.from(wrapper.children).forEach((blob) => {
+    // First 3 children are gradient blobs (with blur), rest are sparkle dots
+    Array.from(wrapper.children).slice(0, 3).forEach((blob) => {
       expect((blob as HTMLElement).className).toMatch(/blur/);
     });
   });
 
-  it('renders between 2 and 3 gradient blob elements', () => {
+  it('renders at least 3 gradient blob elements', () => {
     const { container } = render(<MeshGradientBackground />);
     const wrapper = container.firstElementChild as HTMLElement;
-    expect(wrapper.children.length).toBeGreaterThanOrEqual(2);
-    expect(wrapper.children.length).toBeLessThanOrEqual(3);
+    expect(wrapper.children.length).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -250,26 +256,26 @@ describe('HeroTitle', () => {
     expect(() => render(<HeroTitle />)).not.toThrow();
   });
 
-  it('renders the "AI-Powered" text', () => {
+  it('renders "Reddy" as the h1 brand name', () => {
     render(<HeroTitle />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('AI-Powered');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Reddy');
   });
 
-  it('renders the "Stock Analysis" text inside the h1', () => {
+  it('renders the "AI Powered Stock Analyzer" text in h2', () => {
     render(<HeroTitle />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Stock Analysis');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Stock Analyzer');
   });
 
-  it('renders the subtitle paragraph about technical indicators', () => {
+  it('renders the subtitle paragraph about AI insights', () => {
     render(<HeroTitle />);
     expect(
-      screen.getByText(/Technical indicators, price predictions, and real-time news/i),
+      screen.getByText(/Real-time data, AI insights, and legendary investor analysis/i),
     ).toBeInTheDocument();
   });
 
   it('subtitle is rendered as a <p> element', () => {
     render(<HeroTitle />);
-    const subtitle = screen.getByText(/Technical indicators/i);
+    const subtitle = screen.getByText(/Real-time data, AI insights/i);
     expect(subtitle.tagName).toBe('P');
   });
 
@@ -601,19 +607,19 @@ describe('LandingHero', () => {
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
-  it('renders "AI-Powered" text from HeroTitle', () => {
+  it('renders "Reddy" text from HeroTitle', () => {
     render(<LandingHero />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('AI-Powered');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Reddy');
   });
 
-  it('renders "Stock Analysis" text inside the h1', () => {
+  it('renders "Stock Analyzer" text inside the h2', () => {
     render(<LandingHero />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Stock Analysis');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Stock Analyzer');
   });
 
   it('renders the subtitle paragraph from HeroTitle', () => {
     render(<LandingHero />);
-    expect(screen.getByText(/Technical indicators, price predictions/i)).toBeInTheDocument();
+    expect(screen.getByText(/Real-time data, AI insights/i)).toBeInTheDocument();
   });
 
   it('renders the HeroSearchBar input', () => {

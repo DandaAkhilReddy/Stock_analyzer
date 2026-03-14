@@ -11,8 +11,7 @@
  *   3. Error state         → error message + retry button
  *   4. Analysis available, activeTab = 'chart'      → PriceChart visible
  *   5. Analysis available, activeTab = 'news'       → NewsFeed visible
- *   6. Analysis available, activeTab = 'financials' → QuarterlyEarnings visible
- *   7. Analysis available, activeTab = 'about'      → CompanyAbout visible
+ *   6. Analysis available, activeTab = 'about'      → CompanyAbout + QuarterlyEarnings visible
  */
 
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
@@ -212,14 +211,14 @@ describe('StockAnalysis', () => {
   describe('empty state (no currentTicker)', () => {
     beforeEach(() => setupStore({ currentTicker: null }));
 
-    it('shows the "AI-Powered" heading from LandingHero', () => {
+    it('shows the "Reddy" heading from LandingHero', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText(/AI-Powered/i)).toBeInTheDocument();
+      expect(screen.getByText(/Reddy/i)).toBeInTheDocument();
     });
 
-    it('shows the "Stock Analysis" text from LandingHero', () => {
+    it('shows the "Stock Analyzer" text from LandingHero', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText(/Stock Analysis/i)).toBeInTheDocument();
+      expect(screen.getByText(/Stock Analyzer/i)).toBeInTheDocument();
     });
 
     it('does not show a loading spinner', () => {
@@ -310,8 +309,8 @@ describe('StockAnalysis', () => {
       render(<StockAnalysis />);
       expect(screen.getByRole('button', { name: /chart/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /news/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /financials/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /about/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /invest/i })).toBeInTheDocument();
     });
 
     it('renders the PriceChart area when activeTab is chart', () => {
@@ -329,8 +328,8 @@ describe('StockAnalysis', () => {
 
     it('calls setActiveTab when a tab button is clicked', () => {
       render(<StockAnalysis />);
-      fireEvent.click(screen.getByRole('button', { name: /financials/i }));
-      expect(mockSetActiveTab).toHaveBeenCalledWith('financials');
+      fireEvent.click(screen.getByRole('button', { name: /about/i }));
+      expect(mockSetActiveTab).toHaveBeenCalledWith('about');
     });
   });
 
@@ -392,42 +391,7 @@ describe('StockAnalysis', () => {
   });
 
   // -------------------------------------------------------------------------
-  // 6. Analysis available — financials tab
-  // -------------------------------------------------------------------------
-
-  describe('analysis loaded — financials tab', () => {
-    beforeEach(() =>
-      setupStore({ currentTicker: 'AAPL', analysis: mockAnalysis, activeTab: 'financials' }),
-    );
-
-    it('renders QuarterlyEarnings heading on financials tab', () => {
-      render(<StockAnalysis />);
-      expect(screen.getByText('Quarterly Earnings')).toBeInTheDocument();
-    });
-
-    it('renders Price Data card on financials tab', () => {
-      render(<StockAnalysis />);
-      expect(screen.getByText('Price Data')).toBeInTheDocument();
-    });
-
-    it('renders Technical Summary on financials tab when technical data exists', () => {
-      render(<StockAnalysis />);
-      expect(screen.getByText('Technical Summary')).toBeInTheDocument();
-    });
-
-    it('renders Price Predictions on financials tab', () => {
-      render(<StockAnalysis />);
-      expect(screen.getByText('Price Predictions')).toBeInTheDocument();
-    });
-
-    it('does not render NewsFeed (Latest News) on financials tab', () => {
-      render(<StockAnalysis />);
-      expect(screen.queryByText('Latest News')).not.toBeInTheDocument();
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // 7. Analysis available — about tab
+  // 6. Analysis available — about tab
   // -------------------------------------------------------------------------
 
   describe('analysis loaded — about tab', () => {
@@ -1064,7 +1028,7 @@ describe('StockAnalysis', () => {
       };
 
       render(<StockAnalysis />);
-      expect(screen.queryByText(/AI-Powered/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Reddy/)).not.toBeInTheDocument();
     });
   });
 

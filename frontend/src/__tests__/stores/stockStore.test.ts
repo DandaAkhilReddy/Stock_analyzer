@@ -132,18 +132,13 @@ describe('useStockStore', () => {
   // -------------------------------------------------------------------------
 
   describe('setActiveTab', () => {
-    it('changes activeTab to financials', () => {
-      useStockStore.getState().setActiveTab('financials');
-      expect(useStockStore.getState().activeTab).toBe('financials');
-    });
-
     it('changes activeTab to about', () => {
       useStockStore.getState().setActiveTab('about');
       expect(useStockStore.getState().activeTab).toBe('about');
     });
 
     it('changes activeTab back to news', () => {
-      useStockStore.getState().setActiveTab('financials');
+      useStockStore.getState().setActiveTab('about');
       useStockStore.getState().setActiveTab('news');
       expect(useStockStore.getState().activeTab).toBe('news');
     });
@@ -189,7 +184,7 @@ describe('useStockStore', () => {
     });
 
     it('resets activeTab to invest when called', async () => {
-      useStockStore.setState({ activeTab: 'financials' });
+      useStockStore.setState({ activeTab: 'about' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       const promise = useStockStore.getState().fetchAnalysis('AAPL');
@@ -423,8 +418,8 @@ describe('useStockStore', () => {
   // -------------------------------------------------------------------------
 
   describe('fetchAnalysis — activeTab reset', () => {
-    it('resets activeTab to invest even when previously on financials', async () => {
-      useStockStore.setState({ activeTab: 'financials' });
+    it('resets activeTab to invest even when previously on about', async () => {
+      useStockStore.setState({ activeTab: 'about' });
       vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
       await useStockStore.getState().fetchAnalysis('AAPL');
@@ -509,10 +504,10 @@ describe('persist middleware', () => {
   });
 
   it('writes activeTab to localStorage when changed', () => {
-    useStockStore.getState().setActiveTab('financials');
+    useStockStore.getState().setActiveTab('about');
 
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
-    expect(stored.state.activeTab).toBe('financials');
+    expect(stored.state.activeTab).toBe('about');
   });
 
   it('does not persist analysis object to localStorage', async () => {
