@@ -440,12 +440,36 @@ class TestResolveTicker:
         assert result == "MSFT"
 
     @pytest.mark.asyncio
-    async def test_company_name_triggers_search(self) -> None:
+    async def test_local_mapping_google_returns_googl(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("GOOGLE")
+        assert result == "GOOGL"
+
+    @pytest.mark.asyncio
+    async def test_local_mapping_facebook_returns_meta(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("FACEBOOK")
+        assert result == "META"
+
+    @pytest.mark.asyncio
+    async def test_local_mapping_microsoft_returns_msft(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("MICROSOFT")
+        assert result == "MSFT"
+
+    @pytest.mark.asyncio
+    async def test_local_mapping_case_insensitive(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("google")
+        assert result == "GOOGL"
+
+    @pytest.mark.asyncio
+    async def test_unknown_company_triggers_search(self) -> None:
         service = MarketDataService()
         with patch.object(
             service, "_search_ticker", return_value=_MOCK_SEARCH
         ):
-            result = await service.resolve_ticker("MICROSOFT")
+            result = await service.resolve_ticker("ACMECORP")
         assert result == "MSFT"
 
     @pytest.mark.asyncio
@@ -466,15 +490,16 @@ class TestResolveTicker:
         assert result == "BRK.A"
 
     @pytest.mark.asyncio
-    async def test_search_error_raises_external_api_error(self) -> None:
+    async def test_search_api_error_raises_stock_not_found(self) -> None:
+        """FMP 402/5xx errors are caught and converted to StockNotFoundError."""
         service = MarketDataService()
         with patch.object(
             service,
             "_search_ticker",
-            side_effect=ExternalAPIError("FMP API", "timeout"),
+            side_effect=ExternalAPIError("FMP API", "HTTP 402"),
         ):
-            with pytest.raises(ExternalAPIError):
-                await service.resolve_ticker("MICROSOFT")
+            with pytest.raises(StockNotFoundError):
+                await service.resolve_ticker("XYZUNKNOWNCORP")
 
     @pytest.mark.asyncio
     async def test_empty_symbol_in_result_raises_stock_not_found(self) -> None:
@@ -484,7 +509,7 @@ class TestResolveTicker:
             service, "_search_ticker", return_value=mock_results
         ):
             with pytest.raises(StockNotFoundError):
-                await service.resolve_ticker("MICROSOFT")
+                await service.resolve_ticker("XYZUNKNOWNCORP")
 
     @pytest.mark.asyncio
     async def test_ticker_with_dot_triggers_search(self) -> None:
