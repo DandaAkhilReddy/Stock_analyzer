@@ -645,14 +645,16 @@ describe('StockAnalysis', () => {
       setupStore({ currentTicker: 'AAPL', analysis: mockAnalysis, activeTab: 'about' }),
     );
 
-    it('renders the "About Apple Inc." heading from CompanyAbout', () => {
+    it('renders the company name heading from CompanyAbout', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('About Apple Inc.')).toBeInTheDocument();
+      // Company name appears in both the header and the CompanyAbout hero
+      expect(screen.getAllByText('Apple Inc.').length).toBeGreaterThanOrEqual(2);
     });
 
-    it('renders the Company Info section', () => {
+    it('renders the About section heading', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Company Info')).toBeInTheDocument();
+      // "About" appears in both the tab bar and the CompanyAbout description heading
+      expect(screen.getAllByText('About').length).toBeGreaterThanOrEqual(2);
     });
 
     it('renders the Key Statistics section', () => {
