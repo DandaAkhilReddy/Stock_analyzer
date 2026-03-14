@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStockStore } from '../stores/stockStore';
 import { AgentLoadingAnimation } from '../components/loading/AgentLoadingAnimation';
+import { AnalysisError } from '../components/error/AnalysisError';
 
 import { LandingHero } from '../components/landing/LandingHero';
 import { StockHeader } from '../components/stock/StockHeader';
@@ -80,21 +80,7 @@ export function StockAnalysis() {
   }
 
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-72px)] text-center gap-3">
-        <AlertTriangle size={40} className="text-red-500" />
-        <h2 className="text-lg font-semibold text-red-600">
-          Error analyzing {currentTicker}
-        </h2>
-        <p className="text-sm text-stone-500 max-w-md">{error}</p>
-        <button
-          onClick={() => useStockStore.getState().fetchAnalysis(currentTicker)}
-          className="mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors"
-        >
-          Try Again
-        </button>
-      </div>
-    );
+    return <AnalysisError ticker={currentTicker} error={error} />;
   }
 
   if (!analysis) return null;
