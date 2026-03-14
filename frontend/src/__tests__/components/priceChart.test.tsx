@@ -85,8 +85,7 @@ vi.mock('lightweight-charts', () => ({
   createChart: mockCreateChart,
   ColorType: { Solid: 'solid' },
   CrosshairMode: { Normal: 1 },
-  CandlestickSeries: 'CandlestickSeries',
-  HistogramSeries: 'HistogramSeries',
+  AreaSeries: vi.fn(),
 }));
 
 // framer-motion passthrough — same pattern as stockAnalysis.test.tsx
@@ -208,14 +207,14 @@ describe('PriceChart', () => {
       expect(mockCreateChart).toHaveBeenCalledTimes(1);
     });
 
-    it('calls addSeries twice — once for candles, once for volume', () => {
+    it('calls addSeries once', () => {
       renderChart();
-      expect(mockAddSeries).toHaveBeenCalledTimes(2);
+      expect(mockAddSeries).toHaveBeenCalledTimes(1);
     });
 
-    it('calls setData twice — once per series', () => {
+    it('calls setData once', () => {
       renderChart();
-      expect(mockSetData).toHaveBeenCalledTimes(2);
+      expect(mockSetData).toHaveBeenCalledTimes(1);
     });
 
     it('calls fitContent on the time scale', () => {
@@ -223,26 +222,20 @@ describe('PriceChart', () => {
       expect(mockFitContent).toHaveBeenCalledTimes(1);
     });
 
-    it('passes candle data with correct shape to the first setData call', () => {
+    it('passes area data with correct shape to the setData call', () => {
       renderChart();
       const [firstCall] = mockSetData.mock.calls;
-      const candleData = firstCall[0] as Array<{
+      const areaData = firstCall[0] as Array<{
         time: string;
-        open: number;
-        high: number;
-        low: number;
-        close: number;
+        value: number;
       }>;
-      expect(candleData[0]).toMatchObject({
+      expect(areaData[0]).toMatchObject({
         time: '2025-06-01',
-        open: 100,
-        high: 110,
-        low: 95,
-        close: 105,
+        value: 105,
       });
     });
 
-    it('sorts data by date before setting candle data', () => {
+    it('sorts data by date before setting area data', () => {
       const unsorted: HistoricalPrice[] = [
         { date: '2025-08-01', open: 110, high: 120, low: 105, close: 115, volume: 2_000_000 },
         { date: '2025-06-01', open: 100, high: 110, low: 95,  close: 105, volume: 1_000_000 },
@@ -250,8 +243,8 @@ describe('PriceChart', () => {
       ];
       renderChart(unsorted);
       const [firstCall] = mockSetData.mock.calls;
-      const candleData = firstCall[0] as Array<{ time: string }>;
-      expect(candleData.map((d) => d.time)).toEqual([
+      const areaData = firstCall[0] as Array<{ time: string; value: number }>;
+      expect(areaData.map((d) => d.time)).toEqual([
         '2025-06-01',
         '2025-07-01',
         '2025-08-01',
@@ -352,35 +345,6 @@ describe('PriceChart', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Null volume filtering
-  // -------------------------------------------------------------------------
-
-  describe('null volume filtering', () => {
-    it('excludes entries with null volume from volume series data', () => {
-      const dataWithNullVolume: HistoricalPrice[] = [
-        { date: '2025-06-01', open: 100, high: 110, low: 95,  close: 105, volume: 1_000_000 },
-        { date: '2025-07-01', open: 105, high: 115, low: 100, close: 110, volume: null },
-        { date: '2025-08-01', open: 110, high: 120, low: 105, close: 115, volume: 2_000_000 },
-      ];
-      renderChart(dataWithNullVolume);
-      // Volume series is the second setData call
-      const volumeCall = mockSetData.mock.calls[1][0] as Array<{ value: number }>;
-      expect(volumeCall).toHaveLength(2);
-      expect(volumeCall.every((d) => d.value !== null)).toBe(true);
-    });
-
-    it('volume series data is empty when all volumes are null', () => {
-      const allNullVolume: HistoricalPrice[] = [
-        { date: '2025-06-01', open: 100, high: 110, low: 95,  close: 105, volume: null },
-        { date: '2025-07-01', open: 105, high: 115, low: 100, close: 110, volume: null },
-      ];
-      renderChart(allNullVolume);
-      const volumeCall = mockSetData.mock.calls[1][0] as Array<unknown>;
-      expect(volumeCall).toHaveLength(0);
-    });
-  });
-
-  // -------------------------------------------------------------------------
   // filterByRange — ALL passthrough
   // -------------------------------------------------------------------------
 
@@ -393,42 +357,16 @@ describe('PriceChart', () => {
       renderChart(oldData);
       // Switch to ALL so filterByRange returns everything
       fireEvent.click(screen.getByRole('button', { name: 'ALL' }));
-      // The second createChart call's candle data must contain both dates
-      const allCandleCalls = mockSetData.mock.calls.filter(
-        (_c, i) => i % 2 === 0, // candle setData is always even-indexed (0, 2, …)
-      );
-      const lastCandleData = allCandleCalls[allCandleCalls.length - 1][0] as Array<{
+      // Get the last setData call — one call per render, area series only
+      const lastSetDataCall = mockSetData.mock.calls[mockSetData.mock.calls.length - 1];
+      const lastAreaData = lastSetDataCall[0] as Array<{
         time: string;
+        value: number;
       }>;
-      const times = lastCandleData.map((d) => d.time);
+      const times = lastAreaData.map((d) => d.time);
       expect(times).toContain('2020-01-01');
       expect(times).toContain('2025-08-01');
     });
   });
 
-  // -------------------------------------------------------------------------
-  // Volume colour coding
-  // -------------------------------------------------------------------------
-
-  describe('volume bar colour', () => {
-    it('uses green colour for bars where close >= open', () => {
-      // mockData row 0: open=100 close=105 (bullish)
-      renderChart();
-      const volumeCall = mockSetData.mock.calls[1][0] as Array<{
-        color: string;
-      }>;
-      expect(volumeCall[0].color).toBe('rgba(5, 150, 105, 0.3)');
-    });
-
-    it('uses red colour for bars where close < open (bearish)', () => {
-      const bearishData: HistoricalPrice[] = [
-        { date: '2025-06-01', open: 110, high: 115, low: 95, close: 100, volume: 1_000_000 },
-      ];
-      renderChart(bearishData);
-      const volumeCall = mockSetData.mock.calls[1][0] as Array<{
-        color: string;
-      }>;
-      expect(volumeCall[0].color).toBe('rgba(220, 38, 38, 0.3)');
-    });
-  });
 });

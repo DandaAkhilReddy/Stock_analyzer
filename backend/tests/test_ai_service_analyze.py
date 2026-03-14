@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.core.exceptions import AIAnalysisError, ExternalAPIError, StockNotFoundError
-from app.models.analysis import HistoricalPrice, LongTermOutlook, StockAnalysisResponse, TechnicalSnapshot
+from app.models.analysis import FinancierAnalysis, HistoricalPrice, LongTermOutlook, StockAnalysisResponse, TechnicalSnapshot
 from app.services.ai_analysis_service import AIAnalysisService
 
 # ---------------------------------------------------------------------------
@@ -91,6 +91,47 @@ _MOCK_AI_RESPONSE: dict = {
         "catalysts": ["AI integration", "Services expansion"],
         "long_term_risks": ["Regulatory pressure", "Hardware saturation"],
         "compound_annual_return": 12.5,
+    },
+    "financier_analysis": {
+        "perspectives": [
+            {
+                "name": "Warren Buffett",
+                "framework": "Value Investing",
+                "verdict": "buy",
+                "reasoning": "Strong brand moat and consistent ROE above 30%.",
+                "key_metrics_evaluated": ["P/E", "ROE", "Moat"],
+            },
+            {
+                "name": "Peter Lynch",
+                "framework": "Growth at Reasonable Price",
+                "verdict": "buy",
+                "reasoning": "PEG ratio under 2 with steady earnings growth.",
+                "key_metrics_evaluated": ["PEG Ratio", "Earnings Growth"],
+            },
+            {
+                "name": "Benjamin Graham",
+                "framework": "Margin of Safety",
+                "verdict": "hold",
+                "reasoning": "Current price near intrinsic value, limited margin of safety.",
+                "key_metrics_evaluated": ["P/E", "P/B", "Current Ratio"],
+            },
+            {
+                "name": "Ray Dalio",
+                "framework": "Macro Risk Parity",
+                "verdict": "buy",
+                "reasoning": "Well-positioned across economic cycles with strong cash flows.",
+                "key_metrics_evaluated": ["Debt/Equity", "Sector Cycle"],
+            },
+            {
+                "name": "Cathie Wood",
+                "framework": "Disruptive Innovation",
+                "verdict": "hold",
+                "reasoning": "Incremental innovation rather than disruptive; large TAM but mature.",
+                "key_metrics_evaluated": ["R&D Spend", "TAM", "Innovation Pipeline"],
+            },
+        ],
+        "consensus_verdict": "buy",
+        "consensus_reasoning": "Three of five legendary investors favor buying, citing strong moat and growth.",
     },
 }
 
@@ -270,14 +311,14 @@ class TestProviderCallArguments:
         assert "NVDA" in kwargs["user_prompt"]
 
     @pytest.mark.asyncio
-    async def test_analyze_passes_max_tokens_8000(
+    async def test_analyze_passes_max_tokens_10000(
         self, service: AIAnalysisService, mock_provider: AsyncMock
     ) -> None:
-        """Phase-2 AI call uses max_tokens=8000 (qualitative-only, smaller budget)."""
+        """Phase-2 AI call uses max_tokens=10000 (qualitative + financier analysis)."""
         await service.analyze("AAPL")
 
         _, kwargs = mock_provider.chat_completion_json.call_args
-        assert kwargs["max_tokens"] == 8000
+        assert kwargs["max_tokens"] == 10000
 
     @pytest.mark.asyncio
     async def test_analyze_calls_provider_exactly_once(
@@ -530,6 +571,32 @@ class TestSuccessfulResponse:
         assert result.long_term_outlook.verdict == "buy"
         assert result.long_term_outlook.compound_annual_return == pytest.approx(12.5)
         assert result.long_term_outlook.one_year.mid == pytest.approx(200.0)
+
+    @pytest.mark.asyncio
+    async def test_analyze_returns_financier_analysis(
+        self, service: AIAnalysisService
+    ) -> None:
+        """Financier analysis is parsed from the AI response when present."""
+        result = await service.analyze("AAPL")
+
+        assert result.financier_analysis is not None
+        assert isinstance(result.financier_analysis, FinancierAnalysis)
+        assert result.financier_analysis.consensus_verdict == "buy"
+        assert len(result.financier_analysis.perspectives) == 5
+
+    @pytest.mark.asyncio
+    async def test_analyze_financier_analysis_none_when_absent(
+        self, mock_provider: AsyncMock, mock_market: AsyncMock
+    ) -> None:
+        """Financier analysis is None when the AI response omits the field."""
+        ai_response = dict(_MOCK_AI_RESPONSE)
+        del ai_response["financier_analysis"]
+        mock_provider.chat_completion_json = AsyncMock(return_value=ai_response)
+        service = AIAnalysisService(provider=mock_provider, market_data=mock_market)
+
+        result = await service.analyze("AAPL")
+
+        assert result.financier_analysis is None
 
     @pytest.mark.asyncio
     async def test_analyze_long_term_outlook_none_when_absent(

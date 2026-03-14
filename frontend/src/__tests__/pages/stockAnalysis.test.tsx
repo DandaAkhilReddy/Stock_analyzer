@@ -53,8 +53,7 @@ vi.mock('lightweight-charts', () => ({
   }),
   ColorType: { Solid: 'solid' },
   CrosshairMode: { Normal: 1 },
-  CandlestickSeries: 'CandlestickSeries',
-  HistogramSeries: 'HistogramSeries',
+  AreaSeries: vi.fn(),
 }));
 
 // Stub ResizeObserver for chart tests (jsdom doesn't provide it)
@@ -136,6 +135,10 @@ const mockAnalysis: StockAnalysisResponse = {
   founded: '1976',
   employees: '164,000',
   company_description: 'Apple designs and sells consumer electronics.',
+  long_term_outlook: null,
+  financier_analysis: null,
+  research_context: '',
+  research_sources: [],
   disclaimer: 'Not financial advice.',
 };
 
