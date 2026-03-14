@@ -15,6 +15,36 @@ logger = get_logger(__name__)
 _FMP_BASE = "https://financialmodelingprep.com/stable"
 _TIMEOUT = 30.0
 
+# Local mapping for common company names → ticker symbols.
+# Avoids hitting FMP's premium /search-name endpoint for well-known names.
+_COMMON_TICKERS: dict[str, str] = {
+    "GOOGLE": "GOOGL",
+    "ALPHABET": "GOOGL",
+    "AMAZON": "AMZN",
+    "FACEBOOK": "META",
+    "MICROSOFT": "MSFT",
+    "NVIDIA": "NVDA",
+    "NETFLIX": "NFLX",
+    "BERKSHIRE": "BRK-B",
+    "JPMORGAN": "JPM",
+    "WALMART": "WMT",
+    "MASTERCARD": "MA",
+    "SALESFORCE": "CRM",
+    "COINBASE": "COIN",
+    "PALANTIR": "PLTR",
+    "SNOWFLAKE": "SNOW",
+    "SPOTIFY": "SPOT",
+    "PINTEREST": "PINS",
+    "SNAPCHAT": "SNAP",
+    "AIRBNB": "ABNB",
+    "CROWDSTRIKE": "CRWD",
+    "DATADOG": "DDOG",
+    "SHOPIFY": "SHOP",
+    "CLOUDFLARE": "NET",
+    "SQUARE": "SQ",
+    "ROBINHOOD": "HOOD",
+}
+
 
 def _format_market_cap(value: float | None) -> str | None:
     """Format market cap number to human-readable string (e.g. '2.8T')."""
@@ -112,8 +142,17 @@ class MarketDataService:
         if len(clean) <= 5 and clean.isalpha():
             return clean
 
+        # Check local mapping before hitting FMP search (avoids 402 on free tier)
+        local_match = _COMMON_TICKERS.get(clean)
+        if local_match:
+            logger.info("ticker_local_resolved", query=clean, symbol=local_match)
+            return local_match
+
         logger.info("ticker_search_start", query=clean)
-        results = await self._search_ticker(clean)
+        try:
+            results = await self._search_ticker(clean)
+        except ExternalAPIError:
+            raise StockNotFoundError(query)
 
         if not results:
             raise StockNotFoundError(query)
