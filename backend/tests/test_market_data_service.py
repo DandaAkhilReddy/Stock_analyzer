@@ -2047,3 +2047,144 @@ class TestGetJsonRetry:
         # base_delay=1.0, jitter=0.3 → sleep(1.3)
         assert len(sleep_calls) == 1
         assert sleep_calls[0] == pytest.approx(1.3)
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService.search_suggestions — S&P 500 boosting
+# ---------------------------------------------------------------------------
+
+_MOCK_SP500_CONSTITUENTS: list[dict] = [
+    {"symbol": "MSFT", "marketCap": 3_000_000_000_000},
+    {"symbol": "AAPL", "marketCap": 2_800_000_000_000},
+    {"symbol": "AMZN", "marketCap": 1_500_000_000_000},
+]
+
+
+class TestSearchSuggestionsSP500Boost:
+    """Tests for search_suggestions with S&P 500 priority ordering."""
+
+    def setup_method(self) -> None:
+        """Reset the class-level cache before each test."""
+        MarketDataService._sp500_cache = {}
+        MarketDataService._sp500_loaded_at = 0.0
+
+    @pytest.mark.asyncio
+    async def test_sp500_stocks_appear_before_non_sp500(self) -> None:
+        service = MarketDataService()
+        search_results = [
+            {"symbol": "MSTR", "name": "MicroStrategy Inc"},
+            {"symbol": "MSFT", "name": "Microsoft Corporation"},
+        ]
+        with patch.object(
+            service, "_search_ticker", new_callable=AsyncMock, return_value=search_results
+        ), patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=_MOCK_SP500_CONSTITUENTS
+        ):
+            result = await service.search_suggestions("micr")
+
+        assert result[0]["symbol"] == "MSFT"
+        assert result[1]["symbol"] == "MSTR"
+
+    @pytest.mark.asyncio
+    async def test_sp500_sorted_by_market_cap_descending(self) -> None:
+        service = MarketDataService()
+        search_results = [
+            {"symbol": "AMZN", "name": "Amazon.com Inc."},
+            {"symbol": "MSFT", "name": "Microsoft Corporation"},
+            {"symbol": "AAPL", "name": "Apple Inc."},
+        ]
+        with patch.object(
+            service, "_search_ticker", new_callable=AsyncMock, return_value=search_results
+        ), patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=_MOCK_SP500_CONSTITUENTS
+        ):
+            result = await service.search_suggestions("a")
+
+        symbols = [r["symbol"] for r in result]
+        assert symbols == ["MSFT", "AAPL", "AMZN"]
+
+    @pytest.mark.asyncio
+    async def test_cache_loads_once_across_calls(self) -> None:
+        service = MarketDataService()
+        search_results = [{"symbol": "MSFT", "name": "Microsoft Corporation"}]
+
+        get_json_mock = AsyncMock(return_value=_MOCK_SP500_CONSTITUENTS)
+        with patch.object(
+            service, "_search_ticker", new_callable=AsyncMock, return_value=search_results
+        ), patch.object(service, "_get_json", get_json_mock):
+            await service.search_suggestions("msft")
+            await service.search_suggestions("msft")
+
+        # _get_json called once for sp500 cache + once per _search_ticker call
+        # But _search_ticker is mocked, so only the sp500 call goes through
+        assert get_json_mock.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_graceful_fallback_when_sp500_fails(self) -> None:
+        service = MarketDataService()
+        search_results = [
+            {"symbol": "MSTR", "name": "MicroStrategy Inc"},
+            {"symbol": "MSFT", "name": "Microsoft Corporation"},
+        ]
+
+        async def side_effect(url: str, params: dict) -> list:
+            if "sp500" in url:
+                raise ExternalAPIError("FMP API", "sp500 unavailable")
+            return search_results
+
+        with patch.object(
+            service, "_search_ticker", new_callable=AsyncMock, return_value=search_results
+        ), patch.object(service, "_get_json", side_effect=side_effect):
+            result = await service.search_suggestions("micr")
+
+        # Falls back to original order (no boosting)
+        assert len(result) == 2
+        assert result[0]["symbol"] == "MSTR"
+        assert result[1]["symbol"] == "MSFT"
+
+    @pytest.mark.asyncio
+    async def test_non_sp500_stocks_still_returned(self) -> None:
+        service = MarketDataService()
+        search_results = [
+            {"symbol": "PLTR", "name": "Palantir Technologies"},
+            {"symbol": "HOOD", "name": "Robinhood Markets"},
+        ]
+        with patch.object(
+            service, "_search_ticker", new_callable=AsyncMock, return_value=search_results
+        ), patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=_MOCK_SP500_CONSTITUENTS
+        ):
+            result = await service.search_suggestions("tech")
+
+        assert len(result) == 2
+        assert result[0]["symbol"] == "PLTR"
+        assert result[1]["symbol"] == "HOOD"
+
+    @pytest.mark.asyncio
+    async def test_empty_search_results(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service, "_search_ticker", new_callable=AsyncMock, return_value=[]
+        ), patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=_MOCK_SP500_CONSTITUENTS
+        ):
+            result = await service.search_suggestions("zzzzz")
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_filters_entries_without_symbol(self) -> None:
+        service = MarketDataService()
+        search_results = [
+            {"symbol": "", "name": "Empty Symbol"},
+            {"symbol": "MSFT", "name": "Microsoft Corporation"},
+        ]
+        with patch.object(
+            service, "_search_ticker", new_callable=AsyncMock, return_value=search_results
+        ), patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=_MOCK_SP500_CONSTITUENTS
+        ):
+            result = await service.search_suggestions("ms")
+
+        assert len(result) == 1
+        assert result[0]["symbol"] == "MSFT"
