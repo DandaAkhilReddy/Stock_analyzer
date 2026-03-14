@@ -381,17 +381,40 @@ class MarketDataService:
             ExternalAPIError: If FMP API is unreachable.
         """
         logger.info("fmp_income_statement_start", ticker=ticker)
-        url = f"{_FMP_BASE}/income-statement"
-        data = await self._get_json(
-            url, self._params(symbol=ticker, period="quarter", limit=limit)
-        )
-        rows = data if isinstance(data, list) else []
-        logger.info(
-            "fmp_income_raw",
-            ticker=ticker,
-            raw_count=len(rows),
-            dates=[r.get("date") for r in rows[:8]],
-        )
+
+        # Try stable endpoint first, fall back to v3 if it fails or returns
+        # empty (some FMP plan tiers restrict the /stable/ path).
+        rows: list[dict] = []
+        for base, params in [
+            (
+                f"{_FMP_BASE}/income-statement",
+                self._params(symbol=ticker, period="quarter", limit=limit),
+            ),
+            (
+                f"https://financialmodelingprep.com/api/v3/income-statement/{ticker}",
+                self._params(period="quarter", limit=limit),
+            ),
+        ]:
+            try:
+                data = await self._get_json(base, params)
+                rows = data if isinstance(data, list) else []
+                logger.info(
+                    "fmp_income_raw",
+                    ticker=ticker,
+                    endpoint=base.split("financialmodelingprep.com")[1],
+                    raw_count=len(rows),
+                    dates=[r.get("date") for r in rows[:8]],
+                )
+                if rows:
+                    break
+            except ExternalAPIError as exc:
+                logger.warning(
+                    "fmp_income_endpoint_failed",
+                    ticker=ticker,
+                    endpoint=base.split("financialmodelingprep.com")[1],
+                    error=str(exc),
+                )
+                continue
 
         result: list[dict] = []
         for i, item in enumerate(rows):
@@ -439,11 +462,33 @@ class MarketDataService:
             ExternalAPIError: If FMP API is unreachable.
         """
         logger.info("fmp_news_start", ticker=ticker)
-        url = f"{_FMP_BASE}/stock_news"
-        data = await self._get_json(
-            url, self._params(tickers=ticker, limit=limit)
-        )
-        rows = data if isinstance(data, list) else []
+
+        # Try stable endpoint first, fall back to v3 if it fails or returns
+        # empty (some FMP plan tiers restrict the /stable/ path).
+        rows: list[dict] = []
+        for base, params in [
+            (
+                f"{_FMP_BASE}/stock_news",
+                self._params(tickers=ticker, limit=limit),
+            ),
+            (
+                "https://financialmodelingprep.com/api/v3/stock_news",
+                self._params(tickers=ticker, limit=limit),
+            ),
+        ]:
+            try:
+                data = await self._get_json(base, params)
+                rows = data if isinstance(data, list) else []
+                if rows:
+                    break
+            except ExternalAPIError as exc:
+                logger.warning(
+                    "fmp_news_endpoint_failed",
+                    ticker=ticker,
+                    endpoint=base.split("financialmodelingprep.com")[1],
+                    error=str(exc),
+                )
+                continue
 
         result: list[dict] = []
         for item in rows:

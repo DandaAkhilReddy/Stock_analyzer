@@ -38,6 +38,21 @@ async def search_stocks(
     return await _market_service.search_suggestions(q)
 
 
+@router.get("/debug/earnings/{ticker}")
+async def debug_earnings(ticker: str) -> dict:
+    """Diagnostic endpoint: shows raw FMP earnings data for a ticker.
+
+    Returns the quarters FMP returns and which endpoint succeeded.
+    Remove this endpoint after debugging is complete.
+    """
+    result = await _market_service.get_income_statement(ticker)
+    return {
+        "ticker": ticker,
+        "quarters_returned": len(result),
+        "data": result,
+    }
+
+
 @router.post("/analyze/{ticker}", response_model=StockAnalysisResponse)
 async def analyze_stock(ticker: str) -> StockAnalysisResponse:
     """Run comprehensive stock analysis.
