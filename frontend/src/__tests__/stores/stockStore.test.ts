@@ -474,51 +474,9 @@ describe('useStockStore', () => {
 });
 
 // ---------------------------------------------------------------------------
-// onRehydrate
 // ---------------------------------------------------------------------------
-
-describe('onRehydrate', () => {
-  it('calls fetchAnalysis when rehydrated state has a currentTicker', () => {
-    const mockFetch = vi.fn();
-    const state = { currentTicker: 'AAPL', fetchAnalysis: mockFetch } as any;
-
-    const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrateStorage();
-    rehydrateCallback(state);
-
-    expect(mockFetch).toHaveBeenCalledOnce();
-    expect(mockFetch).toHaveBeenCalledWith('AAPL');
-  });
-
-  it('does not call fetchAnalysis when rehydrated state has null currentTicker', () => {
-    const mockFetch = vi.fn();
-    const state = { currentTicker: null, fetchAnalysis: mockFetch } as any;
-
-    const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrateStorage();
-    rehydrateCallback(state);
-
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  it('handles undefined state gracefully without throwing', () => {
-    const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrateStorage();
-
-    expect(() => rehydrateCallback(undefined)).not.toThrow();
-  });
-
-  it('does not call fetchAnalysis when state has an empty string ticker', () => {
-    const mockFetch = vi.fn();
-    const state = { currentTicker: '', fetchAnalysis: mockFetch } as any;
-
-    const options = (useStockStore.persist as any).getOptions();
-    const rehydrateCallback = options.onRehydrateStorage();
-    rehydrateCallback(state);
-
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-});
+// No auto-fetch on rehydrate — currentTicker is no longer persisted
+// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Persist middleware
@@ -541,13 +499,13 @@ describe('persist middleware', () => {
     vi.clearAllMocks();
   });
 
-  it('writes currentTicker to localStorage when set', async () => {
+  it('does not persist currentTicker to localStorage', async () => {
     vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
 
     await useStockStore.getState().fetchAnalysis('AAPL');
 
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
-    expect(stored.state.currentTicker).toBe('AAPL');
+    expect(stored.state.currentTicker).toBeUndefined();
   });
 
   it('writes activeTab to localStorage when changed', () => {
