@@ -471,10 +471,10 @@ describe('StockAnalysis', () => {
   // -------------------------------------------------------------------------
 
   describe('ticker set but analysis is null and not loading or erroring', () => {
-    it('renders nothing (returns null) when ticker is set but analysis is null', () => {
+    it('falls back to LandingHero when ticker is set but analysis is null', () => {
       setupStore({ currentTicker: 'AAPL', analysis: null, isLoading: false, error: null });
-      const { container } = render(<StockAnalysis />);
-      expect(container.firstChild).toBeNull();
+      render(<StockAnalysis />);
+      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
     });
   });
 
@@ -1023,7 +1023,7 @@ describe('StockAnalysis', () => {
   // -------------------------------------------------------------------------
 
   describe('hydration gate (line 48)', () => {
-    it('renders nothing (returns null) when hasHydrated is false', () => {
+    it('renders a loading spinner when hasHydrated is false', () => {
       const store = {
         currentTicker: 'AAPL',
         analysis: null,
@@ -1037,13 +1037,12 @@ describe('StockAnalysis', () => {
         (selector: (s: typeof store) => unknown) => selector(store),
       );
       (useStockStore as unknown as Record<string, unknown>).persist = {
-        // hasHydrated returns false — triggers the early return null on line 48
         hasHydrated: () => false,
         onFinishHydration: () => () => {},
       };
 
       const { container } = render(<StockAnalysis />);
-      expect(container.firstChild).toBeNull();
+      expect(container.querySelector('.animate-spin')).toBeInTheDocument();
     });
 
     it('does not render LandingHero while store is not yet hydrated', () => {
@@ -1074,15 +1073,15 @@ describe('StockAnalysis', () => {
   // -------------------------------------------------------------------------
 
   describe('null analysis guard (line 86)', () => {
-    it('returns null when ticker is set, no loading, no error, analysis is null', () => {
+    it('falls back to LandingHero when ticker is set but analysis is null', () => {
       setupStore({
         currentTicker: 'AAPL',
         analysis: null,
         isLoading: false,
         error: null,
       });
-      const { container } = render(<StockAnalysis />);
-      expect(container.firstChild).toBeNull();
+      render(<StockAnalysis />);
+      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
     });
 
     it('does not render any tab content when analysis is null', () => {

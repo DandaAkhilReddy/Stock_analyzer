@@ -62,7 +62,13 @@ export function StockAnalysis() {
   }, []);
 
   // Wait for persist middleware to rehydrate before deciding what to show
-  if (!hasHydrated) return null;
+  if (!hasHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!currentTicker) {
     return <LandingHero />;
@@ -100,7 +106,7 @@ export function StockAnalysis() {
     return <AnalysisError ticker={currentTicker} error={error} />;
   }
 
-  if (!analysis) return null;
+  if (!analysis) return <LandingHero />;
 
   return (
     <motion.div
