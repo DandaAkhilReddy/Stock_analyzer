@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-AI-powered stock analysis platform with real-time Yahoo Finance data and Kimi K2.5 qualitative analysis.
+AI-powered stock analysis platform with real-time Financial Modeling Prep (FMP) market data, Kimi K2.5 qualitative analysis, and multi-framework legendary investor predictions (Buffett, Lynch, Graham, Dalio, Cathie Wood).
 
 ## Architecture
 
 ```
 frontend/          React 19 + TypeScript + Vite + Tailwind CSS 4 + Zustand
-backend/           Python FastAPI + Pydantic v2 + yfinance + Azure OpenAI (Kimi K2.5)
+backend/           Python FastAPI + Pydantic v2 + FMP API + Azure OpenAI (Kimi K2.5)
 ```
 
 ### Backend Layers
@@ -27,20 +27,42 @@ backend/           Python FastAPI + Pydantic v2 + yfinance + Azure OpenAI (Kimi 
 
 ## Key Patterns
 
-### Two-Phase Analysis
-1. **Phase 1**: Real market data from Yahoo Finance via `MarketDataService` (yfinance)
-2. **Phase 2**: Qualitative analysis from Kimi K2.5 via `AIAnalysisService`
-3. **Phase 3**: Merge real data + AI analysis into `StockAnalysisResponse`
+### Three-Phase Analysis
+1. **Phase 1**: Real market data from FMP API via `MarketDataService` (quote + historical OHLC + technicals)
+2. **Phase 1.5**: Optional research enrichment via `SharePointAgentProvider` (non-blocking)
+3. **Phase 2**: Qualitative analysis from Kimi K2.5 via `AIAnalysisService` — includes financier framework analysis
+4. **Phase 3**: Merge real data + AI analysis into `StockAnalysisResponse`
+
+### Financier Analysis
+
+AI analyzes each stock through 5 legendary investor frameworks:
+
+- Warren Buffett (value investing, moat, ROE)
+- Peter Lynch (PEG ratio, growth at reasonable price)
+- Benjamin Graham (margin of safety, intrinsic value)
+- Ray Dalio (macro risk parity, all-weather)
+- Cathie Wood (disruptive innovation, S-curves)
+
+Each gives a buy/hold/sell verdict with reasoning. Consensus synthesizes all perspectives.
+
+### Charts
+
+- `lightweight-charts` v5 with `AreaSeries` (indigo line + gradient fill)
+- Shows close prices only, no candlestick or volume bars
+- Time range filters: 1W, 1M, 3M, 6M, 1Y, 5Y, ALL
 
 ### Ticker Resolution
+
 `MarketDataService.resolve_ticker()` converts company names to symbols:
+
 - Short alpha strings (<=5 chars) → assumed ticker, returned as-is
-- Longer inputs → yfinance search → first result's symbol
+- Longer inputs → FMP search → first result's symbol
 - Fallback: if fast-path ticker fails at `get_quote`, `search_ticker()` retries
 
 ### Error Handling
+
 - `StockNotFoundError` → 404 (invalid ticker / no results)
-- `ExternalAPIError` → 502 (Yahoo Finance unreachable)
+- `ExternalAPIError` → 502 (FMP API unreachable)
 - `AIAnalysisError` → 500 (AI provider failure)
 - These propagate unwrapped through the service layer
 
@@ -77,8 +99,8 @@ AZURE_OPENAI_API_VERSION=2024-05-01-preview
 
 ## Testing
 
-- Backend: pytest with 453+ tests (~1s). Mock at boundaries (yfinance, OpenAI).
-- Frontend: Vitest + React Testing Library with 492+ tests. JSDOM environment.
+- Backend: pytest with 747+ tests (~3s). Mock at boundaries (FMP, OpenAI).
+- Frontend: Vitest + React Testing Library with 822+ tests. JSDOM environment.
 - Coverage target: 80%+ minimum, 90%+ for services.
 
 ## Conventions
