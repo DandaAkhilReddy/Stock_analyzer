@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AnalysisSkeleton } from '../components/common/Skeleton';
 import { useStockStore } from '../stores/stockStore';
+import { AgentLoadingAnimation } from '../components/loading/AgentLoadingAnimation';
 
 import { LandingHero } from '../components/landing/LandingHero';
 import { StockHeader } from '../components/stock/StockHeader';
@@ -66,18 +66,16 @@ export function StockAnalysis() {
     'Analyzing insider trading patterns and institutional flows...',
     'Almost done — assembling the final report...',
   ];
-  const messageIndex = Math.floor(loadingSeconds / 10) % agentMessages.length;
+  const messageIndex = Math.floor(loadingSeconds / 5) % agentMessages.length;
   const loadingMessage = agentMessages[messageIndex];
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AnalysisSkeleton />
-        <div className="text-center pb-6">
-          <p className="text-stone-600 text-sm font-medium">Analyzing {currentTicker}...</p>
-          <p className="text-stone-400 text-xs mt-1">{loadingMessage}</p>
-        </div>
-      </div>
+      <AgentLoadingAnimation
+        ticker={currentTicker}
+        message={loadingMessage}
+        elapsedSeconds={loadingSeconds}
+      />
     );
   }
 

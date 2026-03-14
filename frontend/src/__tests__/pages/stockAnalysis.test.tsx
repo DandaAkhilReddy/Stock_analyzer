@@ -229,11 +229,10 @@ describe('StockAnalysis', () => {
       expect(screen.getByText(/Analyzing AAPL/)).toBeInTheDocument();
     });
 
-    it('shows the loading spinner (animate-spin class)', () => {
+    it('shows the orbital loading animation', () => {
       render(<StockAnalysis />);
-      // Loading spinner was replaced by AnalysisSkeleton which uses animate-shimmer divs
-      const skeletonEl = document.querySelector('.animate-shimmer');
-      expect(skeletonEl).toBeInTheDocument();
+      // AgentLoadingAnimation renders the ticker text
+      expect(screen.getByText(/Analyzing AAPL/)).toBeInTheDocument();
     });
 
     it('does not show error UI during loading', () => {
