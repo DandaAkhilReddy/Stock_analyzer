@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CrosshairMode, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
+import { createChart, ColorType, CrosshairMode, AreaSeries } from 'lightweight-charts';
 import type { HistoricalPrice } from '../../types/analysis';
 
 interface PriceChartProps {
@@ -49,40 +49,20 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
       timeScale: { borderColor: '#e7e5e4', timeVisible: true, fixLeftEdge: true, fixRightEdge: true },
     });
 
-    const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#059669',
-      downColor: '#dc2626',
-      borderUpColor: '#059669',
-      borderDownColor: '#dc2626',
-      wickUpColor: '#059669',
-      wickDownColor: '#dc2626',
+    const areaSeries = chart.addSeries(AreaSeries, {
+      lineColor: '#6366f1',
+      topColor: 'rgba(99, 102, 241, 0.3)',
+      bottomColor: 'rgba(99, 102, 241, 0.02)',
+      lineWidth: 2,
+      crosshairMarkerRadius: 4,
+      crosshairMarkerBackgroundColor: '#6366f1',
     });
 
-    candleSeries.setData(
+    areaSeries.setData(
       filtered.map((d) => ({
         time: d.date as `${number}-${number}-${number}`,
-        open: d.open,
-        high: d.high,
-        low: d.low,
-        close: d.close,
+        value: d.close,
       })),
-    );
-
-    const volumeSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: 'volume' },
-      priceScaleId: 'volume',
-    });
-    chart.priceScale('volume').applyOptions({
-      scaleMargins: { top: 0.8, bottom: 0 },
-    });
-    volumeSeries.setData(
-      filtered
-        .filter((d) => d.volume !== null)
-        .map((d) => ({
-          time: d.date as `${number}-${number}-${number}`,
-          value: d.volume!,
-          color: d.close >= d.open ? 'rgba(5, 150, 105, 0.3)' : 'rgba(220, 38, 38, 0.3)',
-        })),
     );
 
     chart.timeScale().fitContent();
