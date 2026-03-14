@@ -386,6 +386,12 @@ class MarketDataService:
             url, self._params(symbol=ticker, period="quarter", limit=limit)
         )
         rows = data if isinstance(data, list) else []
+        logger.info(
+            "fmp_income_raw",
+            ticker=ticker,
+            raw_count=len(rows),
+            dates=[r.get("date") for r in rows[:8]],
+        )
 
         result: list[dict] = []
         for i, item in enumerate(rows):
