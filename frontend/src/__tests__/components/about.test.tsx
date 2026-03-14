@@ -15,26 +15,37 @@ import { vi } from 'vitest';
 // Module stubs — must appear before any component imports
 // ---------------------------------------------------------------------------
 
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({
+vi.mock('framer-motion', () => {
+  const makeEl = (tag: string) => {
+    const Component = ({
       children,
-      ...props
-    }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
-      <div {...props}>{children}</div>
-    ),
-    p: ({
-      children,
-      ...props
-    }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
-      <p {...props}>{children}</p>
-    ),
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useMotionValue: () => ({ set: vi.fn() }),
-  useSpring: (v: unknown) => v,
-  useTransform: () => 0,
-}));
+      ...rest
+    }: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }) => {
+      const El = tag as React.ElementType;
+      // Strip framer-motion-specific props that aren't valid DOM attributes
+      const {
+        initial, animate, exit, transition, whileHover, whileInView, whileTap,
+        viewport, variants, layout, ...domProps
+      } = rest as Record<string, unknown>;
+      return <El {...domProps}>{children}</El>;
+    };
+    Component.displayName = `motion.${tag}`;
+    return Component;
+  };
+  return {
+    motion: {
+      div: makeEl('div'),
+      p: makeEl('p'),
+      h2: makeEl('h2'),
+      span: makeEl('span'),
+      button: makeEl('button'),
+    },
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    useMotionValue: () => ({ set: vi.fn() }),
+    useSpring: (v: unknown) => v,
+    useTransform: () => 0,
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Components under test

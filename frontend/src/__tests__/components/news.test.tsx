@@ -32,6 +32,9 @@ function makeItem(overrides: Partial<NewsItem> = {}): NewsItem {
     title: 'Default headline',
     source: 'Reuters',
     sentiment: 'neutral',
+    url: null,
+    published_date: null,
+    image_url: null,
     ...overrides,
   };
 }
@@ -58,28 +61,24 @@ describe('NewsCard', () => {
     expect(screen.queryByText('Reuters')).not.toBeInTheDocument();
   });
 
-  it('renders a sentiment dot with bg-emerald-500 for positive sentiment', () => {
-    const { container } = render(<NewsCard item={makeItem({ sentiment: 'positive' })} />);
-    const dot = container.querySelector('.bg-emerald-500');
-    expect(dot).toBeInTheDocument();
+  it('renders a Bullish sentiment pill for positive sentiment', () => {
+    render(<NewsCard item={makeItem({ sentiment: 'positive' })} />);
+    expect(screen.getByText('Bullish')).toBeInTheDocument();
   });
 
-  it('renders a sentiment dot with bg-red-500 for negative sentiment', () => {
-    const { container } = render(<NewsCard item={makeItem({ sentiment: 'negative' })} />);
-    const dot = container.querySelector('.bg-red-500');
-    expect(dot).toBeInTheDocument();
+  it('renders a Bearish sentiment pill for negative sentiment', () => {
+    render(<NewsCard item={makeItem({ sentiment: 'negative' })} />);
+    expect(screen.getByText('Bearish')).toBeInTheDocument();
   });
 
-  it('renders a sentiment dot with bg-stone-300 for neutral sentiment', () => {
-    const { container } = render(<NewsCard item={makeItem({ sentiment: 'neutral' })} />);
-    const dot = container.querySelector('.bg-stone-300');
-    expect(dot).toBeInTheDocument();
+  it('renders a Neutral sentiment pill for neutral sentiment', () => {
+    render(<NewsCard item={makeItem({ sentiment: 'neutral' })} />);
+    expect(screen.getByText('Neutral')).toBeInTheDocument();
   });
 
-  it('renders a sentiment dot with bg-stone-300 when sentiment is null', () => {
-    const { container } = render(<NewsCard item={makeItem({ sentiment: null })} />);
-    const dot = container.querySelector('.bg-stone-300');
-    expect(dot).toBeInTheDocument();
+  it('renders a Neutral sentiment pill when sentiment is null', () => {
+    render(<NewsCard item={makeItem({ sentiment: null })} />);
+    expect(screen.getByText('Neutral')).toBeInTheDocument();
   });
 
   it('renders source text alongside the sentiment dot', () => {

@@ -9,6 +9,25 @@ interface PriceChartProps {
 
 type TimeRange = '1W' | '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL';
 
+function downsample(data: HistoricalPrice[], maxPoints: number): HistoricalPrice[] {
+  if (data.length <= maxPoints) return data;
+  const step = Math.ceil(data.length / maxPoints);
+  const sampled: HistoricalPrice[] = [];
+  for (let i = 0; i < data.length; i += step) {
+    sampled.push(data[i]);
+  }
+  // Always include the last point
+  if (sampled[sampled.length - 1] !== data[data.length - 1]) {
+    sampled.push(data[data.length - 1]);
+  }
+  return sampled;
+}
+
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
 function filterByRange(data: HistoricalPrice[], range: TimeRange): HistoricalPrice[] {
   if (data.length === 0) return [];
   if (range === 'ALL') return data;
@@ -27,7 +46,7 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
   const [range, setRange] = useState<TimeRange>('ALL');
 
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
-  const filtered = filterByRange(sorted, range);
+  const filtered = downsample(filterByRange(sorted, range), 2000);
 
   useEffect(() => {
     if (!containerRef.current || filtered.length === 0) return;
@@ -96,20 +115,32 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="text-lg font-semibold text-stone-900">Price Chart</div>
-        <div className="flex gap-1">
-          {ranges.map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                range === r
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-stone-500 hover:bg-stone-100'
-              }`}
-            >
-              {r}
-            </button>
-          ))}
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex gap-1">
+            {ranges.map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  range === r
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-stone-500 hover:bg-stone-100'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-stone-400 text-right mt-1">
+            {range === 'ALL' && filtered.length > 0
+              ? `Since ${formatShortDate(filtered[0].date)}`
+              : filtered.length > 0
+                ? `${formatShortDate(filtered[0].date)} – ${formatShortDate(filtered[filtered.length - 1].date)}`
+                : ''}
+            {filtered.length > 0 && (
+              <span className="text-[10px] text-stone-300 ml-2">{filtered.length} pts</span>
+            )}
+          </p>
         </div>
       </div>
       <div

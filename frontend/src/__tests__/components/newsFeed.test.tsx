@@ -46,6 +46,9 @@ function makeItem(overrides: Partial<NewsItem> = {}): NewsItem {
     title: 'Default headline',
     source: 'Reuters',
     sentiment: 'neutral',
+    url: null,
+    published_date: null,
+    image_url: null,
     ...overrides,
   };
 }
@@ -81,9 +84,9 @@ describe('NewsFeed', () => {
       expect(screen.getByText('0 articles')).toBeInTheDocument();
     });
 
-    it('shows "1 articles" for a single item', () => {
+    it('shows "1 article" for a single item', () => {
       render(<NewsFeed items={[makeItem()]} />);
-      expect(screen.getByText('1 articles')).toBeInTheDocument();
+      expect(screen.getByText('1 article')).toBeInTheDocument();
     });
 
     it('shows "3 articles" for three items', () => {
@@ -154,18 +157,14 @@ describe('NewsFeed', () => {
       expect(screen.queryByText('Reuters')).not.toBeInTheDocument();
     });
 
-    it('renders a positive sentiment dot for a positive-sentiment item', () => {
-      const { container } = render(
-        <NewsFeed items={[makeItem({ sentiment: 'positive' })]} />,
-      );
-      expect(container.querySelector('.bg-emerald-500')).toBeInTheDocument();
+    it('renders a Bullish pill for a positive-sentiment item', () => {
+      render(<NewsFeed items={[makeItem({ sentiment: 'positive' })]} />);
+      expect(screen.getByText('Bullish')).toBeInTheDocument();
     });
 
-    it('renders a negative sentiment dot for a negative-sentiment item', () => {
-      const { container } = render(
-        <NewsFeed items={[makeItem({ sentiment: 'negative' })]} />,
-      );
-      expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
+    it('renders a Bearish pill for a negative-sentiment item', () => {
+      render(<NewsFeed items={[makeItem({ sentiment: 'negative' })]} />);
+      expect(screen.getByText('Bearish')).toBeInTheDocument();
     });
 
     it('renders exactly one card per item — no duplicates for unique titles', () => {

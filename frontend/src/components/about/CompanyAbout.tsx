@@ -12,7 +12,6 @@ import {
   Shield,
   Brain,
   ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import type { StockAnalysisResponse } from '../../types/analysis';
 import { Card } from '../common/Card';
@@ -28,11 +27,13 @@ const riskStyles: Record<string, { color: string; bg: string; label: string }> =
   very_high: { color: 'text-red-700', bg: 'bg-red-100 border-red-200', label: 'Very High Risk' },
 };
 
-const fade = (delay: number) => ({
-  initial: { opacity: 0, y: 20 } as const,
-  animate: { opacity: 1, y: 0 } as const,
-  transition: { duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] as const },
-});
+// Spring presets
+const popSpring = { type: 'spring' as const, stiffness: 400, damping: 15 };
+const softSpring = { type: 'spring' as const, stiffness: 200, damping: 20 };
+const bounceSpring = { type: 'spring' as const, stiffness: 300, damping: 18, mass: 0.8 };
+
+// Shared viewport config — triggers slightly before element is fully visible
+const viewport = { once: true, margin: '-50px' } as const;
 
 export function CompanyAbout({ analysis }: CompanyAboutProps) {
   const [descExpanded, setDescExpanded] = useState(false);
@@ -83,41 +84,72 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
   return (
     <div className="space-y-5">
       {/* ── Hero Header ── */}
-      <motion.div {...fade(0)}>
+      <motion.div
+        initial={{ opacity: 0, x: -60 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={viewport}
+        transition={{ ...bounceSpring, duration: undefined }}
+      >
         <Card>
           <div className="flex flex-col gap-3">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-500 bg-clip-text text-transparent">
+            {/* Company name — slide from left with spring bounce */}
+            <motion.h2
+              className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-500 bg-clip-text text-transparent"
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={viewport}
+              transition={{ ...bounceSpring }}
+            >
               {analysis.company_name}
-            </h2>
+            </motion.h2>
 
-            {/* Sector / Industry pills */}
+            {/* Sector / Industry pills — scale pop-in */}
             {(analysis.sector || analysis.industry) && (
               <div className="flex flex-wrap gap-2">
                 {analysis.sector && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  <motion.span
+                    className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100"
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={viewport}
+                    transition={{ ...popSpring, delay: 0.1 }}
+                  >
                     <Briefcase size={12} />
                     {analysis.sector}
-                  </span>
+                  </motion.span>
                 )}
                 {analysis.industry && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100">
+                  <motion.span
+                    className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100"
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={viewport}
+                    transition={{ ...popSpring, delay: 0.2 }}
+                  >
                     <Building2 size={12} />
                     {analysis.industry}
-                  </span>
+                  </motion.span>
                 )}
               </div>
             )}
 
-            {/* Compact info row */}
+            {/* Info row — stagger slide from bottom */}
             {infoItems.length > 0 && (
               <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
                 {infoItems
                   .filter((i) => i.label !== 'Sector' && i.label !== 'Industry')
-                  .map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-1.5 text-sm text-stone-500">
+                  .map(({ icon: Icon, label, value }, idx) => (
+                    <motion.div
+                      key={label}
+                      className="flex items-center gap-1.5 text-sm text-stone-500"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={viewport}
+                      transition={{ ...softSpring, delay: 0.15 + idx * 0.15 }}
+                    >
                       <Icon size={14} className="text-stone-400" />
                       <span className="font-medium text-stone-700">{value}</span>
-                    </div>
+                    </motion.div>
                   ))}
               </div>
             )}
@@ -127,16 +159,22 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
 
       {/* ── Company Description (collapsible) ── */}
       {descText && (
-        <motion.div {...fade(0.08)}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={viewport}
+          transition={{ ...softSpring, delay: 0.05 }}
+        >
           <Card>
             <h3 className="text-sm font-medium text-stone-500 mb-3">About</h3>
-            <div className="relative">
-              <AnimatePresence initial={false}>
+            <motion.div layout className="relative overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={descExpanded ? 'expanded' : 'collapsed'}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.25 }}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
                   <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line">
@@ -149,40 +187,59 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
                   onClick={() => setDescExpanded(!descExpanded)}
                   className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
                 >
-                  {descExpanded ? (
-                    <>
-                      Show less <ChevronUp size={14} />
-                    </>
-                  ) : (
-                    <>
-                      Read more <ChevronDown size={14} />
-                    </>
-                  )}
+                  {descExpanded ? 'Show less' : 'Read more'}
+                  <motion.span
+                    animate={{ rotate: descExpanded ? 180 : 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="inline-flex"
+                  >
+                    <ChevronDown size={14} />
+                  </motion.span>
                 </button>
               )}
-            </div>
+            </motion.div>
           </Card>
         </motion.div>
       )}
 
       {/* ── Key Statistics ── */}
-      <motion.div {...fade(0.16)}>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={viewport}
+        transition={{ ...softSpring, delay: 0.05 }}
+      >
         <Card>
           <h3 className="text-sm font-medium text-stone-500 mb-4">Key Statistics</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {stats.map(({ label, value }, i) => (
               <motion.div
                 key={label}
-                className="bg-gradient-to-br from-stone-50 to-stone-100/50 rounded-xl p-3 border border-stone-100 hover:border-indigo-200 hover:shadow-sm transition-all duration-200"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.35, delay: 0.2 + i * 0.04 }}
+                className="relative bg-gradient-to-br from-stone-50 to-stone-100/50 rounded-xl p-3 border border-stone-100 overflow-hidden cursor-default"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={viewport}
+                transition={{ ...popSpring, delay: i * 0.06 }}
+                whileHover={{
+                  scale: 1.05,
+                  y: -4,
+                  boxShadow: '0 8px 24px rgba(99,102,241,0.15)',
+                  borderColor: 'rgb(165,180,252)',
+                }}
               >
-                <div className="text-[11px] text-stone-400 uppercase tracking-wider font-medium">
-                  {label}
-                </div>
-                <div className="text-base font-bold text-stone-900 mt-1">
-                  {value ?? 'N/A'}
+                {/* Shimmer overlay on hover */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full"
+                  whileHover={{ translateX: '200%' }}
+                  transition={{ duration: 0.5, ease: 'easeInOut' }}
+                />
+                <div className="relative z-10">
+                  <div className="text-[11px] text-stone-400 uppercase tracking-wider font-medium">
+                    {label}
+                  </div>
+                  <div className="text-base font-bold text-stone-900 mt-1">
+                    {value ?? 'N/A'}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -191,12 +248,22 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
       </motion.div>
 
       {/* ── AI Analysis Summary ── */}
-      <motion.div {...fade(0.24)}>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={viewport}
+        transition={{ ...softSpring, delay: 0.05 }}
+      >
         <Card gradient>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center">
+            {/* Brain icon — infinite pulse */}
+            <motion.div
+              className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            >
               <Brain size={16} className="text-white" />
-            </div>
+            </motion.div>
             <h3 className="text-sm font-medium text-stone-500">AI Analysis Summary</h3>
           </div>
           <p className="text-sm text-stone-600 leading-relaxed">{analysis.summary}</p>
@@ -206,36 +273,74 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
               <motion.div
                 className="h-2 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${(analysis.confidence_score * 100).toFixed(0)}%` }}
-                transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                whileInView={{ width: `${(analysis.confidence_score * 100).toFixed(0)}%` }}
+                viewport={viewport}
+                transition={{
+                  type: 'spring',
+                  stiffness: 80,
+                  damping: 14,
+                  mass: 0.8,
+                  delay: 0.3,
+                }}
               />
             </div>
-            <span className="text-sm font-bold text-indigo-600">
+            <motion.span
+              className="text-sm font-bold text-indigo-600"
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={viewport}
+              transition={{ ...popSpring, delay: 0.5 }}
+            >
               {(analysis.confidence_score * 100).toFixed(0)}%
-            </span>
+            </motion.span>
           </div>
         </Card>
       </motion.div>
 
       {/* ── Bull vs Bear ── */}
       <div className="grid md:grid-cols-2 gap-4">
-        <motion.div {...fade(0.32)}>
+        {/* Bull — slides from LEFT */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={viewport}
+          transition={{ ...bounceSpring, delay: 0.05 }}
+        >
           <Card className="h-full border-l-4 border-l-emerald-400">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <motion.div
+                className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center"
+                initial={{ scale: 0, rotate: -30 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={viewport}
+                transition={{ ...popSpring, delay: 0.2 }}
+              >
                 <TrendingUp size={14} className="text-emerald-600" />
-              </div>
+              </motion.div>
               <h3 className="text-sm font-semibold text-emerald-700">Bull Case</h3>
             </div>
             <p className="text-sm text-stone-600 leading-relaxed">{analysis.bull_case}</p>
           </Card>
         </motion.div>
-        <motion.div {...fade(0.38)}>
+
+        {/* Bear — slides from RIGHT */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={viewport}
+          transition={{ ...bounceSpring, delay: 0.1 }}
+        >
           <Card className="h-full border-l-4 border-l-red-400">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center">
+              <motion.div
+                className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center"
+                initial={{ scale: 0, rotate: 30 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={viewport}
+                transition={{ ...popSpring, delay: 0.2 }}
+              >
                 <TrendingDown size={14} className="text-red-600" />
-              </div>
+              </motion.div>
               <h3 className="text-sm font-semibold text-red-700">Bear Case</h3>
             </div>
             <p className="text-sm text-stone-600 leading-relaxed">{analysis.bear_case}</p>
@@ -244,20 +349,36 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
       </div>
 
       {/* ── Risk Assessment ── */}
-      <motion.div {...fade(0.44)}>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={viewport}
+        transition={{ ...softSpring, delay: 0.05 }}
+      >
         <Card>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-stone-100 flex items-center justify-center">
+              <motion.div
+                className="w-7 h-7 rounded-lg bg-stone-100 flex items-center justify-center"
+                initial={{ rotate: -90, opacity: 0 }}
+                whileInView={{ rotate: 0, opacity: 1 }}
+                viewport={viewport}
+                transition={{ ...bounceSpring, delay: 0.1 }}
+              >
                 <Shield size={14} className="text-stone-500" />
-              </div>
+              </motion.div>
               <h3 className="text-sm font-medium text-stone-500">Risk Assessment</h3>
             </div>
-            <span
+            {/* Risk badge — scale pop-in */}
+            <motion.span
               className={`text-xs font-bold px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}
+              initial={{ scale: 0, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={viewport}
+              transition={{ ...popSpring, delay: 0.2 }}
             >
               {risk.label}
-            </span>
+            </motion.span>
           </div>
           {analysis.risk_assessment.risk_factors.length > 0 && (
             <div className="space-y-2">
@@ -265,11 +386,18 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
                 <motion.div
                   key={i}
                   className="flex items-start gap-2.5 text-sm text-stone-600"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 + i * 0.06 }}
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={viewport}
+                  transition={{ ...softSpring, delay: 0.15 + i * 0.08 }}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-stone-300 mt-1.5 shrink-0" />
+                  <motion.span
+                    className="w-1.5 h-1.5 rounded-full bg-stone-300 mt-1.5 shrink-0"
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={viewport}
+                    transition={{ ...popSpring, delay: 0.2 + i * 0.08 }}
+                  />
                   {factor}
                 </motion.div>
               ))}
@@ -281,7 +409,10 @@ export function CompanyAbout({ analysis }: CompanyAboutProps) {
       {/* ── Disclaimer ── */}
       <motion.p
         className="text-xs text-stone-400 text-center px-4"
-        {...fade(0.5)}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={viewport}
+        transition={{ duration: 0.5, delay: 0.1 }}
       >
         {analysis.disclaimer}
       </motion.p>

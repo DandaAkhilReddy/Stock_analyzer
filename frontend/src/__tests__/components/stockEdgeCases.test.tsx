@@ -76,9 +76,9 @@ const baseAnalysis: StockAnalysisResponse = {
 // ===========================================================================
 
 describe('NewsCard — unrecognised sentiment fallback', () => {
-  it('falls back to bg-stone-300 dot for an unrecognised sentiment string', () => {
-    // Cast bypasses TS so we can hit the ?? 'bg-stone-300' fallback in dotColor
-    const { container } = render(
+  it('falls back to neutral sentiment pill for an unrecognised sentiment string', () => {
+    // Cast bypasses TS so we can hit the fallback in sentimentStyles
+    render(
       <NewsCard
         item={{
           title: 'Test headline',
@@ -87,8 +87,8 @@ describe('NewsCard — unrecognised sentiment fallback', () => {
         }}
       />,
     );
-    const dot = container.querySelector('.bg-stone-300');
-    expect(dot).toBeInTheDocument();
+    // The redesigned NewsCard uses a "Neutral" pill as fallback
+    expect(screen.getByText('Neutral')).toBeInTheDocument();
   });
 });
 

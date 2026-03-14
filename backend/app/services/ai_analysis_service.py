@@ -189,6 +189,14 @@ class AIAnalysisService:
         # Use resolved ticker from FMP
         resolved_ticker = quote.get("ticker", ticker)
 
+        # Phase 1.5a: Fetch real news and earnings in parallel with research
+        real_news_task = asyncio.create_task(
+            self._safe_fetch_news(resolved_ticker)
+        )
+        real_earnings_task = asyncio.create_task(
+            self._safe_fetch_earnings(resolved_ticker)
+        )
+
         # Phase 1.5: Research enrichment (non-blocking)
         research_context = ""
         research_sources: list[str] = []
@@ -251,11 +259,17 @@ class AIAnalysisService:
             )
             raise AIAnalysisError(str(exc)) from exc
 
+        # Collect real news and earnings (tasks started at Phase 1.5a)
+        real_news = await real_news_task
+        real_earnings = await real_earnings_task
+
         # Phase 3: Merge real data + AI qualitative
         response = self._merge_response(
             resolved_ticker, quote, history, technicals, ai_result,
             research_context=research_context,
             research_sources=research_sources,
+            real_news=real_news,
+            real_earnings=real_earnings,
         )
         logger.info(
             "analysis_complete",
@@ -273,6 +287,8 @@ class AIAnalysisService:
         ai_data: dict,
         research_context: str = "",
         research_sources: list[str] | None = None,
+        real_news: list[dict] | None = None,
+        real_earnings: list[dict] | None = None,
     ) -> StockAnalysisResponse:
         """Merge real market data with AI qualitative analysis.
 
@@ -284,6 +300,8 @@ class AIAnalysisService:
             ai_data: Qualitative analysis from AI.
             research_context: Research text from SharePoint agent.
             research_sources: URLs consulted by the research agent.
+            real_news: Real news items from FMP (overrides AI news when present).
+            real_earnings: Real quarterly earnings from FMP (overrides AI when present).
 
         Returns:
             Fully populated ``StockAnalysisResponse``.
@@ -318,13 +336,19 @@ class AIAnalysisService:
                 signal=signal,
             )
 
-            news = [
-                NewsItem(**n) for n in ai_data.get("news", [])
-            ]
-            earnings = [
-                QuarterlyEarning(**e)
-                for e in ai_data.get("quarterly_earnings", [])
-            ]
+            # Prefer real FMP data; fall back to AI-generated when unavailable
+            if real_news:
+                news = [NewsItem(**n) for n in real_news]
+            else:
+                news = [NewsItem(**n) for n in ai_data.get("news", [])]
+
+            if real_earnings:
+                earnings = [QuarterlyEarning(**e) for e in real_earnings]
+            else:
+                earnings = [
+                    QuarterlyEarning(**e)
+                    for e in ai_data.get("quarterly_earnings", [])
+                ]
 
             predictions_data = ai_data.get("price_predictions", {})
             risk_data = ai_data.get("risk_assessment", {})
@@ -448,3 +472,33 @@ class AIAnalysisService:
                 "financier_analysis_parse_failed", error=str(exc)
             )
             return None
+
+    async def _safe_fetch_news(self, ticker: str) -> list[dict]:
+        """Fetch real news from FMP, returning empty list on any failure.
+
+        Args:
+            ticker: Resolved stock ticker symbol.
+
+        Returns:
+            List of news item dicts, or empty list if the fetch fails.
+        """
+        try:
+            return await self._market.get_stock_news(ticker)
+        except Exception:
+            logger.warning("fmp_news_fallback", ticker=ticker)
+            return []
+
+    async def _safe_fetch_earnings(self, ticker: str) -> list[dict]:
+        """Fetch real quarterly earnings from FMP, returning empty list on any failure.
+
+        Args:
+            ticker: Resolved stock ticker symbol.
+
+        Returns:
+            List of quarterly earning dicts, or empty list if the fetch fails.
+        """
+        try:
+            return await self._market.get_income_statement(ticker)
+        except Exception:
+            logger.warning("fmp_earnings_fallback", ticker=ticker)
+            return []
