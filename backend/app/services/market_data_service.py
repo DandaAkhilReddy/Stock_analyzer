@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import math
 import random
+import time
 
 import httpx
 
@@ -20,6 +21,7 @@ _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 1.0  # seconds
 _RETRY_MAX_DELAY = 10.0  # seconds
 _RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_SP500_CACHE_TTL = 86_400  # 24 hours in seconds
 
 # Local mapping for common company names → ticker symbols.
 # Avoids hitting FMP's premium /search-name endpoint for well-known names.
@@ -111,8 +113,37 @@ def _safe_int(value: object) -> int | None:
 class MarketDataService:
     """Fetches real-time quotes and historical OHLC from FMP API."""
 
+    # Class-level S&P 500 cache — shared across instances, loaded once.
+    _sp500_cache: dict[str, float] = {}  # symbol → market_cap
+    _sp500_loaded_at: float = 0.0
+
     def __init__(self) -> None:
         self._api_key = settings.fmp_api_key
+
+    async def _ensure_sp500_cache(self) -> None:
+        """Load S&P 500 constituents from FMP (lazy, refreshes every 24h)."""
+        now = time.monotonic()
+        if MarketDataService._sp500_cache and (
+            now - MarketDataService._sp500_loaded_at < _SP500_CACHE_TTL
+        ):
+            return
+
+        try:
+            url = f"{_FMP_BASE}/sp500_constituent"
+            data = await self._get_json(url, {"apikey": self._api_key})
+            if isinstance(data, list):
+                cache: dict[str, float] = {}
+                for item in data:
+                    sym = item.get("symbol", "")
+                    cap = item.get("marketCap") or 0
+                    if sym:
+                        cache[sym] = float(cap)
+                MarketDataService._sp500_cache = cache
+                MarketDataService._sp500_loaded_at = now
+                logger.info("sp500_cache_loaded", count=len(cache))
+        except Exception as exc:
+            logger.warning("sp500_cache_failed", error=str(exc))
+            # On failure, keep stale cache if available — don't clear it.
 
     def _params(self, **extra: object) -> dict[str, object]:
         """Build query params with API key."""
@@ -241,18 +272,35 @@ class MarketDataService:
     async def search_suggestions(self, query: str) -> list[dict[str, str]]:
         """Return lightweight search suggestions for autocomplete.
 
+        S&P 500 stocks are boosted to the top, sorted by market cap
+        descending.  Non-S&P 500 results follow in their original order.
+
         Args:
             query: User input to search for.
 
         Returns:
             List of dicts with ``symbol`` and ``name`` keys.
         """
+        await self._ensure_sp500_cache()
         results = await self._search_ticker(query.upper().strip())
-        return [
-            {"symbol": r.get("symbol", ""), "name": r.get("name", "")}
-            for r in results
-            if r.get("symbol")
-        ]
+
+        sp500_hits: list[tuple[float, dict[str, str]]] = []
+        other_hits: list[dict[str, str]] = []
+
+        for r in results:
+            sym = r.get("symbol", "")
+            if not sym:
+                continue
+            entry = {"symbol": sym, "name": r.get("name", "")}
+            cap = MarketDataService._sp500_cache.get(sym)
+            if cap is not None:
+                sp500_hits.append((cap, entry))
+            else:
+                other_hits.append(entry)
+
+        # S&P 500 first, sorted by market cap descending
+        sp500_hits.sort(key=lambda x: x[0], reverse=True)
+        return [e for _, e in sp500_hits] + other_hits
 
     async def search_ticker(self, query: str) -> str:
         """Force an FMP search for the query (no fast-path skip).
@@ -571,7 +619,7 @@ class MarketDataService:
         are filtered out so only US exchange results are returned.
         """
         url = f"{_FMP_BASE}/search-name"
-        data = await self._get_json(url, self._params(query=query, limit=10))
+        data = await self._get_json(url, self._params(query=query, limit=15))
         results = data if isinstance(data, list) else []
         # US exchanges only — filter out foreign listings (symbols with dots)
         return [r for r in results if "." not in r.get("symbol", "")]
