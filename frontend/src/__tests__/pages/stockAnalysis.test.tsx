@@ -159,6 +159,8 @@ interface StoreSlice {
   currentTicker: string | null;
   analysis: StockAnalysisResponse | null;
   isLoading: boolean;
+  isRefreshing: boolean;
+  lastFetchedAt: number | null;
   error: string | null;
   activeTab: AnalysisTab;
   setActiveTab: typeof mockSetActiveTab;
@@ -170,6 +172,8 @@ function setupStore(overrides: Partial<StoreSlice> = {}): void {
     currentTicker: null,
     analysis: null,
     isLoading: false,
+    isRefreshing: false,
+    lastFetchedAt: null,
     error: null,
     activeTab: 'chart',
     setActiveTab: mockSetActiveTab,
