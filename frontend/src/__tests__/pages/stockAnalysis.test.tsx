@@ -15,7 +15,7 @@
  *   7. Analysis available, activeTab = 'about'      → CompanyAbout visible
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -62,6 +62,15 @@ vi.stubGlobal('ResizeObserver', class {
   unobserve() {}
   disconnect() {}
 });
+
+// Mock searchStocks so AnalysisError doesn't make real network calls
+vi.mock('../../services/stockApi', () => ({
+  searchStocks: vi.fn().mockResolvedValue([
+    { symbol: 'GOOGL', name: 'Alphabet Inc.' },
+    { symbol: 'GOOG', name: 'Alphabet Inc. Class C' },
+  ]),
+  analyzeStock: vi.fn(),
+}));
 
 const mockFetchAnalysis = vi.fn();
 const mockSetActiveTab = vi.fn();
@@ -247,29 +256,30 @@ describe('StockAnalysis', () => {
 
   describe('error state', () => {
     beforeEach(() =>
-      setupStore({ currentTicker: 'AAPL', isLoading: false, error: 'Ticker not found' }),
+      setupStore({ currentTicker: 'GOOGLE', isLoading: false, error: 'Ticker not found' }),
     );
 
-    it('shows "Error analyzing AAPL" heading', () => {
+    it('shows friendly error heading with the failed ticker', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Error analyzing AAPL')).toBeInTheDocument();
+      expect(screen.getByText(/Couldn.*t analyze.*GOOGLE/)).toBeInTheDocument();
     });
 
-    it('shows the error message text', () => {
+    it('shows a friendly error message instead of raw error', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Ticker not found')).toBeInTheDocument();
+      expect(screen.getByText(/couldn.*t find that stock/i)).toBeInTheDocument();
     });
 
-    it('renders a Try Again button', () => {
+    it('renders a retry link for the original ticker', () => {
       render(<StockAnalysis />);
-      expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+      expect(screen.getByText(/Try.*GOOGLE.*again/)).toBeInTheDocument();
     });
 
-    it('calls fetchAnalysis with the current ticker when Try Again is clicked', () => {
+    it('shows suggestion buttons after search resolves', async () => {
       render(<StockAnalysis />);
-      fireEvent.click(screen.getByRole('button', { name: /try again/i }));
-      expect(mockFetchAnalysis).toHaveBeenCalledOnce();
-      expect(mockFetchAnalysis).toHaveBeenCalledWith('AAPL');
+      // searchStocks mock resolves with GOOGL — wait for it to appear
+      await waitFor(() => {
+        expect(screen.getByText('GOOGL')).toBeInTheDocument();
+      });
     });
   });
 
