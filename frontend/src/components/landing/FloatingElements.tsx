@@ -48,9 +48,11 @@ export function FloatingElements(): React.ReactElement {
               transformStyle: 'preserve-3d',
             }}
             animate={{
-              y: [0, -20, 0],
+              y: [0, -(15 + index * 2), 0],
               rotateX: [0, 15, 0],
               rotateY: [0, -10, 0],
+              scale: [1, 1.15, 1],
+              opacity: [0.4, 0.6, 0.4],
             }}
             transition={{
               duration: item.duration,
