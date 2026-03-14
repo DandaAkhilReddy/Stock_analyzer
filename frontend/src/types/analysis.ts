@@ -81,6 +81,22 @@ export interface RiskAssessment {
   risk_score: number;
 }
 
+export type FinancierVerdict = 'buy' | 'hold' | 'sell';
+
+export interface FinancierPerspective {
+  name: string;
+  framework: string;
+  verdict: FinancierVerdict;
+  reasoning: string;
+  key_metrics_evaluated: string[];
+}
+
+export interface FinancierAnalysis {
+  perspectives: FinancierPerspective[];
+  consensus_verdict: FinancierVerdict;
+  consensus_reasoning: string;
+}
+
 export interface StockAnalysisResponse {
   ticker: string;
   company_name: string;
@@ -115,6 +131,7 @@ export interface StockAnalysisResponse {
   risk_assessment: RiskAssessment;
   price_predictions: PricePredictions;
   long_term_outlook: LongTermOutlook | null;
+  financier_analysis: FinancierAnalysis | null;
   research_context: string;
   research_sources: string[];
   analysis_timestamp: string;

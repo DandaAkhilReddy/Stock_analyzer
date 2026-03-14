@@ -17,6 +17,7 @@ import { SupportResistance } from '../components/technical/SupportResistance';
 import { CompanyAbout } from '../components/about/CompanyAbout';
 import { ResearchSources } from '../components/analysis/ResearchSources';
 import { InvestmentOutlook } from '../components/invest/InvestmentOutlook';
+import { FinancierInsights } from '../components/invest/FinancierInsights';
 
 export function StockAnalysis() {
   const currentTicker = useStockStore((s) => s.currentTicker);
@@ -161,17 +162,26 @@ export function StockAnalysis() {
             </div>
           )}
 
-          {activeTab === 'invest' && analysis.long_term_outlook && (
-            <InvestmentOutlook
-              outlook={analysis.long_term_outlook}
-              currentPrice={analysis.current_price}
-              ticker={analysis.ticker}
-            />
-          )}
-
-          {activeTab === 'invest' && !analysis.long_term_outlook && (
-            <div className="text-center py-12 text-stone-400">
-              <p className="text-sm">Long-term outlook data not available for this stock.</p>
+          {activeTab === 'invest' && (
+            <div className="space-y-4">
+              {analysis.long_term_outlook && (
+                <InvestmentOutlook
+                  outlook={analysis.long_term_outlook}
+                  currentPrice={analysis.current_price}
+                  ticker={analysis.ticker}
+                />
+              )}
+              {analysis.financier_analysis && (
+                <FinancierInsights
+                  analysis={analysis.financier_analysis}
+                  ticker={analysis.ticker}
+                />
+              )}
+              {!analysis.long_term_outlook && !analysis.financier_analysis && (
+                <div className="text-center py-12 text-stone-400">
+                  <p className="text-sm">Long-term outlook data not available for this stock.</p>
+                </div>
+              )}
             </div>
           )}
         </motion.div>

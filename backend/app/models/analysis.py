@@ -83,6 +83,24 @@ class LongTermOutlook(BaseModel):
     compound_annual_return: float
 
 
+class FinancierVerdict(BaseModel):
+    """Analysis of a stock through one legendary investor's framework."""
+
+    name: str
+    framework: str
+    verdict: Literal["buy", "hold", "sell"]
+    reasoning: str
+    key_metrics_evaluated: list[str] = []
+
+
+class FinancierAnalysis(BaseModel):
+    """Aggregated multi-framework analysis from top financiers."""
+
+    perspectives: list[FinancierVerdict] = []
+    consensus_verdict: Literal["buy", "hold", "sell"] = "hold"
+    consensus_reasoning: str = ""
+
+
 class HistoricalPrice(BaseModel):
     """Single day OHLC price point for charting."""
 
@@ -139,6 +157,8 @@ class StockAnalysisResponse(BaseModel):
     risk_assessment: RiskAssessment
     price_predictions: PricePredictions
     long_term_outlook: LongTermOutlook | None = None
+    # Financier analysis
+    financier_analysis: FinancierAnalysis | None = None
     # Research enrichment
     research_context: str = ""
     research_sources: list[str] = []

@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from app.core.exceptions import AIAnalysisError, ExternalAPIError, StockNotFoundError
 from app.core.logging import get_logger
 from app.models.analysis import (
+    FinancierAnalysis,
+    FinancierVerdict,
     HistoricalPrice,
     LongTermOutlook,
     NewsItem,
@@ -24,9 +26,15 @@ from app.services.market_data_service import MarketDataService
 logger = get_logger(__name__)
 
 _SYSTEM_PROMPT = (
-    "You are a senior equity research analyst. You will be given REAL "
-    "current market data for a stock. Your job is to provide qualitative "
-    "analysis only.\n\n"
+    "You are a senior equity research analyst who analyzes stocks through "
+    "the lens of the world's greatest investors:\n"
+    "- Warren Buffett: value investing, economic moat, ROE, owner earnings\n"
+    "- Peter Lynch: PEG ratio, growth at a reasonable price, invest in what you know\n"
+    "- Benjamin Graham: margin of safety, intrinsic value, net-net analysis\n"
+    "- Ray Dalio: macro risk parity, all-weather positioning, debt cycles\n"
+    "- Cathie Wood: disruptive innovation, exponential growth, S-curves\n\n"
+    "You will be given REAL current market data for a stock. Your job is to "
+    "provide qualitative analysis applying each investor's framework.\n\n"
     "IMPORTANT: If the user provides a company name, misspelling, or "
     "informal name instead of a valid ticker symbol, you MUST identify "
     "the correct official ticker symbol (e.g., 'microsft' → 'MSFT', "
@@ -88,6 +96,17 @@ Based on the above real data, provide your qualitative analysis as JSON:
     "catalysts": ["<growth driver 1>", "<growth driver 2>", ...up to 5],
     "long_term_risks": ["<risk 1>", "<risk 2>", ...up to 5],
     "compound_annual_return": <estimated CAGR as percent e.g. 12.5>
+  }},
+  "financier_analysis": {{
+    "perspectives": [
+      {{"name": "Warren Buffett", "framework": "Value Investing", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Buffett's moat/ROE/owner-earnings framework>", "key_metrics_evaluated": ["P/E", "ROE", "Moat Strength", ...]}},
+      {{"name": "Peter Lynch", "framework": "Growth at Reasonable Price", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Lynch's PEG/growth framework>", "key_metrics_evaluated": ["PEG Ratio", "Earnings Growth", ...]}},
+      {{"name": "Benjamin Graham", "framework": "Margin of Safety", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Graham's intrinsic value framework>", "key_metrics_evaluated": ["P/E", "P/B", "Current Ratio", ...]}},
+      {{"name": "Ray Dalio", "framework": "Macro Risk Parity", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Dalio's macro/risk framework>", "key_metrics_evaluated": ["Debt/Equity", "Sector Cycle", ...]}},
+      {{"name": "Cathie Wood", "framework": "Disruptive Innovation", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Wood's innovation/S-curve framework>", "key_metrics_evaluated": ["R&D Spend", "TAM", "Innovation Pipeline", ...]}}
+    ],
+    "consensus_verdict": "buy" | "hold" | "sell",
+    "consensus_reasoning": "<2-3 sentences synthesizing all five perspectives into a unified view>"
   }},
   "support_levels": [<float>, ...],
   "resistance_levels": [<float>, ...],
@@ -222,7 +241,7 @@ class AIAnalysisService:
             ai_result = await self._provider.chat_completion_json(
                 system_prompt=_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
-                max_tokens=8000,
+                max_tokens=10000,
             )
         except AIAnalysisError:
             raise
@@ -363,6 +382,9 @@ class AIAnalysisService:
                 long_term_outlook=self._parse_long_term(
                     ai_data.get("long_term_outlook")
                 ),
+                financier_analysis=self._parse_financier_analysis(
+                    ai_data.get("financier_analysis")
+                ),
                 research_context=research_context,
                 research_sources=research_sources or [],
                 analysis_timestamp=datetime.now(timezone.utc),
@@ -401,5 +423,28 @@ class AIAnalysisService:
         except (KeyError, TypeError, ValueError) as exc:
             logger.warning(
                 "long_term_outlook_parse_failed", error=str(exc)
+            )
+            return None
+
+    @staticmethod
+    def _parse_financier_analysis(
+        data: dict | None,
+    ) -> FinancierAnalysis | None:
+        """Parse financier analysis from AI response, returning None on failure."""
+        if not data or not isinstance(data, dict):
+            return None
+        try:
+            perspectives = [
+                FinancierVerdict(**p)
+                for p in data.get("perspectives", [])
+            ]
+            return FinancierAnalysis(
+                perspectives=perspectives,
+                consensus_verdict=data.get("consensus_verdict", "hold"),
+                consensus_reasoning=data.get("consensus_reasoning", ""),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.warning(
+                "financier_analysis_parse_failed", error=str(exc)
             )
             return None
