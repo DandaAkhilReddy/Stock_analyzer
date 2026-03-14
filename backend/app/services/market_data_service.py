@@ -291,7 +291,9 @@ class MarketDataService:
         logger.info("fmp_history_start", ticker=ticker, period=period)
 
         url = f"{_FMP_BASE}/historical-price-eod/full"
-        data = await self._get_json(url, self._params(symbol=ticker))
+        data = await self._get_json(
+            url, self._params(symbol=ticker, **{"from": "1980-01-01"})
+        )
 
         # FMP /stable/ returns a flat array (newest-first)
         historical = data if isinstance(data, list) else []

@@ -8,7 +8,7 @@
  * motion-value hooks return deterministic values, keeping tests fast.
  */
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -22,6 +22,12 @@ vi.mock('framer-motion', () => ({
       ...props
     }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
       <div {...props}>{children}</div>
+    ),
+    p: ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
+      <p {...props}>{children}</p>
     ),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -375,16 +381,89 @@ describe('SignalBanner', () => {
 
 describe('CompanyAbout', () => {
   // -------------------------------------------------------------------------
-  // Company description card
+  // Hero header — company name, sector/industry pills, info row
+  // -------------------------------------------------------------------------
+
+  describe('hero header', () => {
+    it('renders the company name as a heading', () => {
+      render(<CompanyAbout analysis={baseAnalysis} />);
+      expect(screen.getByText('Apple Inc.')).toBeInTheDocument();
+    });
+
+    it('renders sector as a pill badge', () => {
+      render(<CompanyAbout analysis={baseAnalysis} />);
+      expect(screen.getByText('Technology')).toBeInTheDocument();
+    });
+
+    it('renders industry as a pill badge', () => {
+      render(<CompanyAbout analysis={baseAnalysis} />);
+      expect(screen.getByText('Consumer Electronics')).toBeInTheDocument();
+    });
+
+    it('renders CEO value in the info row', () => {
+      render(<CompanyAbout analysis={baseAnalysis} />);
+      expect(screen.getByText('Tim Cook')).toBeInTheDocument();
+    });
+
+    it('renders headquarters value in the info row', () => {
+      render(<CompanyAbout analysis={baseAnalysis} />);
+      expect(screen.getByText('Cupertino, CA')).toBeInTheDocument();
+    });
+
+    it('renders founded year in the info row', () => {
+      render(<CompanyAbout analysis={baseAnalysis} />);
+      expect(screen.getByText('1976')).toBeInTheDocument();
+    });
+
+    it('renders employees in the info row', () => {
+      render(<CompanyAbout analysis={baseAnalysis} />);
+      expect(screen.getByText('164,000')).toBeInTheDocument();
+    });
+
+    it('omits sector pill when sector is empty', () => {
+      const analysis: StockAnalysisResponse = { ...baseAnalysis, sector: '' };
+      render(<CompanyAbout analysis={analysis} />);
+      expect(screen.queryByText('Technology')).not.toBeInTheDocument();
+    });
+
+    it('omits industry pill when industry is empty', () => {
+      const analysis: StockAnalysisResponse = { ...baseAnalysis, industry: '' };
+      render(<CompanyAbout analysis={analysis} />);
+      expect(screen.queryByText('Consumer Electronics')).not.toBeInTheDocument();
+    });
+
+    it('omits a specific info item when its field is empty', () => {
+      const analysis: StockAnalysisResponse = { ...baseAnalysis, ceo: '' };
+      render(<CompanyAbout analysis={analysis} />);
+      expect(screen.queryByText('Tim Cook')).not.toBeInTheDocument();
+    });
+
+    it('does not render info row when all non-pill info fields are empty', () => {
+      const analysis: StockAnalysisResponse = {
+        ...baseAnalysis,
+        headquarters: '',
+        ceo: '',
+        founded: '',
+        employees: '',
+      };
+      render(<CompanyAbout analysis={analysis} />);
+      // Sector/Industry pills still appear, but no info row values
+      expect(screen.getByText('Technology')).toBeInTheDocument();
+      expect(screen.queryByText('Tim Cook')).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Company description — collapsible
   // -------------------------------------------------------------------------
 
   describe('company description', () => {
-    it('renders the "About <company_name>" heading', () => {
+    it('renders the "About" section heading', () => {
       render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('About Apple Inc.')).toBeInTheDocument();
+      expect(screen.getByText('About')).toBeInTheDocument();
     });
 
-    it('renders the company_description text', () => {
+    it('renders the company_description text (short desc shown fully)', () => {
       render(<CompanyAbout analysis={baseAnalysis} />);
       expect(
         screen.getByText(
@@ -396,82 +475,44 @@ describe('CompanyAbout', () => {
     it('does not render the description card when company_description is empty string', () => {
       const analysis: StockAnalysisResponse = { ...baseAnalysis, company_description: '' };
       render(<CompanyAbout analysis={analysis} />);
-      expect(screen.queryByText(/About Apple/)).not.toBeInTheDocument();
+      expect(screen.queryByText('About')).not.toBeInTheDocument();
     });
-  });
 
-  // -------------------------------------------------------------------------
-  // Company info grid — sector / industry / headquarters / CEO / founded / employees
-  // -------------------------------------------------------------------------
-
-  describe('company info grid', () => {
-    it('renders the "Company Info" section heading', () => {
+    it('does not show "Read more" button for short descriptions', () => {
       render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('Company Info')).toBeInTheDocument();
+      expect(screen.queryByText('Read more')).not.toBeInTheDocument();
     });
 
-    it('renders the Sector label and value', () => {
-      render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('Sector')).toBeInTheDocument();
-      expect(screen.getByText('Technology')).toBeInTheDocument();
-    });
-
-    it('renders the Industry label and value', () => {
-      render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('Industry')).toBeInTheDocument();
-      expect(screen.getByText('Consumer Electronics')).toBeInTheDocument();
-    });
-
-    it('renders the Headquarters label and value', () => {
-      render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('Headquarters')).toBeInTheDocument();
-      expect(screen.getByText('Cupertino, CA')).toBeInTheDocument();
-    });
-
-    it('renders the CEO label and value', () => {
-      render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('CEO')).toBeInTheDocument();
-      expect(screen.getByText('Tim Cook')).toBeInTheDocument();
-    });
-
-    it('renders the Founded label and value', () => {
-      render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('Founded')).toBeInTheDocument();
-      expect(screen.getByText('1976')).toBeInTheDocument();
-    });
-
-    it('renders the Employees label and value', () => {
-      render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('Employees')).toBeInTheDocument();
-      expect(screen.getByText('164,000')).toBeInTheDocument();
-    });
-
-    it('omits the Company Info section entirely when all info fields are empty strings', () => {
-      const analysis: StockAnalysisResponse = {
-        ...baseAnalysis,
-        sector: '',
-        industry: '',
-        headquarters: '',
-        ceo: '',
-        founded: '',
-        employees: '',
-      };
+    it('shows "Read more" button for long descriptions (>300 chars)', () => {
+      const longDesc = 'A'.repeat(350);
+      const analysis: StockAnalysisResponse = { ...baseAnalysis, company_description: longDesc };
       render(<CompanyAbout analysis={analysis} />);
-      expect(screen.queryByText('Company Info')).not.toBeInTheDocument();
+      expect(screen.getByText('Read more')).toBeInTheDocument();
     });
 
-    it('omits a specific info row when its field is an empty string', () => {
-      const analysis: StockAnalysisResponse = { ...baseAnalysis, ceo: '' };
+    it('truncates long descriptions to 300 chars by default', () => {
+      const longDesc = 'A'.repeat(350);
+      const analysis: StockAnalysisResponse = { ...baseAnalysis, company_description: longDesc };
       render(<CompanyAbout analysis={analysis} />);
-      expect(screen.queryByText('CEO')).not.toBeInTheDocument();
+      expect(screen.getByText(`${'A'.repeat(300)}...`)).toBeInTheDocument();
     });
 
-    it('still renders other info rows when only one field is missing', () => {
-      const analysis: StockAnalysisResponse = { ...baseAnalysis, headquarters: '' };
+    it('expands to full text when "Read more" is clicked', () => {
+      const longDesc = 'B'.repeat(350);
+      const analysis: StockAnalysisResponse = { ...baseAnalysis, company_description: longDesc };
       render(<CompanyAbout analysis={analysis} />);
-      expect(screen.getByText('Sector')).toBeInTheDocument();
-      expect(screen.getByText('Industry')).toBeInTheDocument();
-      expect(screen.queryByText('Headquarters')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByText('Read more'));
+      expect(screen.getByText(longDesc)).toBeInTheDocument();
+      expect(screen.getByText('Show less')).toBeInTheDocument();
+    });
+
+    it('collapses back when "Show less" is clicked', () => {
+      const longDesc = 'C'.repeat(350);
+      const analysis: StockAnalysisResponse = { ...baseAnalysis, company_description: longDesc };
+      render(<CompanyAbout analysis={analysis} />);
+      fireEvent.click(screen.getByText('Read more'));
+      fireEvent.click(screen.getByText('Show less'));
+      expect(screen.getByText(`${'C'.repeat(300)}...`)).toBeInTheDocument();
     });
   });
 
@@ -589,9 +630,9 @@ describe('CompanyAbout', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the "Confidence:" label', () => {
+    it('renders the "Confidence" label', () => {
       render(<CompanyAbout analysis={baseAnalysis} />);
-      expect(screen.getByText('Confidence:')).toBeInTheDocument();
+      expect(screen.getByText('Confidence')).toBeInTheDocument();
     });
 
     it('renders the confidence percentage (0.78 → "78%")', () => {
@@ -688,7 +729,6 @@ describe('CompanyAbout', () => {
     });
 
     it('falls back to the raw value when overall_risk is not in the label map', () => {
-      // The component uses: riskLabels[overall_risk] ?? overall_risk
       const analysis = {
         ...baseAnalysis,
         risk_assessment: {
