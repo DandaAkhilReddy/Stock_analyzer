@@ -1,7 +1,9 @@
 """Market data service — fetches real prices from Financial Modeling Prep API."""
 from __future__ import annotations
 
+import asyncio
 import math
+import random
 
 import httpx
 
@@ -14,6 +16,10 @@ logger = get_logger(__name__)
 
 _FMP_BASE = "https://financialmodelingprep.com/stable"
 _TIMEOUT = 30.0
+_MAX_RETRIES = 3
+_RETRY_BASE_DELAY = 1.0  # seconds
+_RETRY_MAX_DELAY = 10.0  # seconds
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 # Local mapping for common company names → ticker symbols.
 # Avoids hitting FMP's premium /search-name endpoint for well-known names.
@@ -113,7 +119,10 @@ class MarketDataService:
         return {"apikey": self._api_key, **extra}
 
     async def _get_json(self, url: str, params: dict[str, object]) -> list | dict:
-        """Make an authenticated GET request to FMP and return JSON.
+        """Make an authenticated GET request to FMP with retry + backoff.
+
+        Retries up to ``_MAX_RETRIES`` times on transient failures (timeouts,
+        5xx, 429).  Non-retryable errors (4xx except 429) fail immediately.
 
         Args:
             url: Full FMP API URL.
@@ -123,26 +132,70 @@ class MarketDataService:
             Parsed JSON response.
 
         Raises:
-            ExternalAPIError: On network/timeout/HTTP errors.
+            ExternalAPIError: After all retries are exhausted or on
+                non-retryable HTTP errors.
         """
+        last_exc: Exception | None = None
+
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            try:
-                resp = await client.get(url, params=params)
-                resp.raise_for_status()
-                return resp.json()
-            except httpx.TimeoutException as exc:
-                raise ExternalAPIError(
-                    "FMP API", f"Request timed out: {url}"
-                ) from exc
-            except httpx.HTTPStatusError as exc:
-                raise ExternalAPIError(
-                    "FMP API",
-                    f"HTTP {exc.response.status_code}: {exc.response.text[:200]}",
-                ) from exc
-            except httpx.HTTPError as exc:
-                raise ExternalAPIError(
-                    "FMP API", f"Request failed: {exc}"
-                ) from exc
+            for attempt in range(1, _MAX_RETRIES + 1):
+                try:
+                    resp = await client.get(url, params=params)
+                    resp.raise_for_status()
+                    return resp.json()
+                except httpx.TimeoutException as exc:
+                    last_exc = ExternalAPIError(
+                        "FMP API", f"Request timed out: {url}"
+                    )
+                    last_exc.__cause__ = exc
+                    logger.warning(
+                        "fmp_retry",
+                        url=url,
+                        attempt=attempt,
+                        max_retries=_MAX_RETRIES,
+                        error="timeout",
+                    )
+                except httpx.HTTPStatusError as exc:
+                    status = exc.response.status_code
+                    if status not in _RETRYABLE_STATUS_CODES:
+                        raise ExternalAPIError(
+                            "FMP API",
+                            f"HTTP {status}: {exc.response.text[:200]}",
+                        ) from exc
+                    last_exc = ExternalAPIError(
+                        "FMP API",
+                        f"HTTP {status}: {exc.response.text[:200]}",
+                    )
+                    last_exc.__cause__ = exc
+                    logger.warning(
+                        "fmp_retry",
+                        url=url,
+                        attempt=attempt,
+                        max_retries=_MAX_RETRIES,
+                        error=f"HTTP {status}",
+                    )
+                except httpx.HTTPError as exc:
+                    last_exc = ExternalAPIError(
+                        "FMP API", f"Request failed: {exc}"
+                    )
+                    last_exc.__cause__ = exc
+                    logger.warning(
+                        "fmp_retry",
+                        url=url,
+                        attempt=attempt,
+                        max_retries=_MAX_RETRIES,
+                        error=str(exc),
+                    )
+
+                if attempt < _MAX_RETRIES:
+                    delay = min(
+                        _RETRY_BASE_DELAY * (2 ** (attempt - 1)),
+                        _RETRY_MAX_DELAY,
+                    )
+                    jitter = random.uniform(0, delay * 0.5)  # noqa: S311
+                    await asyncio.sleep(delay + jitter)
+
+        raise last_exc  # type: ignore[misc]
 
     async def resolve_ticker(self, query: str) -> str:
         """Resolve a company name or partial input to a ticker symbol.

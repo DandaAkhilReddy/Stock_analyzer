@@ -1,11 +1,13 @@
 """Azure OpenAI provider — thin wrapper around the AsyncAzureOpenAI client."""
 from __future__ import annotations
 
+import asyncio
 import json
+import random
 import re
 from typing import Any
 
-from openai import AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI, APITimeoutError, APIConnectionError, RateLimitError as OpenAIRateLimitError, InternalServerError
 
 from app.core.config import settings
 from app.core.exceptions import AIAnalysisError
@@ -17,6 +19,10 @@ _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*([\s\S]*?)```")
 _TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
 _JS_COMMENT_RE = re.compile(r"//[^\n]*")
 _MAX_RETRIES = 1
+_API_MAX_RETRIES = 3
+_API_RETRY_BASE_DELAY = 2.0
+_API_RETRY_MAX_DELAY = 30.0
+_RETRYABLE_EXCEPTIONS = (APITimeoutError, APIConnectionError, OpenAIRateLimitError, InternalServerError)
 
 
 def _extract_json(text: str) -> str:
@@ -112,7 +118,10 @@ class OpenAIProvider:
         user_prompt: str,
         max_tokens: int,
     ) -> str:
-        """Execute the chat completion API call.
+        """Execute the chat completion API call with retry on transient errors.
+
+        Retries up to ``_API_MAX_RETRIES`` times on timeouts, connection
+        errors, rate limits, and 5xx responses from Azure OpenAI.
 
         Args:
             system_prompt: System message content.
@@ -123,26 +132,57 @@ class OpenAIProvider:
             Raw text content from the assistant.
 
         Raises:
-            AIAnalysisError: On API errors or empty responses.
+            AIAnalysisError: On non-retryable API errors, empty responses,
+                or after all retries are exhausted.
         """
-        try:
-            response = await self._client.chat.completions.create(
-                model=self._deployment,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                response_format={"type": "json_object"},
-                max_completion_tokens=max_tokens,
-                timeout=180.0,
-            )
-        except Exception as exc:
-            logger.error("openai_api_error", error=str(exc))
-            raise AIAnalysisError(f"API call failed: {exc}") from exc
+        last_exc: Exception | None = None
 
-        content = response.choices[0].message.content
-        if not content:
-            raise AIAnalysisError("Empty response from AI model")
+        for attempt in range(1, _API_MAX_RETRIES + 1):
+            try:
+                response = await self._client.chat.completions.create(
+                    model=self._deployment,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    response_format={"type": "json_object"},
+                    max_completion_tokens=max_tokens,
+                    timeout=180.0,
+                )
 
-        logger.debug("openai_raw_response", content_length=len(content))
-        return content
+                content = response.choices[0].message.content
+                if not content:
+                    raise AIAnalysisError("Empty response from AI model")
+
+                logger.debug("openai_raw_response", content_length=len(content))
+                return content
+
+            except _RETRYABLE_EXCEPTIONS as exc:
+                last_exc = exc
+                logger.warning(
+                    "openai_api_retry",
+                    attempt=attempt,
+                    max_retries=_API_MAX_RETRIES,
+                    error_type=type(exc).__name__,
+                    error=str(exc),
+                )
+                if attempt < _API_MAX_RETRIES:
+                    delay = min(
+                        _API_RETRY_BASE_DELAY * (2 ** (attempt - 1)),
+                        _API_RETRY_MAX_DELAY,
+                    )
+                    jitter = random.uniform(0, delay * 0.5)  # noqa: S311
+                    await asyncio.sleep(delay + jitter)
+
+            except Exception as exc:
+                logger.error("openai_api_error", error=str(exc))
+                raise AIAnalysisError(f"API call failed: {exc}") from exc
+
+        logger.error(
+            "openai_api_retries_exhausted",
+            attempts=_API_MAX_RETRIES,
+            error=str(last_exc),
+        )
+        raise AIAnalysisError(
+            f"API call failed after {_API_MAX_RETRIES} retries: {last_exc}"
+        ) from last_exc
