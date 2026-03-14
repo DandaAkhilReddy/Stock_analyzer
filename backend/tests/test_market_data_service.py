@@ -1737,3 +1737,313 @@ class TestCommonTickersMixedCase:
     @pytest.mark.asyncio
     async def test_snowflake_lowercase(self) -> None:
         assert await MarketDataService().resolve_ticker("snowflake") == "SNOW"
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService._get_json — retry logic
+# ---------------------------------------------------------------------------
+
+
+def _make_http_status_response(status_code: int, body: bytes = b"error") -> httpx.Response:
+    """Build an httpx.Response that will raise HTTPStatusError on raise_for_status."""
+    return httpx.Response(
+        status_code=status_code,
+        content=body,
+        request=httpx.Request("GET", "https://financialmodelingprep.com/stable/test"),
+    )
+
+
+def _make_async_client_mock(side_effects: list) -> AsyncMock:
+    """Build a mock AsyncClient whose .get() yields side_effects in sequence."""
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(side_effect=side_effects)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    return mock_client
+
+
+class TestGetJsonRetry:
+    """Tests for _get_json retry + backoff logic."""
+
+    # ------------------------------------------------------------------
+    # Happy path — no retry needed
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_succeeds_on_first_attempt_no_sleep_called(self) -> None:
+        service = MarketDataService()
+        good_resp = _mock_response([{"symbol": "AAPL"}])
+        mock_client = _make_async_client_mock([good_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep") as mock_sleep:
+            result = await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert result == [{"symbol": "AAPL"}]
+        mock_sleep.assert_not_called()
+
+    # ------------------------------------------------------------------
+    # Retry on 5xx / 429
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_retries_on_502_and_succeeds_on_second_attempt(self) -> None:
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(502)
+        good_resp = _mock_response({"ok": True})
+        mock_client = _make_async_client_mock([bad_resp, good_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            result = await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert result == {"ok": True}
+        assert mock_client.get.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_retries_on_429_and_succeeds_on_second_attempt(self) -> None:
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(429, b"rate limited")
+        good_resp = _mock_response([{"symbol": "TSLA"}])
+        mock_client = _make_async_client_mock([bad_resp, good_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            result = await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert result == [{"symbol": "TSLA"}]
+
+    @pytest.mark.asyncio
+    async def test_retries_on_500_and_succeeds_on_second_attempt(self) -> None:
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(500, b"Internal Server Error")
+        good_resp = _mock_response({"price": 185.5})
+        mock_client = _make_async_client_mock([bad_resp, good_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            result = await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert result == {"price": 185.5}
+
+    @pytest.mark.asyncio
+    async def test_retries_on_503_and_succeeds_on_second_attempt(self) -> None:
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(503, b"Service Unavailable")
+        good_resp = _mock_response([])
+        mock_client = _make_async_client_mock([bad_resp, good_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            result = await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_retries_on_504_and_succeeds_on_second_attempt(self) -> None:
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(504, b"Gateway Timeout")
+        good_resp = _mock_response({"data": "ok"})
+        mock_client = _make_async_client_mock([bad_resp, good_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            result = await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert result == {"data": "ok"}
+
+    # ------------------------------------------------------------------
+    # Retry on timeout
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_retries_on_timeout_and_succeeds_on_second_attempt(self) -> None:
+        service = MarketDataService()
+        good_resp = _mock_response([{"symbol": "MSFT"}])
+        mock_client = _make_async_client_mock(
+            [httpx.TimeoutException("timed out"), good_resp]
+        )
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            result = await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert result == [{"symbol": "MSFT"}]
+
+    # ------------------------------------------------------------------
+    # Non-retryable errors — fail immediately
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_fails_immediately_on_404_no_retry(self) -> None:
+        service = MarketDataService()
+        not_found_resp = _make_http_status_response(404, b"Not Found")
+        mock_client = _make_async_client_mock([not_found_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep") as mock_sleep:
+            with pytest.raises(ExternalAPIError, match="HTTP 404"):
+                await service._get_json("https://example.com", {"apikey": "k"})
+
+        # get() called exactly once — no retry
+        assert mock_client.get.call_count == 1
+        mock_sleep.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_fails_immediately_on_401_no_retry(self) -> None:
+        service = MarketDataService()
+        auth_resp = _make_http_status_response(401, b"Unauthorized")
+        mock_client = _make_async_client_mock([auth_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep") as mock_sleep:
+            with pytest.raises(ExternalAPIError, match="HTTP 401"):
+                await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert mock_client.get.call_count == 1
+        mock_sleep.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_fails_immediately_on_403_no_retry(self) -> None:
+        service = MarketDataService()
+        forbidden_resp = _make_http_status_response(403, b"Forbidden")
+        mock_client = _make_async_client_mock([forbidden_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep") as mock_sleep:
+            with pytest.raises(ExternalAPIError, match="HTTP 403"):
+                await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert mock_client.get.call_count == 1
+        mock_sleep.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_fails_immediately_on_400_no_retry(self) -> None:
+        service = MarketDataService()
+        bad_req_resp = _make_http_status_response(400, b"Bad Request")
+        mock_client = _make_async_client_mock([bad_req_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep") as mock_sleep:
+            with pytest.raises(ExternalAPIError, match="HTTP 400"):
+                await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert mock_client.get.call_count == 1
+        mock_sleep.assert_not_called()
+
+    # ------------------------------------------------------------------
+    # Retry exhaustion — all 3 attempts fail
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_after_exhausting_all_retries_502(
+        self,
+    ) -> None:
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(502, b"Bad Gateway")
+        mock_client = _make_async_client_mock([bad_resp, bad_resp, bad_resp])
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            with pytest.raises(ExternalAPIError, match="HTTP 502"):
+                await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert mock_client.get.call_count == 3
+
+    @pytest.mark.asyncio
+    async def test_raises_external_api_error_after_exhausting_all_retries_timeout(
+        self,
+    ) -> None:
+        service = MarketDataService()
+        mock_client = _make_async_client_mock(
+            [httpx.TimeoutException("timed out")] * 3
+        )
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("asyncio.sleep"), \
+             patch("random.uniform", return_value=0.0):
+            with pytest.raises(ExternalAPIError, match="timed out"):
+                await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert mock_client.get.call_count == 3
+
+    # ------------------------------------------------------------------
+    # Backoff delay increases exponentially
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_backoff_delays_grow_exponentially(self) -> None:
+        """Delays between attempts follow 1s, 2s pattern (base * 2^(attempt-1))."""
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(503)
+        good_resp = _mock_response({"ok": True})
+        # Fail twice then succeed — triggers 2 sleeps with delays 1s and 2s
+        mock_client = _make_async_client_mock([bad_resp, bad_resp, good_resp])
+
+        sleep_calls: list[float] = []
+
+        async def capture_sleep(delay: float) -> None:
+            sleep_calls.append(delay)
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("app.services.market_data_service.asyncio.sleep", side_effect=capture_sleep), \
+             patch("random.uniform", return_value=0.0):
+            await service._get_json("https://example.com", {"apikey": "k"})
+
+        assert len(sleep_calls) == 2
+        # First delay: base=1.0 * 2^0 = 1.0, jitter=0 → 1.0
+        assert sleep_calls[0] == pytest.approx(1.0)
+        # Second delay: base=1.0 * 2^1 = 2.0, jitter=0 → 2.0
+        assert sleep_calls[1] == pytest.approx(2.0)
+
+    @pytest.mark.asyncio
+    async def test_no_sleep_after_last_failed_attempt(self) -> None:
+        """asyncio.sleep is NOT called after the final failed attempt."""
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(502)
+        # All 3 attempts fail → sleep called between attempt 1→2 and 2→3, not after 3
+        mock_client = _make_async_client_mock([bad_resp, bad_resp, bad_resp])
+
+        sleep_calls: list[float] = []
+
+        async def capture_sleep(delay: float) -> None:
+            sleep_calls.append(delay)
+
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("app.services.market_data_service.asyncio.sleep", side_effect=capture_sleep), \
+             patch("random.uniform", return_value=0.0):
+            with pytest.raises(ExternalAPIError):
+                await service._get_json("https://example.com", {"apikey": "k"})
+
+        # Only 2 sleeps: between attempt 1→2 and 2→3
+        assert len(sleep_calls) == 2
+
+    @pytest.mark.asyncio
+    async def test_jitter_is_added_to_base_delay(self) -> None:
+        """random.uniform jitter is included in the sleep duration."""
+        service = MarketDataService()
+        bad_resp = _make_http_status_response(500)
+        good_resp = _mock_response({"ok": True})
+        mock_client = _make_async_client_mock([bad_resp, good_resp])
+
+        sleep_calls: list[float] = []
+
+        async def capture_sleep(delay: float) -> None:
+            sleep_calls.append(delay)
+
+        # Jitter = 0.3 (uniform called with (0, 0.5) → returns 0.3)
+        with patch("httpx.AsyncClient", return_value=mock_client), \
+             patch("app.services.market_data_service.asyncio.sleep", side_effect=capture_sleep), \
+             patch("random.uniform", return_value=0.3):
+            await service._get_json("https://example.com", {"apikey": "k"})
+
+        # base_delay=1.0, jitter=0.3 → sleep(1.3)
+        assert len(sleep_calls) == 1
+        assert sleep_calls[0] == pytest.approx(1.3)
