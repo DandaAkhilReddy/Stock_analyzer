@@ -30,6 +30,9 @@ export interface NewsItem {
   title: string;
   source: string | null;
   sentiment: Sentiment | null;
+  url: string | null;
+  published_date: string | null;
+  image_url: string | null;
 }
 
 export interface QuarterlyEarning {

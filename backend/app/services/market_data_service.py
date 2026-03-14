@@ -70,6 +70,27 @@ def _safe_float(value: object) -> float | None:
         return None
 
 
+def _date_to_quarter(date_str: str) -> str:
+    """Convert FMP date string to quarter label: '2025-03-31' → 'Q1 2025'."""
+    try:
+        month = int(date_str.split("-")[1])
+        year = date_str.split("-")[0]
+        quarter = (month - 1) // 3 + 1
+        return f"Q{quarter} {year}"
+    except (IndexError, ValueError):
+        return date_str
+
+
+def _classify_sentiment(raw: str) -> str:
+    """Normalize FMP sentiment to our enum."""
+    raw_lower = (raw or "").lower().strip()
+    if raw_lower in ("positive", "bullish"):
+        return "positive"
+    if raw_lower in ("negative", "bearish"):
+        return "negative"
+    return "neutral"
+
+
 def _safe_int(value: object) -> int | None:
     """Return int if value is a valid number, else None."""
     if value is None:
@@ -341,6 +362,99 @@ class MarketDataService:
 
         logger.info("fmp_technicals_complete", ticker=ticker)
         return snapshot
+
+    async def get_income_statement(
+        self, ticker: str, limit: int = 8
+    ) -> list[dict]:
+        """Fetch quarterly income statement data from FMP.
+
+        Args:
+            ticker: Stock ticker symbol (e.g. "AAPL").
+            limit: Number of quarters to fetch from FMP (default 8, to allow
+                   YoY comparison).
+
+        Returns:
+            List of dicts with: quarter, revenue, net_income, eps,
+            yoy_revenue_growth — most recent first, capped to 4 entries.
+
+        Raises:
+            ExternalAPIError: If FMP API is unreachable.
+        """
+        logger.info("fmp_income_statement_start", ticker=ticker)
+        url = f"{_FMP_BASE}/income-statement"
+        data = await self._get_json(
+            url, self._params(symbol=ticker, period="quarter", limit=limit)
+        )
+        rows = data if isinstance(data, list) else []
+
+        result: list[dict] = []
+        for i, item in enumerate(rows):
+            date_str = item.get("date", "")
+            quarter_label = _date_to_quarter(date_str)
+
+            revenue = item.get("revenue")
+            net_income = item.get("netIncome")
+            eps_val = item.get("eps")
+
+            # YoY: compare with same quarter last year (4 entries back)
+            yoy: float | None = None
+            if i + 4 < len(rows) and revenue and rows[i + 4].get("revenue"):
+                prev_rev = rows[i + 4]["revenue"]
+                if prev_rev != 0:
+                    yoy = round((revenue - prev_rev) / abs(prev_rev), 4)
+
+            result.append({
+                "quarter": quarter_label,
+                "revenue": round(revenue / 1_000_000, 1) if revenue else None,
+                "net_income": (
+                    round(net_income / 1_000_000, 1) if net_income else None
+                ),
+                "eps": round(eps_val, 2) if eps_val is not None else None,
+                "yoy_revenue_growth": yoy,
+            })
+
+        logger.info(
+            "fmp_income_statement_complete", ticker=ticker, quarters=len(result[:4])
+        )
+        return result[:4]
+
+    async def get_stock_news(self, ticker: str, limit: int = 15) -> list[dict]:
+        """Fetch real stock news from FMP.
+
+        Args:
+            ticker: Stock ticker symbol (e.g. "AAPL").
+            limit: Maximum number of articles to return.
+
+        Returns:
+            List of dicts with: title, source, sentiment, url,
+            published_date, image_url.
+
+        Raises:
+            ExternalAPIError: If FMP API is unreachable.
+        """
+        logger.info("fmp_news_start", ticker=ticker)
+        url = f"{_FMP_BASE}/stock_news"
+        data = await self._get_json(
+            url, self._params(tickers=ticker, limit=limit)
+        )
+        rows = data if isinstance(data, list) else []
+
+        result: list[dict] = []
+        for item in rows:
+            title = item.get("title", "")
+            if not title:
+                continue
+            result.append({
+                "title": title,
+                "source": item.get("site") or item.get("source"),
+                "sentiment": _classify_sentiment(item.get("sentiment", "")),
+                "url": item.get("url"),
+                "published_date": item.get("publishedDate"),
+                "image_url": item.get("image"),
+            })
+
+        logger.info("fmp_news_complete", ticker=ticker, articles=len(result))
+        return result
 
     # ------------------------------------------------------------------
     # Internal helpers

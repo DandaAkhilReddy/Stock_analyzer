@@ -28,11 +28,14 @@ class TechnicalSnapshot(BaseModel):
 
 
 class NewsItem(BaseModel):
-    """A single news headline from AI analysis."""
+    """A single news headline."""
 
     title: str
     source: str | None = None
     sentiment: Literal["positive", "negative", "neutral"] | None = None
+    url: str | None = None
+    published_date: str | None = None
+    image_url: str | None = None
 
 
 class QuarterlyEarning(BaseModel):

@@ -169,6 +169,9 @@ def mock_market() -> AsyncMock:
     )
     market.get_historical = AsyncMock(return_value=list(_MOCK_HISTORY))
     market.get_technicals = AsyncMock(return_value=_MOCK_TECHNICALS)
+    # Return empty lists so AI-generated news/earnings are used in most tests
+    market.get_stock_news = AsyncMock(return_value=[])
+    market.get_income_statement = AsyncMock(return_value=[])
     return market
 
 
