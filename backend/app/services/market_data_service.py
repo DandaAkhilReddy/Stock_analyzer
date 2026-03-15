@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import math
 import random
 import time
+from typing import Any
 
 import httpx
 
@@ -20,8 +23,12 @@ _TIMEOUT = 30.0
 _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 1.0  # seconds
 _RETRY_MAX_DELAY = 10.0  # seconds
-_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_RETRYABLE_STATUS_CODES = {500, 502, 503, 504}  # 429 = daily quota, not transient
 _SP500_CACHE_TTL = 86_400  # 24 hours in seconds
+_RESPONSE_CACHE_TTL = 300  # 5 minutes — reduces FMP API call volume
+
+# In-memory response cache: cache_key → (expiry_timestamp, response_data)
+_response_cache: dict[str, tuple[float, Any]] = {}
 
 # Local mapping for common company names → ticker symbols.
 # Avoids hitting FMP's premium /search-name endpoint for well-known names.
@@ -160,11 +167,21 @@ class MarketDataService:
         """Build query params with API key."""
         return {"apikey": self._api_key, **extra}
 
+    @staticmethod
+    def _cache_key(url: str, params: dict[str, object]) -> str:
+        """Build a deterministic cache key from URL + params (excluding apikey)."""
+        filtered = {k: v for k, v in sorted(params.items()) if k != "apikey"}
+        raw = f"{url}|{json.dumps(filtered, sort_keys=True, default=str)}"
+        return hashlib.sha256(raw.encode()).hexdigest()
+
     async def _get_json(self, url: str, params: dict[str, object]) -> list | dict:
-        """Make an authenticated GET request to FMP with retry + backoff.
+        """Make an authenticated GET request to FMP with caching + retry.
+
+        Responses are cached in-memory for ``_RESPONSE_CACHE_TTL`` seconds
+        to minimise FMP API call volume (free tier = 250 calls/day).
 
         Retries up to ``_MAX_RETRIES`` times on transient failures (timeouts,
-        5xx, 429).  Non-retryable errors (4xx except 429) fail immediately.
+        5xx).  Non-retryable errors (4xx) fail immediately.
 
         Args:
             url: Full FMP API URL.
@@ -177,6 +194,17 @@ class MarketDataService:
             ExternalAPIError: After all retries are exhausted or on
                 non-retryable HTTP errors.
         """
+        key = self._cache_key(url, params)
+        now = time.time()
+
+        # Return cached response if still valid
+        cached = _response_cache.get(key)
+        if cached is not None:
+            expiry, data = cached
+            if now < expiry:
+                logger.debug("fmp_cache_hit", url=url)
+                return data
+
         last_exc: Exception | None = None
 
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
@@ -184,7 +212,9 @@ class MarketDataService:
                 try:
                     resp = await client.get(url, params=params)
                     resp.raise_for_status()
-                    return resp.json()
+                    result = resp.json()
+                    _response_cache[key] = (now + _RESPONSE_CACHE_TTL, result)
+                    return result
                 except httpx.TimeoutException as exc:
                     last_exc = ExternalAPIError(
                         "FMP API", f"Request timed out: {url}"

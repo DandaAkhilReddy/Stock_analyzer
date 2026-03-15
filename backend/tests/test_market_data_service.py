@@ -708,6 +708,47 @@ class TestGetJson:
                     "https://example.com", {"apikey": "test"}
                 )
 
+    @pytest.mark.asyncio
+    async def test_cache_returns_same_result_without_second_http_call(self) -> None:
+        """Second call with same URL+params should return cached data."""
+        service = MarketDataService()
+        mock_resp = _mock_response([{"symbol": "AAPL"}])
+        mock_client = AsyncMock()
+        mock_client.get.return_value = mock_resp
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        url = "https://example.com/quote/AAPL"
+        params: dict[str, object] = {"apikey": "test"}
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result1 = await service._get_json(url, params)
+            result2 = await service._get_json(url, params)
+
+        assert result1 == result2 == [{"symbol": "AAPL"}]
+        assert mock_client.get.call_count == 1  # only 1 HTTP call
+
+    @pytest.mark.asyncio
+    async def test_cache_miss_on_different_url(self) -> None:
+        """Different URLs should not share cache entries."""
+        service = MarketDataService()
+        resp1 = _mock_response([{"symbol": "AAPL"}])
+        resp2 = _mock_response([{"symbol": "MSFT"}])
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = [resp1, resp2]
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        params: dict[str, object] = {"apikey": "test"}
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            r1 = await service._get_json("https://example.com/a", params)
+            r2 = await service._get_json("https://example.com/b", params)
+
+        assert r1 == [{"symbol": "AAPL"}]
+        assert r2 == [{"symbol": "MSFT"}]
+        assert mock_client.get.call_count == 2
+
 
 # ---------------------------------------------------------------------------
 # MarketDataService._fetch_quote_and_profile
@@ -1804,18 +1845,17 @@ class TestGetJsonRetry:
         assert mock_client.get.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_retries_on_429_and_succeeds_on_second_attempt(self) -> None:
+    async def test_fails_immediately_on_429_no_retry(self) -> None:
+        """429 = daily quota limit, not transient — should not retry."""
         service = MarketDataService()
-        bad_resp = _make_http_status_response(429, b"rate limited")
-        good_resp = _mock_response([{"symbol": "TSLA"}])
-        mock_client = _make_async_client_mock([bad_resp, good_resp])
+        bad_resp = _make_http_status_response(429, b"Limit Reach")
+        mock_client = _make_async_client_mock([bad_resp])
 
         with patch("httpx.AsyncClient", return_value=mock_client), \
-             patch("asyncio.sleep"), \
-             patch("random.uniform", return_value=0.0):
-            result = await service._get_json("https://example.com", {"apikey": "k"})
+             pytest.raises(ExternalAPIError, match="429"):
+            await service._get_json("https://example.com", {"apikey": "k"})
 
-        assert result == [{"symbol": "TSLA"}]
+        assert mock_client.get.call_count == 1
 
     @pytest.mark.asyncio
     async def test_retries_on_500_and_succeeds_on_second_attempt(self) -> None:
