@@ -456,36 +456,36 @@ _MOCK_RESPONSE_WITH_FINANCIERS = _MOCK_RESPONSE.model_copy(
         "financier_analysis": {
             "perspectives": [
                 {
-                    "name": "Warren Buffett",
-                    "framework": "value investing",
+                    "name": "Value Analysis",
+                    "framework": "Intrinsic Value & Moat Assessment",
                     "verdict": "buy",
                     "reasoning": "Wide economic moat and strong free cash flow.",
                     "key_metrics_evaluated": ["ROE", "moat", "FCF"],
                 },
                 {
-                    "name": "Peter Lynch",
-                    "framework": "growth at reasonable price",
+                    "name": "Growth Analysis",
+                    "framework": "Growth at Reasonable Price",
                     "verdict": "hold",
                     "reasoning": "PEG ratio slightly elevated at current price.",
                     "key_metrics_evaluated": ["PEG", "revenue_growth"],
                 },
                 {
-                    "name": "Benjamin Graham",
-                    "framework": "margin of safety",
+                    "name": "Safety Analysis",
+                    "framework": "Margin of Safety",
                     "verdict": "hold",
                     "reasoning": "Current price offers limited margin of safety.",
                     "key_metrics_evaluated": ["P/B", "debt_ratio", "earnings_stability"],
                 },
                 {
-                    "name": "Ray Dalio",
-                    "framework": "macro risk parity",
+                    "name": "Macro Analysis",
+                    "framework": "Macroeconomic & Sector Positioning",
                     "verdict": "hold",
                     "reasoning": "Macro headwinds from rate environment offset growth.",
                     "key_metrics_evaluated": ["macro_risk", "correlation"],
                 },
                 {
-                    "name": "Cathie Wood",
-                    "framework": "disruptive innovation",
+                    "name": "Innovation Analysis",
+                    "framework": "Disruptive Innovation Assessment",
                     "verdict": "buy",
                     "reasoning": "AI integration positions Apple on the S-curve.",
                     "key_metrics_evaluated": ["innovation_index", "TAM"],
@@ -503,36 +503,36 @@ _MOCK_RESPONSE_WITH_FINANCIERS = _MOCK_RESPONSE.model_copy(
         "financier_analysis": FinancierAnalysis(
             perspectives=[
                 FinancierVerdict(
-                    name="Warren Buffett",
-                    framework="value investing",
+                    name="Value Analysis",
+                    framework="Intrinsic Value & Moat Assessment",
                     verdict="buy",
                     reasoning="Wide economic moat and strong free cash flow.",
                     key_metrics_evaluated=["ROE", "moat", "FCF"],
                 ),
                 FinancierVerdict(
-                    name="Peter Lynch",
-                    framework="growth at reasonable price",
+                    name="Growth Analysis",
+                    framework="Growth at Reasonable Price",
                     verdict="hold",
                     reasoning="PEG ratio slightly elevated at current price.",
                     key_metrics_evaluated=["PEG", "revenue_growth"],
                 ),
                 FinancierVerdict(
-                    name="Benjamin Graham",
-                    framework="margin of safety",
+                    name="Safety Analysis",
+                    framework="Margin of Safety",
                     verdict="hold",
                     reasoning="Current price offers limited margin of safety.",
                     key_metrics_evaluated=["P/B", "debt_ratio", "earnings_stability"],
                 ),
                 FinancierVerdict(
-                    name="Ray Dalio",
-                    framework="macro risk parity",
+                    name="Macro Analysis",
+                    framework="Macroeconomic & Sector Positioning",
                     verdict="hold",
                     reasoning="Macro headwinds from rate environment offset growth.",
                     key_metrics_evaluated=["macro_risk", "correlation"],
                 ),
                 FinancierVerdict(
-                    name="Cathie Wood",
-                    framework="disruptive innovation",
+                    name="Innovation Analysis",
+                    framework="Disruptive Innovation Assessment",
                     verdict="buy",
                     reasoning="AI integration positions Apple on the S-curve.",
                     key_metrics_evaluated=["innovation_index", "TAM"],
@@ -656,16 +656,16 @@ class TestAnalyzeStockFinancierAnalysis:
         assert isinstance(fa["consensus_reasoning"], str)
 
     @pytest.mark.asyncio
-    async def test_financier_buffett_perspective_name(
+    async def test_financier_first_perspective_name(
         self, client: AsyncClient
     ) -> None:
-        """The first perspective must identify Warren Buffett as the financier."""
+        """The first perspective must identify the Value Analysis framework."""
         with patch(_PATCH_TARGET, new_callable=AsyncMock) as mock_analyze:
             mock_analyze.return_value = _MOCK_RESPONSE_WITH_FINANCIERS
             response = await client.post("/api/analyze/GOOGL")
 
         first = response.json()["financier_analysis"]["perspectives"][0]
-        assert first["name"] == "Warren Buffett"
+        assert first["name"] == "Value Analysis"
 
     @pytest.mark.asyncio
     async def test_financier_key_metrics_evaluated_is_list(

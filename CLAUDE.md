@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-AI-powered stock analysis platform with real-time Financial Modeling Prep (FMP) market data, Kimi K2.5 qualitative analysis, and multi-framework legendary investor predictions (Buffett, Lynch, Graham, Dalio, Cathie Wood).
+AI-powered stock analysis platform with real-time Financial Modeling Prep (FMP) market data, Kimi K2.5 qualitative analysis, and multi-framework institutional investment analysis (Value, Growth, Safety, Macro, Innovation).
 
 ## Architecture
 
@@ -35,13 +35,13 @@ backend/           Python FastAPI + Pydantic v2 + FMP API + Azure OpenAI (Kimi K
 
 ### Financier Analysis
 
-AI analyzes each stock through 5 legendary investor frameworks:
+AI analyzes each stock through 5 institutional investment frameworks:
 
-- Warren Buffett (value investing, moat, ROE)
-- Peter Lynch (PEG ratio, growth at reasonable price)
-- Benjamin Graham (margin of safety, intrinsic value)
-- Ray Dalio (macro risk parity, all-weather)
-- Cathie Wood (disruptive innovation, S-curves)
+- Value Analysis (intrinsic value, economic moat, ROE, owner earnings)
+- Growth Analysis (PEG ratio, earnings growth, revenue acceleration)
+- Safety Analysis (margin of safety, book value, current ratio, debt levels)
+- Macro Analysis (macroeconomic positioning, sector cycles, risk parity)
+- Innovation Analysis (disruptive potential, TAM expansion, technology S-curves)
 
 Each gives a buy/hold/sell verdict with reasoning. Consensus synthesizes all perspectives.
 

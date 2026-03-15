@@ -833,14 +833,14 @@ describe('StockAnalysis', () => {
   const mockFinancierAnalysis = {
     perspectives: [
       {
-        name: 'Warren Buffett',
-        framework: 'Value Investing',
+        name: 'Value Analysis',
+        framework: 'Intrinsic Value & Moat Assessment',
         verdict: 'buy' as const,
         reasoning: 'Wide economic moat and consistent earnings growth.',
         key_metrics_evaluated: ['ROE', 'FCF Yield'],
       },
       {
-        name: 'Peter Lynch',
+        name: 'Growth Analysis',
         framework: 'Growth at Reasonable Price',
         verdict: 'hold' as const,
         reasoning: 'PEG ratio slightly elevated.',
@@ -864,9 +864,9 @@ describe('StockAnalysis', () => {
       }),
     );
 
-    it('renders the Legendary Investor Analysis heading', () => {
+    it('renders the Investment Framework Analysis heading', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
+      expect(screen.getByText('Investment Framework Analysis')).toBeInTheDocument();
     });
 
     it('renders the consensus verdict badge', () => {
@@ -874,10 +874,10 @@ describe('StockAnalysis', () => {
       expect(screen.getByText('Consensus: BUY')).toBeInTheDocument();
     });
 
-    it('renders each financier perspective card by name', () => {
+    it('renders each framework perspective card by name', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
-      expect(screen.getByText('Peter Lynch')).toBeInTheDocument();
+      expect(screen.getByText('Value Analysis')).toBeInTheDocument();
+      expect(screen.getByText('Growth Analysis')).toBeInTheDocument();
     });
 
     it('renders perspective reasoning text', () => {
@@ -938,9 +938,9 @@ describe('StockAnalysis', () => {
       expect(screen.getByText('BUY FOR LONG TERM')).toBeInTheDocument();
     });
 
-    it('renders FinancierInsights (Legendary Investor Analysis heading)', () => {
+    it('renders FinancierInsights (Investment Framework Analysis heading)', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
+      expect(screen.getByText('Investment Framework Analysis')).toBeInTheDocument();
     });
 
     it('does NOT render the "not available" fallback when both are present', () => {
@@ -983,7 +983,7 @@ describe('StockAnalysis', () => {
 
     it('does not render FinancierInsights content', () => {
       render(<StockAnalysis />);
-      expect(screen.queryByText('Legendary Investor Analysis')).not.toBeInTheDocument();
+      expect(screen.queryByText('Investment Framework Analysis')).not.toBeInTheDocument();
     });
   });
 

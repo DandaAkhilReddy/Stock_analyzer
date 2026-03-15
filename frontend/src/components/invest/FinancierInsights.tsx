@@ -15,19 +15,19 @@ const verdictStyles: Record<FinancierVerdict, { bg: string; text: string; label:
 };
 
 const financierIcons: Record<string, typeof TrendingUp> = {
-  'Warren Buffett': TrendingUp,
-  'Peter Lynch': Target,
-  'Benjamin Graham': Shield,
-  'Ray Dalio': Lightbulb,
-  'Cathie Wood': BookOpen,
+  'Value Analysis': TrendingUp,
+  'Growth Analysis': Target,
+  'Safety Analysis': Shield,
+  'Macro Analysis': Lightbulb,
+  'Innovation Analysis': BookOpen,
 };
 
 const financierGradients: Record<string, string> = {
-  'Warren Buffett': 'from-emerald-500 to-emerald-600',
-  'Peter Lynch': 'from-blue-500 to-cyan-500',
-  'Benjamin Graham': 'from-slate-500 to-zinc-600',
-  'Ray Dalio': 'from-violet-500 to-purple-600',
-  'Cathie Wood': 'from-rose-500 to-pink-500',
+  'Value Analysis': 'from-emerald-500 to-emerald-600',
+  'Growth Analysis': 'from-blue-500 to-cyan-500',
+  'Safety Analysis': 'from-slate-500 to-zinc-600',
+  'Macro Analysis': 'from-violet-500 to-purple-600',
+  'Innovation Analysis': 'from-rose-500 to-pink-500',
 };
 
 const tagContainerVariants = {
@@ -146,7 +146,7 @@ export function FinancierInsights({ analysis, ticker }: FinancierInsightsProps) 
       <Card>
         <div className="flex items-center gap-2 mb-4">
           <Users size={16} className="text-indigo-500" />
-          <h4 className="text-sm font-medium text-stone-500">Legendary Investor Analysis</h4>
+          <h4 className="text-sm font-medium text-stone-500">Investment Framework Analysis</h4>
           <span className={`ml-auto text-xs font-bold px-2.5 py-1 rounded-full border ${consensusStyle.bg} ${consensusStyle.text}`}>
             Consensus: {consensusStyle.label}
           </span>

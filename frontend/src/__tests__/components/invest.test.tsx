@@ -1031,8 +1031,8 @@ import type { FinancierAnalysis, FinancierPerspective } from '../../types/analys
 const makePerspective = (
   overrides: Partial<FinancierPerspective> = {},
 ): FinancierPerspective => ({
-  name: 'Warren Buffett',
-  framework: 'Value Investing',
+  name: 'Value Analysis',
+  framework: 'Intrinsic Value & Moat Assessment',
   verdict: 'buy',
   reasoning: 'Strong moat and consistent cash flows.',
   key_metrics_evaluated: ['ROE', 'P/E ratio'],
@@ -1041,11 +1041,11 @@ const makePerspective = (
 
 const baseFinancierAnalysis: FinancierAnalysis = {
   perspectives: [
-    makePerspective({ name: 'Warren Buffett', verdict: 'buy' }),
-    makePerspective({ name: 'Peter Lynch', framework: 'Growth at Reasonable Price', verdict: 'buy' }),
-    makePerspective({ name: 'Benjamin Graham', framework: 'Deep Value', verdict: 'hold' }),
-    makePerspective({ name: 'Ray Dalio', framework: 'Risk Parity', verdict: 'hold' }),
-    makePerspective({ name: 'Cathie Wood', framework: 'Disruptive Innovation', verdict: 'sell' }),
+    makePerspective({ name: 'Value Analysis', verdict: 'buy' }),
+    makePerspective({ name: 'Growth Analysis', framework: 'Growth at Reasonable Price', verdict: 'buy' }),
+    makePerspective({ name: 'Safety Analysis', framework: 'Margin of Safety', verdict: 'hold' }),
+    makePerspective({ name: 'Macro Analysis', framework: 'Macroeconomic & Sector Positioning', verdict: 'hold' }),
+    makePerspective({ name: 'Innovation Analysis', framework: 'Disruptive Innovation Assessment', verdict: 'sell' }),
   ],
   consensus_verdict: 'hold',
   consensus_reasoning: 'Mixed signals across frameworks suggest a cautious hold.',
@@ -1072,9 +1072,9 @@ describe('FinancierInsights — Empty perspectives', () => {
 // ===========================================================================
 
 describe('FinancierInsights — Header and consensus', () => {
-  it('renders the "Legendary Investor Analysis" heading', () => {
+  it('renders the "Investment Framework Analysis" heading', () => {
     render(<FinancierInsights analysis={baseFinancierAnalysis} ticker="AAPL" />);
-    expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Investment Framework Analysis')).toBeInTheDocument();
   });
 
   it('renders the consensus verdict badge', () => {
@@ -1117,13 +1117,13 @@ describe('FinancierInsights — Header and consensus', () => {
 describe('FinancierInsights — Perspective cards', () => {
   it('renders exactly one card when there is a single perspective', () => {
     const singleAnalysis: FinancierAnalysis = {
-      perspectives: [makePerspective({ name: 'Warren Buffett', verdict: 'buy' })],
+      perspectives: [makePerspective({ name: 'Value Analysis', verdict: 'buy' })],
       consensus_verdict: 'buy',
       consensus_reasoning: 'Only one voice but a strong one.',
     };
     render(<FinancierInsights analysis={singleAnalysis} ticker="AAPL" />);
-    expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
-    expect(screen.getByText('Value Investing')).toBeInTheDocument();
+    expect(screen.getByText('Value Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Intrinsic Value & Moat Assessment')).toBeInTheDocument();
     expect(screen.getByText('Strong moat and consistent cash flows.')).toBeInTheDocument();
   });
 
@@ -1210,19 +1210,19 @@ describe('FinancierInsights — Perspective cards', () => {
     );
     // No pill-like spans with metric text should appear for the empty array case.
     // We verify the cards section is present but no metric text renders.
-    expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
+    expect(screen.getByText('Value Analysis')).toBeInTheDocument();
     // The metric container is conditionally rendered; query for a known absent metric.
     expect(screen.queryByText('P/E')).not.toBeInTheDocument();
     expect(screen.queryByText('ROE')).not.toBeInTheDocument();
   });
 
-  it('renders all five perspective cards for full financier set', () => {
+  it('renders all five perspective cards for full framework set', () => {
     render(<FinancierInsights analysis={baseFinancierAnalysis} ticker="AAPL" />);
-    expect(screen.getByText('Warren Buffett')).toBeInTheDocument();
-    expect(screen.getByText('Peter Lynch')).toBeInTheDocument();
-    expect(screen.getByText('Benjamin Graham')).toBeInTheDocument();
-    expect(screen.getByText('Ray Dalio')).toBeInTheDocument();
-    expect(screen.getByText('Cathie Wood')).toBeInTheDocument();
+    expect(screen.getByText('Value Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Growth Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Safety Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Macro Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Innovation Analysis')).toBeInTheDocument();
   });
 });
 
@@ -1234,9 +1234,9 @@ describe('FinancierInsights — ConsensusBar', () => {
   it('renders only the green segment when all perspectives are buy', () => {
     const allBuy: FinancierAnalysis = {
       perspectives: [
-        makePerspective({ name: 'Warren Buffett', verdict: 'buy' }),
-        makePerspective({ name: 'Peter Lynch', verdict: 'buy' }),
-        makePerspective({ name: 'Benjamin Graham', verdict: 'buy' }),
+        makePerspective({ name: 'Value Analysis', verdict: 'buy' }),
+        makePerspective({ name: 'Growth Analysis', verdict: 'buy' }),
+        makePerspective({ name: 'Safety Analysis', verdict: 'buy' }),
       ],
       consensus_verdict: 'buy',
       consensus_reasoning: 'Unanimous buy.',
@@ -1255,9 +1255,9 @@ describe('FinancierInsights — ConsensusBar', () => {
   it('renders only the red segment when all perspectives are sell', () => {
     const allSell: FinancierAnalysis = {
       perspectives: [
-        makePerspective({ name: 'Warren Buffett', verdict: 'sell' }),
-        makePerspective({ name: 'Peter Lynch', verdict: 'sell' }),
-        makePerspective({ name: 'Benjamin Graham', verdict: 'sell' }),
+        makePerspective({ name: 'Value Analysis', verdict: 'sell' }),
+        makePerspective({ name: 'Growth Analysis', verdict: 'sell' }),
+        makePerspective({ name: 'Safety Analysis', verdict: 'sell' }),
       ],
       consensus_verdict: 'sell',
       consensus_reasoning: 'Unanimous sell.',
@@ -1288,9 +1288,9 @@ describe('FinancierInsights — ConsensusBar', () => {
     // 3 perspectives: 2 buy (66.67%), 1 hold (33.33%), 0 sell
     const twoOneZero: FinancierAnalysis = {
       perspectives: [
-        makePerspective({ name: 'Warren Buffett', verdict: 'buy' }),
-        makePerspective({ name: 'Peter Lynch', verdict: 'buy' }),
-        makePerspective({ name: 'Benjamin Graham', verdict: 'hold' }),
+        makePerspective({ name: 'Value Analysis', verdict: 'buy' }),
+        makePerspective({ name: 'Growth Analysis', verdict: 'buy' }),
+        makePerspective({ name: 'Safety Analysis', verdict: 'hold' }),
       ],
       consensus_verdict: 'buy',
       consensus_reasoning: '',
@@ -1370,8 +1370,8 @@ describe('FinancierInsights — PerspectiveCard unknown verdict fallback (line 6
         analysis={{
           perspectives: [
             {
-              name: 'Warren Buffett',
-              framework: 'Value Investing',
+              name: 'Value Analysis',
+              framework: 'Intrinsic Value & Moat Assessment',
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               verdict: 'unknown_verdict' as any,
               reasoning: 'Unusual signal.',
@@ -1401,8 +1401,8 @@ describe('FinancierInsights — consensusStyle fallback for unknown verdict (lin
         analysis={{
           perspectives: [
             {
-              name: 'Warren Buffett',
-              framework: 'Value Investing',
+              name: 'Value Analysis',
+              framework: 'Intrinsic Value & Moat Assessment',
               verdict: 'buy',
               reasoning: 'Strong moat.',
               key_metrics_evaluated: [],
@@ -1428,8 +1428,8 @@ describe('FinancierInsights — consensusStyle fallback for unknown verdict (lin
         analysis={{
           perspectives: [
             {
-              name: 'Peter Lynch',
-              framework: 'Growth',
+              name: 'Growth Analysis',
+              framework: 'Growth at Reasonable Price',
               verdict: 'sell',
               reasoning: 'Overvalued.',
               key_metrics_evaluated: ['PEG'],
@@ -1443,7 +1443,7 @@ describe('FinancierInsights — consensusStyle fallback for unknown verdict (lin
       />,
     );
     // Header and perspective card must still render
-    expect(screen.getByText('Legendary Investor Analysis')).toBeInTheDocument();
-    expect(screen.getByText('Peter Lynch')).toBeInTheDocument();
+    expect(screen.getByText('Investment Framework Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Growth Analysis')).toBeInTheDocument();
   });
 });
