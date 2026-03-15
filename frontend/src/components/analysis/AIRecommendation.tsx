@@ -34,6 +34,7 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
   const Icon = config.icon;
   const confidencePct = (analysis.confidence_score * 100).toFixed(0);
   const stripGradient = topStripGradient[analysis.recommendation];
+  const confidenceWidth = `${analysis.confidence_score * 100}%`;
 
   return (
     <motion.div
@@ -48,10 +49,14 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
 
         <Card className="rounded-t-none">
           <div className="flex items-center gap-2 mb-4">
-            {/* Pulse-glow wrapper around Brain icon */}
-            <span className="animate-pulse-glow rounded-full p-0.5">
+            {/* Animated pulse wrapper around Brain icon */}
+            <motion.span
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="rounded-full p-0.5"
+            >
               <Brain size={18} className="text-indigo-600" />
-            </span>
+            </motion.span>
             <h3 className="text-sm font-medium text-stone-500">AI Recommendation</h3>
             <span className="text-[10px] text-stone-400 ml-auto">
               Powered by {analysis.model_used}
@@ -59,18 +64,27 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
           </div>
 
           <div className="flex items-center gap-4 mb-4">
-            <Badge variant={analysis.recommendation} size="lg">
-              <Icon size={16} className="mr-1" />
-              <span className="text-2xl font-bold leading-none">{config.label}</span>
-            </Badge>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.2 }}
+            >
+              <Badge variant={analysis.recommendation} size="lg">
+                <Icon size={16} className="mr-1" />
+                <span className="text-2xl font-bold leading-none">{config.label}</span>
+              </Badge>
+            </motion.div>
 
             <div>
               <p className="text-xs text-stone-500">Confidence</p>
               <div className="flex items-center gap-2">
                 <div className="w-40 h-2.5 bg-stone-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-indigo-500 rounded-full transition-all"
-                    style={{ width: `${analysis.confidence_score * 100}%` }}
+                  <motion.div
+                    className="h-full bg-indigo-500 rounded-full"
+                    style={{ width: confidenceWidth }}
+                    initial={{ width: 0 }}
+                    animate={{ width: confidenceWidth }}
+                    transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
                   />
                 </div>
                 <span className="text-sm font-medium text-stone-900">{confidencePct}%</span>
@@ -80,9 +94,15 @@ export function AIRecommendation({ analysis }: AIRecommendationProps) {
 
           <p className="text-sm text-stone-600 leading-relaxed">{analysis.summary}</p>
 
-          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded mt-4">
+          <motion.p
+            className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded mt-4"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+          >
             {analysis.disclaimer}
-          </p>
+          </motion.p>
         </Card>
       </div>
     </motion.div>

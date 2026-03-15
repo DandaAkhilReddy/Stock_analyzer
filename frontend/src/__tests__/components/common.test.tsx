@@ -5,12 +5,14 @@
  * jest-dom matchers are available via the setup file (src/test/setup.ts).
  */
 
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 
 vi.mock('framer-motion', () => {
   const createMotionComponent = (tag: string) => {
-    const Component = ({ children, ...props }: any) => {
+    // Use forwardRef so that ref={ref} in Card reaches the real DOM element
+    const Component = React.forwardRef(({ children, ...props }: any, ref: any) => {
       const Tag = tag as any;
       // Filter out framer-motion specific props that aren't valid HTML
       const { style, className, ...rest } = props;
@@ -22,8 +24,9 @@ vi.mock('framer-motion', () => {
           }
         }
       }
-      return <Tag style={style} className={className} {...htmlProps}>{children}</Tag>;
-    };
+      return <Tag ref={ref} style={style} className={className} {...htmlProps}>{children}</Tag>;
+    });
+    Component.displayName = `motion.${tag}`;
     return Component;
   };
   return {
@@ -100,6 +103,32 @@ describe('Card', () => {
       fireEvent.mouseMove(div, { clientX: 200, clientY: 100 });
       fireEvent.mouseLeave(div);
     }).not.toThrow();
+  });
+
+  it('takes the early-return path when getBoundingClientRect returns null (rect is falsy)', () => {
+    // With forwardRef mock, ref.current is set. Return null from getBoundingClientRect
+    // to exercise the `if (!rect) return` early-exit branch.
+    const { container } = render(<Card>content</Card>);
+    const div = container.firstElementChild as HTMLElement;
+    div.getBoundingClientRect = vi.fn().mockReturnValue(null as unknown as DOMRect);
+    // Should return early without throwing
+    expect(() => fireEvent.mouseMove(div, { clientX: 100, clientY: 50 })).not.toThrow();
+    expect(div.getBoundingClientRect).toHaveBeenCalled();
+  });
+
+  it('executes x.set / y.set when ref is forwarded and getBoundingClientRect returns a real rect', () => {
+    // With forwardRef mock, ref.current is set. Return a real rect to exercise
+    // the non-early-return path (rect is truthy → x.set / y.set are called).
+    const { container } = render(<Card>content</Card>);
+    const div = container.firstElementChild as HTMLElement;
+    div.getBoundingClientRect = vi.fn().mockReturnValue({
+      left: 10,
+      top: 10,
+      width: 200,
+      height: 100,
+    } as DOMRect);
+    expect(() => fireEvent.mouseMove(div, { clientX: 110, clientY: 60 })).not.toThrow();
+    expect(div.getBoundingClientRect).toHaveBeenCalled();
   });
 
   it('wraps card in gradient div when gradient={true}', () => {

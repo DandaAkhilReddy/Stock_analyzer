@@ -77,34 +77,40 @@ export function HeroSearchBar() {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="flex items-center bg-white/80 backdrop-blur-xl border border-stone-200/60 rounded-2xl px-5 py-4 shadow-2xl shadow-indigo-500/10 animate-pulse-glow focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:shadow-xl focus-within:shadow-indigo-500/20 transition-all duration-300">
-        <Search size={22} className="text-indigo-500 shrink-0" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Search any stock — AAPL, TSLA, MSFT..."
-          className="bg-transparent border-none outline-none text-stone-900 placeholder:text-stone-400 ml-3 w-full text-lg"
-          autoFocus
-        />
-        {isLoading || isSearching ? (
-          <Loader2 size={20} className="text-indigo-500 animate-spin shrink-0" />
-        ) : (
-          <kbd className="hidden sm:inline-flex items-center text-xs text-stone-400 border border-stone-200 rounded-md px-2 py-1 font-mono shrink-0">
-            Enter ↵
-          </kbd>
-        )}
+      {/* Animated gradient border wrapper */}
+      <div className="glow-border-lg">
+        <div className="flex items-center bg-white/90 backdrop-blur-2xl rounded-2xl px-5 py-4 shadow-2xl shadow-indigo-500/10 shimmer-sweep focus-within:shadow-xl focus-within:shadow-indigo-500/20 transition-all duration-300">
+          <Search size={22} className="text-indigo-500 shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Search any stock — AAPL, TSLA, MSFT..."
+            className="bg-transparent border-none outline-none text-stone-900 placeholder:text-stone-400 ml-3 w-full text-lg"
+            autoFocus
+          />
+          {isLoading || isSearching ? (
+            <Loader2 size={20} className="text-indigo-500 animate-spin shrink-0" />
+          ) : (
+            <kbd className="hidden sm:inline-flex items-center text-xs text-stone-400 border border-stone-200 rounded-md px-2 py-1 font-mono shrink-0">
+              Enter ↵
+            </kbd>
+          )}
+        </div>
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div
+        <motion.div
           ref={dropdownRef}
-          className="absolute z-50 mt-2 w-full bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-xl shadow-2xl shadow-indigo-500/10 overflow-hidden"
+          className="absolute z-50 mt-2 w-full glass-strong rounded-xl shadow-2xl shadow-indigo-500/10 overflow-hidden"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
         >
           {suggestions.map((item, i) => (
-            <button
+            <motion.button
               key={item.symbol}
               type="button"
               className={`w-full text-left px-5 py-3 flex items-center justify-between transition-colors ${
@@ -114,24 +120,27 @@ export function HeroSearchBar() {
               }`}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => selectSuggestion(i)}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.04, duration: 0.2 }}
             >
               <span className="truncate text-sm">{item.name}</span>
               <span className="ml-3 font-mono text-xs font-bold text-indigo-500/70 shrink-0">
                 {item.symbol}
               </span>
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       )}
 
       <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
         {FEATURE_PILLS.map((pill, i) => (
           <motion.div
             key={pill.label}
-            className="flex items-center gap-1.5 bg-white/50 backdrop-blur-sm border border-stone-200/50 rounded-full px-3 py-1.5 text-xs text-stone-500"
+            className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-stone-500 hover:scale-105 hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-200 cursor-default"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.5 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.4, delay: 0.6 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
             <span className="text-indigo-400">{pill.icon}</span>
             {pill.label}

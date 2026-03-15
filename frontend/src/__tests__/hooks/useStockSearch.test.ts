@@ -317,6 +317,25 @@ describe('useStockSearch — debounced search', () => {
     expect(result.current.suggestions).toEqual([]);
     expect(result.current.isOpen).toBe(false);
   });
+
+  it('cleanup runs without error when query changes before any debounce timer fires (timerRef.current is null branch)', async () => {
+    // On first render the effect runs with query=''. trimmed.length < MIN_QUERY_LENGTH so
+    // no timer is set, and timerRef.current stays null. Setting a new query triggers
+    // a re-render which runs the cleanup for the previous effect where timerRef.current
+    // is null — covering the falsy branch of `if (timerRef.current)` on line 65.
+    mockedSearchStocks.mockResolvedValueOnce(RESULTS);
+
+    const { result } = renderHook(() => useStockSearch(noop));
+
+    // The initial effect runs with empty query — no timer is set, timerRef.current is null.
+    // Setting a non-empty query triggers the cleanup of that first effect (null timer path).
+    await act(async () => { result.current.setQuery('AAPL'); });
+
+    // Cleanup ran without throwing. Advance to confirm the new timer fires correctly.
+    await act(async () => { vi.advanceTimersByTime(300); });
+
+    expect(mockedSearchStocks).toHaveBeenCalledWith('AAPL');
+  });
 });
 
 // ---------------------------------------------------------------------------

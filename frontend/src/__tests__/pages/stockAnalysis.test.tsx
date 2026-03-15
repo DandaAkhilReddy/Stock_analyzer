@@ -38,6 +38,7 @@ vi.mock('framer-motion', () => {
     useMotionValue: () => ({ set: () => {} }),
     useSpring: (v: any) => v,
     useTransform: () => 0,
+    useScroll: () => ({ scrollYProgress: { get: () => 0 } }),
   };
 });
 
@@ -213,7 +214,11 @@ describe('StockAnalysis', () => {
 
     it('shows the "Reddy" heading from LandingHero', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText(/Reddy/i)).toBeInTheDocument();
+      // "Reddy" is rendered as individual <motion.span> characters inside <motion.h1>.
+      // getByText won't find it via text-node matching; check via heading role instead.
+      const headings = screen.getAllByRole('heading', { level: 1 });
+      const reddyHeading = headings.find((h) => /Reddy/i.test(h.textContent ?? ''));
+      expect(reddyHeading).toBeDefined();
     });
 
     it('shows the "Stock Analyzer" text from LandingHero', () => {
@@ -1058,6 +1063,200 @@ describe('StockAnalysis', () => {
       render(<StockAnalysis />);
       expect(screen.queryByRole('button', { name: /chart/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /news/i })).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 21. onFinishHydration callback — covers line 42: () => setHasHydrated(true)
+  // -------------------------------------------------------------------------
+
+  describe('onFinishHydration callback (line 42)', () => {
+    it('transitions from hydration spinner to content when onFinishHydration fires', async () => {
+      const store = {
+        currentTicker: null as string | null,
+        analysis: null,
+        isLoading: false,
+        error: null,
+        activeTab: 'chart' as const,
+        setActiveTab: mockSetActiveTab,
+        fetchAnalysis: mockFetchAnalysis,
+      };
+      vi.mocked(useStockStore).mockImplementation(
+        (selector: (s: typeof store) => unknown) => selector(store),
+      );
+      (useStockStore as unknown as { getState: () => typeof store }).getState = () => store;
+
+      let capturedCallback: (() => void) | null = null;
+      (useStockStore as unknown as Record<string, unknown>).persist = {
+        hasHydrated: () => false,
+        // Capture the callback so we can invoke it manually
+        onFinishHydration: (cb: () => void) => {
+          capturedCallback = cb;
+          return () => {}; // unsub
+        },
+      };
+
+      render(<StockAnalysis />);
+      // Initially shows spinner (not hydrated)
+      expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+
+      // Fire the hydration callback — this calls setHasHydrated(true)
+      expect(capturedCallback).not.toBeNull();
+      await act(async () => {
+        capturedCallback!();
+      });
+
+      // After hydration, spinner is gone and LandingHero renders
+      expect(document.querySelector('.animate-spin')).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 22. 30-second tick interval — covers the (t) => t + 1 updater function
+  // -------------------------------------------------------------------------
+
+  describe('30-second tick interval fires without error', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('advances the tick counter after 30 seconds without unmounting errors', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: mockAnalysis,
+        activeTab: 'chart',
+        lastFetchedAt: Date.now() - 10_000,
+      });
+      render(<StockAnalysis />);
+      // Advance past the 30s tick interval — covers the `(t) => t + 1` updater
+      expect(() => act(() => { vi.advanceTimersByTime(30_000); })).not.toThrow();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 22. about tab — research_context and research_sources nullish coalescing
+  //     (lines 153-154: the `?? ''` and `?? []` fallback branches)
+  // -------------------------------------------------------------------------
+
+  describe('analysis loaded — about tab (null research fields trigger ?? fallback)', () => {
+    it('renders about tab when research_context and research_sources are undefined', () => {
+      const analysisWithoutResearch = {
+        ...mockAnalysis,
+        research_context: undefined as unknown as string,
+        research_sources: undefined as unknown as string[],
+      };
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: analysisWithoutResearch,
+        activeTab: 'about',
+      });
+      render(<StockAnalysis />);
+      // CompanyAbout and QuarterlyEarnings still render
+      expect(screen.getByText(/Apple designs and sells consumer electronics/)).toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 22. formatTimeAgo — "just now" (seconds < 60)
+  // -------------------------------------------------------------------------
+
+  describe('formatTimeAgo — just now (lastFetchedAt within 59s)', () => {
+    it('shows "Updated just now" when lastFetchedAt is recent (< 60s ago)', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: mockAnalysis,
+        activeTab: 'chart',
+        lastFetchedAt: Date.now() - 5_000,
+      });
+      render(<StockAnalysis />);
+      expect(screen.getByText('Updated just now')).toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 22. formatTimeAgo — "Xm ago" (60s <= seconds < 3600)
+  // -------------------------------------------------------------------------
+
+  describe('formatTimeAgo — Xm ago (lastFetchedAt 2 minutes ago)', () => {
+    it('shows "Updated 2m ago" when lastFetchedAt is 2 minutes ago', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: mockAnalysis,
+        activeTab: 'chart',
+        lastFetchedAt: Date.now() - 2 * 60_000,
+      });
+      render(<StockAnalysis />);
+      expect(screen.getByText('Updated 2m ago')).toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 23. formatTimeAgo — "Xh ago" (seconds >= 3600)
+  // -------------------------------------------------------------------------
+
+  describe('formatTimeAgo — Xh ago (lastFetchedAt 3 hours ago)', () => {
+    it('shows "Updated 3h ago" when lastFetchedAt is 3 hours ago', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: mockAnalysis,
+        activeTab: 'chart',
+        lastFetchedAt: Date.now() - 3 * 60 * 60_000,
+      });
+      render(<StockAnalysis />);
+      expect(screen.getByText('Updated 3h ago')).toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 24. isRefreshing spinner — shows when isRefreshing=true + lastFetchedAt set
+  // -------------------------------------------------------------------------
+
+  describe('isRefreshing spinner', () => {
+    it('shows a refreshing spinner when isRefreshing is true and lastFetchedAt is set', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: mockAnalysis,
+        activeTab: 'chart',
+        isRefreshing: true,
+        lastFetchedAt: Date.now() - 30_000,
+      });
+      const { container } = render(<StockAnalysis />);
+      // The isRefreshing motion.div renders as a plain div with border classes
+      const spinnerDivs = container.querySelectorAll(
+        'div.border-2.border-indigo-400.border-t-transparent.rounded-full',
+      );
+      expect(spinnerDivs.length).toBeGreaterThan(0);
+    });
+
+    it('does not show refreshing spinner when isRefreshing is false', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: mockAnalysis,
+        activeTab: 'chart',
+        isRefreshing: false,
+        lastFetchedAt: Date.now() - 30_000,
+      });
+      const { container } = render(<StockAnalysis />);
+      const spinnerDivs = container.querySelectorAll(
+        'div.border-2.border-indigo-400.border-t-transparent.rounded-full',
+      );
+      expect(spinnerDivs.length).toBe(0);
+    });
+
+    it('does not show timestamp row when lastFetchedAt is null', () => {
+      setupStore({
+        currentTicker: 'AAPL',
+        analysis: mockAnalysis,
+        activeTab: 'chart',
+        isRefreshing: false,
+        lastFetchedAt: null,
+      });
+      render(<StockAnalysis />);
+      expect(screen.queryByText(/Updated/)).not.toBeInTheDocument();
     });
   });
 });

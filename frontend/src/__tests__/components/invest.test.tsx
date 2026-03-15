@@ -31,9 +31,45 @@ vi.mock('framer-motion', () => ({
   motion: {
     div: ({
       children,
+      animate,
+      initial: _initial,
+      transition: _transition,
+      whileInView: _whileInView,
+      viewport: _viewport,
+      whileHover: _whileHover,
       ...props
-    }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
-      <div {...props}>{children}</div>
+    }: React.HTMLAttributes<HTMLDivElement> & {
+      children?: React.ReactNode;
+      animate?: Record<string, unknown>;
+      initial?: unknown;
+      transition?: unknown;
+      whileInView?: unknown;
+      viewport?: unknown;
+      whileHover?: unknown;
+    }) => {
+      // Forward `animate` as inline style so width/opacity assertions work.
+      const animateStyle = animate && typeof animate === 'object' ? animate as React.CSSProperties : {};
+      return <div style={{ ...animateStyle, ...(props.style as React.CSSProperties) }} {...props}>{children}</div>;
+    },
+    span: ({
+      children,
+      animate: _animate,
+      initial: _initial,
+      transition: _transition,
+      variants: _variants,
+      whileInView: _whileInView,
+      viewport: _viewport,
+      ...props
+    }: React.HTMLAttributes<HTMLSpanElement> & {
+      children?: React.ReactNode;
+      animate?: unknown;
+      initial?: unknown;
+      transition?: unknown;
+      variants?: unknown;
+      whileInView?: unknown;
+      viewport?: unknown;
+    }) => (
+      <span {...props}>{children}</span>
     ),
   },
   useMotionValue: () => ({ set: vi.fn() }),
@@ -309,39 +345,49 @@ describe('InvestmentOutlook — Price Trajectory', () => {
   });
 
   it('renders confidence percentage for the 1-year horizon card', () => {
-    // one_year.confidence: 0.80 → "Confidence: 80%"
-    render(
+    // one_year.confidence: 0.80 → RadialGauge renders "80%" as a <span>
+    const { container } = render(
       <InvestmentOutlook
         outlook={baseOutlook}
         currentPrice={CURRENT_PRICE}
         ticker={TICKER}
       />,
     );
-    expect(screen.getByText('Confidence: 80%')).toBeInTheDocument();
+    // RadialGauge renders the value as "{value}%" in a span — check presence
+    const percentSpans = Array.from(container.querySelectorAll('span')).filter(
+      (el) => el.textContent === '80%',
+    );
+    expect(percentSpans.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders confidence percentage for the 5-year horizon card', () => {
-    // five_year.confidence: 0.65 → "Confidence: 65%"
-    render(
+    // five_year.confidence: 0.65 → RadialGauge renders "65%" as a <span>
+    const { container } = render(
       <InvestmentOutlook
         outlook={baseOutlook}
         currentPrice={CURRENT_PRICE}
         ticker={TICKER}
       />,
     );
-    expect(screen.getByText('Confidence: 65%')).toBeInTheDocument();
+    const percentSpans = Array.from(container.querySelectorAll('span')).filter(
+      (el) => el.textContent === '65%',
+    );
+    expect(percentSpans.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders confidence percentage for the 10-year horizon card', () => {
-    // ten_year.confidence: 0.5 → "Confidence: 50%"
-    render(
+    // ten_year.confidence: 0.5 → RadialGauge renders "50%" as a <span>
+    const { container } = render(
       <InvestmentOutlook
         outlook={baseOutlook}
         currentPrice={CURRENT_PRICE}
         ticker={TICKER}
       />,
     );
-    expect(screen.getByText('Confidence: 50%')).toBeInTheDocument();
+    const percentSpans = Array.from(container.querySelectorAll('span')).filter(
+      (el) => el.textContent === '50%',
+    );
+    expect(percentSpans.length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows positive percentage change with + prefix when mid > currentPrice', () => {
@@ -391,6 +437,8 @@ describe('InvestmentOutlook — Price Trajectory', () => {
   it('renders $10K today → future value investment projection', () => {
     // one_year: shares = 10000/185.5, futureVal = shares * 210
     // ≈ 53.9 shares × $210 = ~$11319 → "$11.3K"
+    // AnimatedCounter renders value=10000 as "$10,000" (formatted with commas),
+    // not "$10K". The " today" text is a sibling node, so use a custom matcher.
     render(
       <InvestmentOutlook
         outlook={baseOutlook}
@@ -398,8 +446,9 @@ describe('InvestmentOutlook — Price Trajectory', () => {
         ticker={TICKER}
       />,
     );
-    // All three cards produce investment projections; at least one must be present
-    const projections = screen.getAllByText('$10K today');
+    // AnimatedCounter with prefix="$" decimals=0 renders "$10,000" in a span.
+    // All three HorizonCards render this, so at least one must be present.
+    const projections = screen.getAllByText('$10,000');
     expect(projections.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -862,14 +911,18 @@ describe('InvestmentOutlook — Additional Edge Cases', () => {
       ...baseOutlook,
       one_year: { low: 180, mid: 190, high: 200, confidence: 0.01 },
     };
-    render(
+    const { container } = render(
       <InvestmentOutlook
         outlook={tinyConfidenceOutlook}
         currentPrice={CURRENT_PRICE}
         ticker={TICKER}
       />,
     );
-    expect(screen.getByText('Confidence: 1%')).toBeInTheDocument();
+    // RadialGauge renders the confidence value as "{value}%" in a <span>
+    const percentSpans = Array.from(container.querySelectorAll('span')).filter(
+      (el) => el.textContent === '1%',
+    );
+    expect(percentSpans.length).toBeGreaterThanOrEqual(1);
   });
 
   it('applies red border accent for HorizonCard when forecast mid is below current price', () => {
@@ -1305,6 +1358,37 @@ describe('FinancierInsights — PerspectiveCard with unknown financier name (lin
     // Both the perspective badge and consensus badge say BUY
     const buyBadges = screen.getAllByText('BUY');
     expect(buyBadges.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('FinancierInsights — PerspectiveCard unknown verdict fallback (line 64)', () => {
+  // verdictStyles[perspective.verdict] ?? verdictStyles.hold — covers the ?? branch
+  // when perspective.verdict is not one of buy/hold/sell.
+  it('falls back to HOLD badge styling for a perspective with an unknown verdict', () => {
+    const { container } = render(
+      <FinancierInsights
+        analysis={{
+          perspectives: [
+            {
+              name: 'Warren Buffett',
+              framework: 'Value Investing',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              verdict: 'unknown_verdict' as any,
+              reasoning: 'Unusual signal.',
+              key_metrics_evaluated: [],
+            },
+          ],
+          consensus_verdict: 'hold',
+          consensus_reasoning: '',
+        }}
+        ticker="AAPL"
+      />,
+    );
+    // The perspective card badge falls back to hold styling (amber)
+    const amberBadge = container.querySelector('.bg-amber-100');
+    expect(amberBadge).toBeInTheDocument();
+    // The HOLD label should appear (from the fallback)
+    expect(screen.getAllByText('HOLD').length).toBeGreaterThanOrEqual(1);
   });
 });
 

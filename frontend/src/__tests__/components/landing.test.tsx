@@ -40,6 +40,18 @@ vi.mock('framer-motion', () => ({
     }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
       <p {...props}>{children}</p>
     ),
+    span: ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLSpanElement> & { children?: React.ReactNode }) => (
+      <span {...props}>{children}</span>
+    ),
+    button: ({
+      children,
+      ...props
+    }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }) => (
+      <button {...props}>{children}</button>
+    ),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useMotionValue: () => ({ set: vi.fn() }),
@@ -267,16 +279,23 @@ describe('HeroTitle', () => {
   });
 
   it('renders the subtitle paragraph about AI insights', () => {
-    render(<HeroTitle />);
-    expect(
-      screen.getByText(/Real-time data, AI insights, and legendary investor analysis/i),
-    ).toBeInTheDocument();
+    const { container } = render(<HeroTitle />);
+    // The subtitle is a <p> whose words are individual <motion.span> elements.
+    // textContent concatenates all inner spans without inter-word spaces, so
+    // use single-word patterns rather than multi-word phrases with spaces.
+    const p = container.querySelector('p');
+    expect(p).not.toBeNull();
+    expect(p!.textContent).toMatch(/Real-time/i);
+    expect(p!.textContent).toMatch(/AIinsights/i);
+    expect(p!.textContent).toMatch(/legendaryinvestoranalysis/i);
   });
 
   it('subtitle is rendered as a <p> element', () => {
-    render(<HeroTitle />);
-    const subtitle = screen.getByText(/Real-time data, AI insights/i);
-    expect(subtitle.tagName).toBe('P');
+    const { container } = render(<HeroTitle />);
+    // The subtitle words are spread across individual <motion.span> children of the <p>.
+    const p = container.querySelector('p');
+    expect(p).not.toBeNull();
+    expect(p!.tagName).toBe('P');
   });
 
   it('wraps content in a text-center container', () => {
@@ -618,8 +637,13 @@ describe('LandingHero', () => {
   });
 
   it('renders the subtitle paragraph from HeroTitle', () => {
-    render(<LandingHero />);
-    expect(screen.getByText(/Real-time data, AI insights/i)).toBeInTheDocument();
+    const { container } = render(<LandingHero />);
+    // Subtitle words are individual <motion.span> children of the <p>.
+    // textContent concatenates all inner spans without inter-word spaces.
+    const p = container.querySelector('p');
+    expect(p).not.toBeNull();
+    expect(p!.textContent).toMatch(/Real-time/i);
+    expect(p!.textContent).toMatch(/AIinsights/i);
   });
 
   it('renders the HeroSearchBar input', () => {

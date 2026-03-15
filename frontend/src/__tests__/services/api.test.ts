@@ -392,6 +392,33 @@ describe('request error branches', () => {
     await expect(get('/test')).rejects.toBeInstanceOf(ApiError);
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
+
+  it('abort controller fires and cancels the pending request after REQUEST_TIMEOUT_MS elapses', async () => {
+    const mockFetch = vi.mocked(globalThis.fetch);
+    // fetch never resolves on its own — it only rejects when abort fires
+    mockFetch.mockImplementation((_url, options) => {
+      return new Promise<Response>((_resolve, reject) => {
+        const signal = (options as RequestInit).signal as AbortSignal;
+        signal.addEventListener('abort', () => {
+          reject(new DOMException('signal is aborted', 'AbortError'));
+        });
+      });
+    });
+
+    let caughtError: unknown;
+    const promise = get('/test').catch((e) => { caughtError = e; });
+
+    // Advance past the 120s REQUEST_TIMEOUT_MS to trigger controller.abort()
+    await vi.advanceTimersByTimeAsync(120_001);
+    await promise;
+
+    const e = caughtError as ApiError;
+    expect(e).toBeInstanceOf(ApiError);
+    expect(e.status).toBe(408);
+    expect(e.code).toBe('TIMEOUT');
+    // fetch called exactly once — AbortError is not retried
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
 });
 
 // ---------------------------------------------------------------------------

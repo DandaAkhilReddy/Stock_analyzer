@@ -132,6 +132,36 @@ describe('StockHeader', () => {
     render(<StockHeader analysis={noMarketCap} />);
     expect(screen.queryByText(/Mkt Cap:/)).not.toBeInTheDocument();
   });
+
+  it('uses the ticker for the avatar letter when company_name is null (line 27 ?? branch)', () => {
+    const noName: StockAnalysisResponse = { ...mockAnalysis, company_name: null };
+    const { container } = render(<StockHeader analysis={noName} />);
+    // Avatar letter falls back to ticker first char: 'A' from 'AAPL'
+    const avatarSpan = container.querySelector('.text-white.font-bold');
+    expect(avatarSpan?.textContent).toBe('A');
+  });
+
+  it('shows a negative change badge with red styling when change is negative', () => {
+    const downAnalysis: StockAnalysisResponse = {
+      ...mockAnalysis,
+      current_price: 180.00,
+      previous_close: 185.00,
+    };
+    const { container } = render(<StockHeader analysis={downAnalysis} />);
+    const redBadge = container.querySelector('.bg-red-50');
+    expect(redBadge).toBeInTheDocument();
+  });
+
+  it('falls back to raw recommendation string for an unknown recommendation value (line 41 ?? branch)', () => {
+    const unknownRec: StockAnalysisResponse = {
+      ...mockAnalysis,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recommendation: 'accumulate' as any,
+    };
+    render(<StockHeader analysis={unknownRec} />);
+    // recLabels['accumulate'] is undefined so falls back to 'accumulate'
+    expect(screen.getByText('accumulate')).toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------

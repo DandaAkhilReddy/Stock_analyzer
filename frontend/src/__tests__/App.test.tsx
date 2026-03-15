@@ -28,11 +28,18 @@ vi.mock('framer-motion', () => ({
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
       <p {...props}>{children}</p>
     ),
+    button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }) => (
+      <button {...props}>{children}</button>
+    ),
+    span: ({ children, ...props }: React.HTMLAttributes<HTMLSpanElement> & { children?: React.ReactNode }) => (
+      <span {...props}>{children}</span>
+    ),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useMotionValue: () => ({ set: vi.fn() }),
   useSpring: (v: unknown) => v,
   useTransform: () => 0,
+  useScroll: () => ({ scrollYProgress: { get: () => 0 } }),
 }));
 
 const mockFetchAnalysis = vi.fn();
@@ -95,8 +102,12 @@ describe('App', () => {
 
   it('renders the LandingHero on the root route when no ticker is selected', () => {
     render(<App />);
-    // "Reddy" only appears in HeroTitle, not in the Header
-    expect(screen.getByText('Reddy')).toBeInTheDocument();
+    // "Reddy" is the h1 brand name in HeroTitle — rendered as individual motion.span
+    // characters (one per letter). There are multiple h1s on the page (Header + HeroTitle),
+    // so find the one whose combined textContent matches "Reddy".
+    const headings = screen.getAllByRole('heading', { level: 1 });
+    const reddyHeading = headings.find((h) => h.textContent === 'Reddy');
+    expect(reddyHeading).toBeDefined();
   });
 
   it('renders the hero search input on landing', () => {

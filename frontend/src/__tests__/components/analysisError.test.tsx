@@ -528,4 +528,37 @@ describe('AnalysisError', () => {
       });
     });
   });
+
+  // -------------------------------------------------------------------------
+  // 16. cancelled guard — unmount before search resolves (success path)
+  // -------------------------------------------------------------------------
+
+  describe('cancelled guard — unmount before search resolves', () => {
+    it('does not call setSuggestions after unmount when search succeeds (cancelled = true branch)', async () => {
+      let resolveSearch!: (value: import('../../types/analysis').SearchResult[]) => void;
+      vi.mocked(searchStocks).mockReturnValue(
+        new Promise<import('../../types/analysis').SearchResult[]>((res) => { resolveSearch = res; }),
+      );
+
+      const { unmount } = renderError('CANCELLED', 'error');
+      // Unmount while searchStocks is still in-flight — sets cancelled = true
+      unmount();
+      // Now resolve the search — the cancelled guard prevents setSuggestions
+      resolveSearch([{ symbol: 'AAPL', name: 'Apple Inc.' }]);
+      // No assertions needed — the test verifies no React state-update warning is thrown
+    });
+
+    it('does not call setSuggestions after unmount when search rejects (cancelled = true branch)', async () => {
+      let rejectSearch!: (err: Error) => void;
+      vi.mocked(searchStocks).mockReturnValue(
+        new Promise<import('../../types/analysis').SearchResult[]>((_res, rej) => { rejectSearch = rej; }),
+      );
+
+      const { unmount } = renderError('CANCELLED', 'error');
+      // Unmount while searchStocks is still in-flight
+      unmount();
+      // Reject after unmount — cancelled guard prevents setSuggestions
+      rejectSearch(new Error('too late'));
+    });
+  });
 });

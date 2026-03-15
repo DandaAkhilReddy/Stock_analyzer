@@ -24,6 +24,16 @@ vi.mock('framer-motion', () => ({
         {children}
       </div>
     ),
+    button: ({ children, layoutId, transition, whileHover, whileTap, className, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { layoutId?: string; transition?: unknown; whileHover?: unknown; whileTap?: unknown }) => (
+      <button className={className} {...rest}>
+        {children}
+      </button>
+    ),
+    span: ({ children, animate, transition, className, ...rest }: React.HTMLAttributes<HTMLSpanElement> & { animate?: unknown; transition?: unknown }) => (
+      <span className={className} {...rest}>
+        {children}
+      </span>
+    ),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useMotionValue: () => ({ set: vi.fn() }),

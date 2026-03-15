@@ -3,6 +3,11 @@ import { motion } from 'framer-motion';
 import { ExternalLink, Clock } from 'lucide-react';
 import type { NewsItem } from '../../types/analysis';
 
+const pingVariants = {
+  positive: { animate: { scale: [1, 1.5, 1.5], opacity: [0.4, 0, 0] }, color: 'bg-emerald-400' },
+  negative: { animate: { scale: [1, 1.5, 1.5], opacity: [0.4, 0, 0] }, color: 'bg-red-400' },
+};
+
 interface NewsCardProps {
   item: NewsItem;
   index?: number;
@@ -33,6 +38,7 @@ const fallbackSentiment = sentimentStyles['neutral'];
 
 export function NewsCard({ item, index = 0 }: NewsCardProps) {
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const sentiment = item.sentiment !== null ? (sentimentStyles[item.sentiment] ?? fallbackSentiment) : fallbackSentiment;
   const relTime = timeAgo(item.published_date);
   const hasImage = item.image_url !== null && item.image_url !== '' && !imgError;
@@ -44,15 +50,16 @@ export function NewsCard({ item, index = 0 }: NewsCardProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.05 }}
-      whileHover={{ scale: 1.01 }}
+      whileHover={{ y: -2, boxShadow: '0 8px 20px rgba(0,0,0,0.08)' }}
     >
       {/* Thumbnail */}
       {hasImage && (
         <img
           src={item.image_url as string}
           alt=""
-          className="w-12 h-12 rounded-lg object-cover shrink-0 bg-stone-100"
+          className={`w-12 h-12 rounded-lg object-cover shrink-0 bg-stone-100 transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
           onError={() => setImgError(true)}
+          onLoad={() => setImgLoaded(true)}
         />
       )}
 
@@ -80,11 +87,20 @@ export function NewsCard({ item, index = 0 }: NewsCardProps) {
           )}
 
           {/* Sentiment pill */}
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                        border ${sentiment.bg} ${sentiment.text} ${sentiment.border}`}
-          >
-            {sentiment.label}
+          <span className="relative inline-flex items-center">
+            {(item.sentiment === 'positive' || item.sentiment === 'negative') && (
+              <motion.span
+                className={`absolute inset-0 rounded-full ${pingVariants[item.sentiment].color}`}
+                animate={pingVariants[item.sentiment].animate}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
+              />
+            )}
+            <span
+              className={`relative inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                          border ${sentiment.bg} ${sentiment.text} ${sentiment.border}`}
+            >
+              {sentiment.label}
+            </span>
           </span>
         </div>
       </div>

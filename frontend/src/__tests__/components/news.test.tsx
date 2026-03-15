@@ -5,13 +5,19 @@
  * jest-dom matchers are available via the setup file (src/test/setup.ts).
  */
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { vi } from 'vitest';
 
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
       <div {...props}>{children}</div>
+    ),
+    span: ({ children, ...props }: React.HTMLAttributes<HTMLSpanElement> & { children?: React.ReactNode }) => (
+      <span {...props}>{children}</span>
+    ),
+    p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
+      <p {...props}>{children}</p>
     ),
   },
   useMotionValue: () => ({ set: vi.fn() }),
@@ -89,6 +95,116 @@ describe('NewsCard', () => {
   it('renders title only when both source and sentiment are null', () => {
     render(<NewsCard item={makeItem({ title: 'Bare headline', source: null, sentiment: null })} />);
     expect(screen.getByText('Bare headline')).toBeInTheDocument();
+    expect(screen.queryByText('Reuters')).not.toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // timeAgo branches
+  // -------------------------------------------------------------------------
+
+  it('shows relative time in minutes', () => {
+    const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    render(<NewsCard item={makeItem({ published_date: twoMinAgo })} />);
+    expect(screen.getByText('2m ago')).toBeInTheDocument();
+  });
+
+  it('shows relative time in hours', () => {
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+    render(<NewsCard item={makeItem({ published_date: threeHoursAgo })} />);
+    expect(screen.getByText('3h ago')).toBeInTheDocument();
+  });
+
+  it('shows relative time in days', () => {
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    render(<NewsCard item={makeItem({ published_date: twoDaysAgo })} />);
+    expect(screen.getByText('2d ago')).toBeInTheDocument();
+  });
+
+  it('shows formatted short date for dates older than 7 days', () => {
+    const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    render(<NewsCard item={makeItem({ published_date: twoWeeksAgo })} />);
+    // toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) → e.g. "Mar 1"
+    // Just verify some non-empty text matching a short-month pattern appears.
+    const el = screen.queryByText(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/);
+    expect(el).toBeTruthy();
+  });
+
+  it('shows no timestamp when published_date is null', () => {
+    render(<NewsCard item={makeItem({ published_date: null })} />);
+    expect(screen.queryByText(/ago/)).not.toBeInTheDocument();
+  });
+
+  it('shows no timestamp for an invalid date string', () => {
+    render(<NewsCard item={makeItem({ published_date: 'not-a-date' })} />);
+    expect(screen.queryByText(/ago/)).not.toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Image rendering and onError handler
+  // -------------------------------------------------------------------------
+
+  it('renders an image when image_url is provided', () => {
+    const { container } = render(<NewsCard item={makeItem({ image_url: 'https://img.com/photo.jpg' })} />);
+    // The img has alt="" making it presentational; query the DOM directly.
+    const img = container.querySelector('img');
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute('src', 'https://img.com/photo.jpg');
+  });
+
+  it('hides the image after an error loading it', () => {
+    const { container } = render(<NewsCard item={makeItem({ image_url: 'https://img.com/bad.jpg' })} />);
+    const img = container.querySelector('img') as HTMLImageElement;
+    expect(img).not.toBeNull();
+    act(() => { fireEvent.error(img); });
+    expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('does not render an image when image_url is null', () => {
+    const { container } = render(<NewsCard item={makeItem({ image_url: null })} />);
+    expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('does not render an image when image_url is an empty string', () => {
+    const { container } = render(<NewsCard item={makeItem({ image_url: '' })} />);
+    expect(container.querySelector('img')).toBeNull();
+  });
+
+  // -------------------------------------------------------------------------
+  // Link wrapping when url is provided
+  // -------------------------------------------------------------------------
+
+  it('wraps the card in an anchor tag when url is provided', () => {
+    render(<NewsCard item={makeItem({ url: 'https://example.com/article' })} />);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', 'https://example.com/article');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  it('does not render an anchor when url is null', () => {
+    render(<NewsCard item={makeItem({ url: null })} />);
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('does not render an anchor when url is an empty string', () => {
+    render(<NewsCard item={makeItem({ url: '' })} />);
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Sentiment fallback for unknown values
+  // -------------------------------------------------------------------------
+
+  it('falls back to Neutral for an unrecognised sentiment value', () => {
+    render(<NewsCard item={makeItem({ sentiment: 'mixed' as never })} />);
+    expect(screen.getByText('Neutral')).toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Source hidden when empty string
+  // -------------------------------------------------------------------------
+
+  it('hides the source badge when source is an empty string', () => {
+    render(<NewsCard item={makeItem({ source: '' })} />);
     expect(screen.queryByText('Reuters')).not.toBeInTheDocument();
   });
 });
