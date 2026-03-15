@@ -448,25 +448,22 @@ class TestSuccessfulResponse:
         assert result.technical.sma_200 == pytest.approx(175.0)
 
     @pytest.mark.asyncio
-    async def test_analyze_returns_news_items(
+    async def test_analyze_returns_empty_news_when_market_returns_none(
         self, service: AIAnalysisService
     ) -> None:
-        """News items come from the AI qualitative response."""
+        """News is empty when market data returns no news (no AI fallback)."""
         result = await service.analyze("AAPL")
 
-        assert len(result.news) == 1
-        assert result.news[0].title == "Apple Reports Strong Q1"
-        assert result.news[0].sentiment == "positive"
+        assert result.news == []
 
     @pytest.mark.asyncio
-    async def test_analyze_returns_quarterly_earnings(
+    async def test_analyze_returns_empty_earnings_when_market_returns_none(
         self, service: AIAnalysisService
     ) -> None:
-        """Quarterly earnings come from the AI qualitative response."""
+        """Earnings is empty when market data returns no earnings (no AI fallback)."""
         result = await service.analyze("AAPL")
 
-        assert len(result.quarterly_earnings) == 1
-        assert result.quarterly_earnings[0].quarter == "Q1 2025"
+        assert result.quarterly_earnings == []
 
     @pytest.mark.asyncio
     async def test_analyze_returns_risk_assessment(
@@ -1604,6 +1601,7 @@ _FMP_NEWS: list[dict] = [
         "url": "https://bloomberg.com/apple-q2",
         "published_date": "2025-03-01",
         "image_url": None,
+        "data_source": "FMP",
     }
 ]
 
@@ -1614,6 +1612,7 @@ _FMP_EARNINGS: list[dict] = [
         "net_income": 24_100.0,
         "eps": 1.61,
         "yoy_revenue_growth": 0.07,
+        "data_source": "FMP",
     }
 ]
 
@@ -1657,37 +1656,33 @@ class TestRealFMPDataMerge:
         assert result.quarterly_earnings[0].eps == pytest.approx(1.61)
 
     @pytest.mark.asyncio
-    async def test_safe_fetch_news_exception_returns_empty(
+    async def test_safe_fetch_news_exception_returns_empty_list(
         self,
         service: AIAnalysisService,
         mock_market: AsyncMock,
         mock_provider: AsyncMock,
     ) -> None:
-        """_safe_fetch_news swallows exceptions; analyze falls back to AI news."""
+        """_safe_fetch_news swallows exceptions; news is empty (no AI fallback)."""
         mock_market.get_stock_news = AsyncMock(side_effect=Exception("FMP down"))
         mock_market.get_income_statement = AsyncMock(return_value=[])
 
-        # Should not raise; falls back to AI-generated news from _MOCK_AI_RESPONSE
         result = await service.analyze("AAPL")
 
         assert result is not None
-        # AI mock response contains one news item with title "Apple Reports Strong Q1"
-        assert len(result.news) >= 1
+        assert result.news == []
 
     @pytest.mark.asyncio
-    async def test_safe_fetch_earnings_exception_returns_empty(
+    async def test_safe_fetch_earnings_exception_returns_empty_list(
         self,
         service: AIAnalysisService,
         mock_market: AsyncMock,
         mock_provider: AsyncMock,
     ) -> None:
-        """_safe_fetch_earnings swallows exceptions; analyze falls back to AI earnings."""
+        """_safe_fetch_earnings swallows exceptions; earnings is empty (no AI fallback)."""
         mock_market.get_stock_news = AsyncMock(return_value=[])
         mock_market.get_income_statement = AsyncMock(side_effect=Exception("FMP down"))
 
-        # Should not raise; falls back to AI-generated quarterly_earnings
         result = await service.analyze("AAPL")
 
         assert result is not None
-        # AI mock response contains one earnings entry for Q1 2025
-        assert len(result.quarterly_earnings) >= 1
+        assert result.quarterly_earnings == []
