@@ -37,6 +37,7 @@ vi.mock('framer-motion', () => ({
 import { AIRecommendation } from '../../components/analysis/AIRecommendation';
 import { BullBearCase } from '../../components/analysis/BullBearCase';
 import { RiskAssessment } from '../../components/analysis/RiskAssessment';
+import { ResearchSources } from '../../components/analysis/ResearchSources';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -542,5 +543,31 @@ describe('RiskAssessment', () => {
       const label = screen.getByText('Very High Risk');
       expect(label).toHaveStyle({ color: '#dc2626' });
     });
+  });
+});
+
+// ===========================================================================
+// ResearchSources
+// ===========================================================================
+
+describe('ResearchSources', () => {
+  it('shows count 0 when researchSources is undefined — covers ?? branch on line 27', () => {
+    render(
+      <ResearchSources
+        researchContext="Some research context"
+        researchSources={undefined as unknown as string[]}
+      />,
+    );
+    expect(screen.getByText('Research Sources (0)')).toBeInTheDocument();
+  });
+
+  it('shows count equal to the length of a provided array', () => {
+    render(
+      <ResearchSources
+        researchContext="context"
+        researchSources={['https://example.com', 'https://other.com']}
+      />,
+    );
+    expect(screen.getByText('Research Sources (2)')).toBeInTheDocument();
   });
 });

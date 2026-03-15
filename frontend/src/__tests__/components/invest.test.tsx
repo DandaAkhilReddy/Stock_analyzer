@@ -1308,6 +1308,37 @@ describe('FinancierInsights — PerspectiveCard with unknown financier name (lin
   });
 });
 
+describe('FinancierInsights — PerspectiveCard unknown verdict fallback (line 64)', () => {
+  // verdictStyles[perspective.verdict] ?? verdictStyles.hold — covers the ?? branch
+  // when perspective.verdict is not one of buy/hold/sell.
+  it('falls back to HOLD badge styling for a perspective with an unknown verdict', () => {
+    const { container } = render(
+      <FinancierInsights
+        analysis={{
+          perspectives: [
+            {
+              name: 'Warren Buffett',
+              framework: 'Value Investing',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              verdict: 'unknown_verdict' as any,
+              reasoning: 'Unusual signal.',
+              key_metrics_evaluated: [],
+            },
+          ],
+          consensus_verdict: 'hold',
+          consensus_reasoning: '',
+        }}
+        ticker="AAPL"
+      />,
+    );
+    // The perspective card badge falls back to hold styling (amber)
+    const amberBadge = container.querySelector('.bg-amber-100');
+    expect(amberBadge).toBeInTheDocument();
+    // The HOLD label should appear (from the fallback)
+    expect(screen.getAllByText('HOLD').length).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe('FinancierInsights — consensusStyle fallback for unknown verdict (line 112)', () => {
   // verdictStyles lookup falls back to verdictStyles.hold when consensus_verdict
   // is not one of buy/hold/sell. The component must render without throwing.
