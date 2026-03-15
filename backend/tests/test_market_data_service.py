@@ -1335,7 +1335,7 @@ class TestFormatMarketCapBoundaries:
 
 def _http_status_error(status_code: int) -> httpx.HTTPStatusError:
     """Build an httpx.HTTPStatusError for a given status code."""
-    request = httpx.Request("GET", "https://financialmodelingprep.com/stable/quote")
+    request = httpx.Request("GET", "https://financialmodelingprep.com/api/v3/quote")
     response = httpx.Response(
         status_code=status_code,
         content=b"error body",
@@ -1373,8 +1373,8 @@ class TestParallelGet:
                     with patch("httpx.AsyncClient", return_value=mock_client):
                         await service._parallel_get(
                             client,
-                            "https://financialmodelingprep.com/stable/quote",
-                            "https://financialmodelingprep.com/stable/profile",
+                            "https://financialmodelingprep.com/api/v3/quote",
+                            "https://financialmodelingprep.com/api/v3/profile",
                             "AAPL",
                         )
 
@@ -1402,8 +1402,8 @@ class TestParallelGet:
             with pytest.raises(httpx.HTTPStatusError):
                 await service._parallel_get(
                     mock_client,  # type: ignore[arg-type]
-                    "https://financialmodelingprep.com/stable/quote",
-                    "https://financialmodelingprep.com/stable/profile",
+                    "https://financialmodelingprep.com/api/v3/quote",
+                    "https://financialmodelingprep.com/api/v3/profile",
                     "AAPL",
                 )
         r1.raise_for_status.assert_called_once()
@@ -1432,8 +1432,8 @@ class TestParallelGet:
             with pytest.raises(httpx.HTTPStatusError):
                 await service._parallel_get(
                     mock_client,  # type: ignore[arg-type]
-                    "https://financialmodelingprep.com/stable/quote",
-                    "https://financialmodelingprep.com/stable/profile",
+                    "https://financialmodelingprep.com/api/v3/quote",
+                    "https://financialmodelingprep.com/api/v3/profile",
                     "AAPL",
                 )
         r2.raise_for_status.assert_called_once()
@@ -1460,8 +1460,8 @@ class TestParallelGet:
         with patch("asyncio.gather", side_effect=mock_gather):
             result = await service._parallel_get(
                 mock_client,  # type: ignore[arg-type]
-                "https://financialmodelingprep.com/stable/quote",
-                "https://financialmodelingprep.com/stable/profile",
+                "https://financialmodelingprep.com/api/v3/quote",
+                "https://financialmodelingprep.com/api/v3/profile",
                 "AAPL",
             )
         assert result == (r1, r2)
@@ -1489,8 +1489,8 @@ class TestParallelGet:
             with pytest.raises(httpx.HTTPStatusError) as exc_info:
                 await service._parallel_get(
                     mock_client,
-                    "https://financialmodelingprep.com/stable/quote",
-                    "https://financialmodelingprep.com/stable/profile",
+                    "https://financialmodelingprep.com/api/v3/quote",
+                    "https://financialmodelingprep.com/api/v3/profile",
                     "AAPL",
                 )
         assert exc_info.value.response.status_code == 403
@@ -1751,7 +1751,7 @@ def _make_http_status_response(status_code: int, body: bytes = b"error") -> http
     return httpx.Response(
         status_code=status_code,
         content=body,
-        request=httpx.Request("GET", "https://financialmodelingprep.com/stable/test"),
+        request=httpx.Request("GET", "https://financialmodelingprep.com/api/v3/test"),
     )
 
 
@@ -2230,8 +2230,17 @@ class TestDateToQuarter:
 # ---------------------------------------------------------------------------
 
 
-class TestClassifySentimentNegative:
-    """Tests for _classify_sentiment negative/bearish mapping."""
+class TestClassifySentiment:
+    """Tests for _classify_sentiment — all branches."""
+
+    def test_positive(self) -> None:
+        assert _classify_sentiment("positive") == "positive"
+
+    def test_bullish(self) -> None:
+        assert _classify_sentiment("bullish") == "positive"
+
+    def test_positive_uppercase(self) -> None:
+        assert _classify_sentiment("POSITIVE") == "positive"
 
     def test_negative_lowercase(self) -> None:
         assert _classify_sentiment("negative") == "negative"
@@ -2244,6 +2253,18 @@ class TestClassifySentimentNegative:
 
     def test_negative_titlecase(self) -> None:
         assert _classify_sentiment("Negative") == "negative"
+
+    def test_neutral(self) -> None:
+        assert _classify_sentiment("neutral") == "neutral"
+
+    def test_empty_string(self) -> None:
+        assert _classify_sentiment("") == "neutral"
+
+    def test_none_fallback(self) -> None:
+        assert _classify_sentiment(None) == "neutral"  # type: ignore[arg-type]
+
+    def test_unknown_value(self) -> None:
+        assert _classify_sentiment("mixed") == "neutral"
 
 
 # ---------------------------------------------------------------------------
@@ -2271,33 +2292,27 @@ def _make_income_rows(count: int, revenue: int = 100_000_000) -> list[dict]:
 
 
 class TestGetIncomeStatementFallback:
-    """Tests for get_income_statement() stable→v3 fallback and edge cases."""
+    """Tests for get_income_statement() edge cases."""
 
     def setup_method(self) -> None:
         MarketDataService._sp500_cache = {}
         MarketDataService._sp500_loaded_at = 0.0
 
     @pytest.mark.asyncio
-    async def test_income_stable_fails_v3_succeeds(self) -> None:
+    async def test_income_returns_data(self) -> None:
         service = MarketDataService()
         v3_data = [_INCOME_ROW_TEMPLATE.copy()]
-        call_count = 0
 
-        async def side_effect(url: str, params: dict) -> list | dict:
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:
-                raise ExternalAPIError("FMP API", "stable endpoint unavailable")
-            return v3_data
-
-        with patch.object(service, "_get_json", side_effect=side_effect):
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=v3_data
+        ):
             result = await service.get_income_statement("AAPL")
 
         assert len(result) == 1
         assert result[0]["quarter"] == "Q1 2025"
 
     @pytest.mark.asyncio
-    async def test_income_both_endpoints_empty(self) -> None:
+    async def test_income_empty_response(self) -> None:
         service = MarketDataService()
 
         with patch.object(
@@ -2319,6 +2334,21 @@ class TestGetIncomeStatementFallback:
             result = await service.get_income_statement("AAPL")
 
         assert all(r["yoy_revenue_growth"] is None for r in result)
+
+    @pytest.mark.asyncio
+    async def test_income_yoy_calculated_when_history_sufficient(self) -> None:
+        """5 rows with valid revenue — YoY growth calculated for row 0."""
+        service = MarketDataService()
+        rows = _make_income_rows(5, revenue=200_000_000)
+        rows[4]["revenue"] = 100_000_000  # prev year revenue
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=rows
+        ):
+            result = await service.get_income_statement("AAPL")
+
+        # Row 0: (200M - 100M) / 100M = 1.0
+        assert result[0]["yoy_revenue_growth"] == 1.0
 
     @pytest.mark.asyncio
     async def test_income_yoy_zero_prev_revenue(self) -> None:
@@ -2363,25 +2393,19 @@ _NEWS_ITEM: dict = {
 
 
 class TestGetStockNewsFallback:
-    """Tests for get_stock_news() stable→v3 fallback and edge cases."""
+    """Tests for get_stock_news() edge cases."""
 
     def setup_method(self) -> None:
         MarketDataService._sp500_cache = {}
         MarketDataService._sp500_loaded_at = 0.0
 
     @pytest.mark.asyncio
-    async def test_news_stable_fails_v3_succeeds(self) -> None:
+    async def test_news_returns_data(self) -> None:
         service = MarketDataService()
-        call_count = 0
 
-        async def side_effect(url: str, params: dict) -> list | dict:
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:
-                raise ExternalAPIError("FMP API", "stable endpoint unavailable")
-            return [_NEWS_ITEM.copy()]
-
-        with patch.object(service, "_get_json", side_effect=side_effect):
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=[_NEWS_ITEM.copy()]
+        ):
             result = await service.get_stock_news("AAPL")
 
         assert len(result) == 1
@@ -2389,7 +2413,7 @@ class TestGetStockNewsFallback:
         assert result[0]["sentiment"] == "negative"
 
     @pytest.mark.asyncio
-    async def test_news_both_endpoints_empty(self) -> None:
+    async def test_news_empty_response(self) -> None:
         service = MarketDataService()
 
         with patch.object(
