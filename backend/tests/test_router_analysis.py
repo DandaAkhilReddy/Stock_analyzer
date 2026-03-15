@@ -940,3 +940,42 @@ class TestErrorResponseContentType:
         response = await client.post("/api/analyze/")
 
         assert "application/json" in response.headers["content-type"]
+
+
+# ---------------------------------------------------------------------------
+# GET /api/debug/earnings/{ticker}
+# ---------------------------------------------------------------------------
+
+_DEBUG_EARNINGS_PATCH = "app.routers.analysis._market_service.get_income_statement"
+
+_SAMPLE_EARNINGS_DATA: list[dict] = [
+    {"quarter": "Q1 2025", "revenue": 94900.0, "net_income": 23600.0, "eps": 1.53, "yoy_revenue_growth": 0.05},
+    {"quarter": "Q4 2024", "revenue": 119600.0, "net_income": 33900.0, "eps": 2.18, "yoy_revenue_growth": 0.04},
+]
+
+
+class TestDebugEarnings:
+    """GET /api/debug/earnings/{ticker} — diagnostic endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_debug_earnings_happy_path(self, client: AsyncClient) -> None:
+        """200 response with ticker, quarters_returned, and data fields for valid ticker."""
+        with patch(_DEBUG_EARNINGS_PATCH, new_callable=AsyncMock) as mock_income:
+            mock_income.return_value = _SAMPLE_EARNINGS_DATA
+            response = await client.get("/api/debug/earnings/AAPL")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ticker"] == "AAPL"
+        assert body["quarters_returned"] == 2
+        assert len(body["data"]) == 2
+        assert body["data"][0]["quarter"] == "Q1 2025"
+
+    @pytest.mark.asyncio
+    async def test_debug_earnings_not_found(self, client: AsyncClient) -> None:
+        """StockNotFoundError from get_income_statement propagates as 404."""
+        with patch(_DEBUG_EARNINGS_PATCH, new_callable=AsyncMock) as mock_income:
+            mock_income.side_effect = StockNotFoundError("INVALID")
+            response = await client.get("/api/debug/earnings/INVALID")
+
+        assert response.status_code == 404

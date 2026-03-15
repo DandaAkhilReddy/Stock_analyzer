@@ -10,6 +10,8 @@ from app.core.exceptions import ExternalAPIError, StockNotFoundError
 from app.models.analysis import HistoricalPrice, TechnicalSnapshot
 from app.services.market_data_service import (
     MarketDataService,
+    _classify_sentiment,
+    _date_to_quarter,
     _format_market_cap,
     _safe_float,
     _safe_int,
@@ -2188,3 +2190,252 @@ class TestSearchSuggestionsSP500Boost:
 
         assert len(result) == 1
         assert result[0]["symbol"] == "MSFT"
+
+
+# ---------------------------------------------------------------------------
+# Unit tests for _date_to_quarter
+# ---------------------------------------------------------------------------
+
+
+class TestDateToQuarter:
+    """Tests for _date_to_quarter helper."""
+
+    def test_q1_date(self) -> None:
+        assert _date_to_quarter("2025-03-31") == "Q1 2025"
+
+    def test_q2_date(self) -> None:
+        assert _date_to_quarter("2025-06-30") == "Q2 2025"
+
+    def test_q3_date(self) -> None:
+        assert _date_to_quarter("2025-09-30") == "Q3 2025"
+
+    def test_q4_date(self) -> None:
+        assert _date_to_quarter("2025-12-31") == "Q4 2025"
+
+    def test_malformed_no_hyphen_returns_input(self) -> None:
+        # No hyphens → split gives a single-element list → IndexError → fallback
+        assert _date_to_quarter("20250331") == "20250331"
+
+    def test_empty_string_returns_empty(self) -> None:
+        # Empty string → split gives [""] → IndexError on [1] → fallback
+        assert _date_to_quarter("") == ""
+
+    def test_non_numeric_month_returns_input(self) -> None:
+        # Month token is not a number → ValueError → fallback
+        assert _date_to_quarter("2025-xx-31") == "2025-xx-31"
+
+
+# ---------------------------------------------------------------------------
+# Unit tests for _classify_sentiment — negative branch
+# ---------------------------------------------------------------------------
+
+
+class TestClassifySentimentNegative:
+    """Tests for _classify_sentiment negative/bearish mapping."""
+
+    def test_negative_lowercase(self) -> None:
+        assert _classify_sentiment("negative") == "negative"
+
+    def test_bearish_lowercase(self) -> None:
+        assert _classify_sentiment("bearish") == "negative"
+
+    def test_bearish_uppercase(self) -> None:
+        assert _classify_sentiment("BEARISH") == "negative"
+
+    def test_negative_titlecase(self) -> None:
+        assert _classify_sentiment("Negative") == "negative"
+
+
+# ---------------------------------------------------------------------------
+# Integration tests for get_income_statement() — fallback paths
+# ---------------------------------------------------------------------------
+
+_INCOME_ROW_TEMPLATE: dict = {
+    "date": "2025-03-31",
+    "revenue": 100_000_000,
+    "netIncome": 20_000_000,
+    "eps": 1.5,
+}
+
+
+def _make_income_rows(count: int, revenue: int = 100_000_000) -> list[dict]:
+    rows = []
+    for i in range(count):
+        rows.append({
+            "date": f"2025-0{(i % 3) + 1}-31",
+            "revenue": revenue,
+            "netIncome": 20_000_000,
+            "eps": 1.5,
+        })
+    return rows
+
+
+class TestGetIncomeStatementFallback:
+    """Tests for get_income_statement() stable→v3 fallback and edge cases."""
+
+    def setup_method(self) -> None:
+        MarketDataService._sp500_cache = {}
+        MarketDataService._sp500_loaded_at = 0.0
+
+    @pytest.mark.asyncio
+    async def test_income_stable_fails_v3_succeeds(self) -> None:
+        service = MarketDataService()
+        v3_data = [_INCOME_ROW_TEMPLATE.copy()]
+        call_count = 0
+
+        async def side_effect(url: str, params: dict) -> list | dict:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ExternalAPIError("FMP API", "stable endpoint unavailable")
+            return v3_data
+
+        with patch.object(service, "_get_json", side_effect=side_effect):
+            result = await service.get_income_statement("AAPL")
+
+        assert len(result) == 1
+        assert result[0]["quarter"] == "Q1 2025"
+
+    @pytest.mark.asyncio
+    async def test_income_both_endpoints_empty(self) -> None:
+        service = MarketDataService()
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=[]
+        ):
+            result = await service.get_income_statement("AAPL")
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_income_yoy_insufficient_history(self) -> None:
+        """Only 3 rows — no i+4 index exists, so yoy_revenue_growth is None."""
+        service = MarketDataService()
+        rows = _make_income_rows(3)
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=rows
+        ):
+            result = await service.get_income_statement("AAPL")
+
+        assert all(r["yoy_revenue_growth"] is None for r in result)
+
+    @pytest.mark.asyncio
+    async def test_income_yoy_zero_prev_revenue(self) -> None:
+        """5 rows where the 5th row has revenue=0 — division skipped, yoy=None."""
+        service = MarketDataService()
+        rows = _make_income_rows(5)
+        rows[4]["revenue"] = 0  # prev_rev == 0 → guard triggers
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=rows
+        ):
+            result = await service.get_income_statement("AAPL")
+
+        # Row 0 has i+4=4 which has revenue=0 → yoy must be None
+        assert result[0]["yoy_revenue_growth"] is None
+
+    @pytest.mark.asyncio
+    async def test_income_non_list_response(self) -> None:
+        """_get_json returns a dict instead of a list — treated as empty."""
+        service = MarketDataService()
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value={}
+        ):
+            result = await service.get_income_statement("AAPL")
+
+        assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Integration tests for get_stock_news() — fallback paths
+# ---------------------------------------------------------------------------
+
+_NEWS_ITEM: dict = {
+    "title": "News headline",
+    "site": "Reuters",
+    "sentiment": "Bearish",
+    "url": "https://example.com",
+    "publishedDate": "2025-03-14",
+    "image": "https://img.com/1.jpg",
+}
+
+
+class TestGetStockNewsFallback:
+    """Tests for get_stock_news() stable→v3 fallback and edge cases."""
+
+    def setup_method(self) -> None:
+        MarketDataService._sp500_cache = {}
+        MarketDataService._sp500_loaded_at = 0.0
+
+    @pytest.mark.asyncio
+    async def test_news_stable_fails_v3_succeeds(self) -> None:
+        service = MarketDataService()
+        call_count = 0
+
+        async def side_effect(url: str, params: dict) -> list | dict:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ExternalAPIError("FMP API", "stable endpoint unavailable")
+            return [_NEWS_ITEM.copy()]
+
+        with patch.object(service, "_get_json", side_effect=side_effect):
+            result = await service.get_stock_news("AAPL")
+
+        assert len(result) == 1
+        assert result[0]["title"] == "News headline"
+        assert result[0]["sentiment"] == "negative"
+
+    @pytest.mark.asyncio
+    async def test_news_both_endpoints_empty(self) -> None:
+        service = MarketDataService()
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=[]
+        ):
+            result = await service.get_stock_news("AAPL")
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_news_filters_empty_title(self) -> None:
+        service = MarketDataService()
+        items = [
+            {"title": "", "site": "Reuters", "sentiment": "Positive", "url": "https://a.com"},
+            _NEWS_ITEM.copy(),
+        ]
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=items
+        ):
+            result = await service.get_stock_news("AAPL")
+
+        assert len(result) == 1
+        assert result[0]["title"] == "News headline"
+
+    @pytest.mark.asyncio
+    async def test_news_negative_sentiment(self) -> None:
+        service = MarketDataService()
+        item = _NEWS_ITEM.copy()
+        item["sentiment"] = "Bearish"
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=[item]
+        ):
+            result = await service.get_stock_news("AAPL")
+
+        assert result[0]["sentiment"] == "negative"
+
+    @pytest.mark.asyncio
+    async def test_news_non_list_response(self) -> None:
+        """_get_json returns a dict — treated as empty."""
+        service = MarketDataService()
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value={}
+        ):
+            result = await service.get_stock_news("AAPL")
+
+        assert result == []
