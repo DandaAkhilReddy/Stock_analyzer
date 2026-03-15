@@ -383,7 +383,7 @@ class TestChatCompletionJsonCallArguments:
         await provider.chat_completion_json("sys", "usr")
 
         _, kwargs = create_mock.call_args
-        assert kwargs["timeout"] == pytest.approx(180.0)
+        assert kwargs["timeout"] == pytest.approx(45.0)
 
 
 # ---------------------------------------------------------------------------
@@ -685,13 +685,13 @@ class TestCallApiRetry:
     ) -> None:
         provider, create_mock = _make_provider()
         timeout_exc = APITimeoutError(request=_fake_request())
-        create_mock.side_effect = [timeout_exc] * 3
+        create_mock.side_effect = [timeout_exc] * 2
 
         with patch("asyncio.sleep"), patch("random.uniform", return_value=0.0):
-            with pytest.raises(AIAnalysisError, match="3 retries"):
+            with pytest.raises(AIAnalysisError, match="2 retries"):
                 await provider.chat_completion_json("sys", "usr")
 
-        assert create_mock.call_count == 3
+        assert create_mock.call_count == 2
 
     @pytest.mark.asyncio
     async def test_raises_ai_analysis_error_after_exhausting_all_retries_rate_limit(
@@ -703,13 +703,13 @@ class TestCallApiRetry:
             response=_fake_response(429),
             body=None,
         )
-        create_mock.side_effect = [rate_exc] * 3
+        create_mock.side_effect = [rate_exc] * 2
 
         with patch("asyncio.sleep"), patch("random.uniform", return_value=0.0):
-            with pytest.raises(AIAnalysisError, match="3 retries"):
+            with pytest.raises(AIAnalysisError, match="2 retries"):
                 await provider.chat_completion_json("sys", "usr")
 
-        assert create_mock.call_count == 3
+        assert create_mock.call_count == 2
 
     @pytest.mark.asyncio
     async def test_raises_ai_analysis_error_after_exhausting_all_retries_connection(
@@ -717,13 +717,13 @@ class TestCallApiRetry:
     ) -> None:
         provider, create_mock = _make_provider()
         conn_exc = APIConnectionError(request=_fake_request(), message="timeout")
-        create_mock.side_effect = [conn_exc] * 3
+        create_mock.side_effect = [conn_exc] * 2
 
         with patch("asyncio.sleep"), patch("random.uniform", return_value=0.0):
-            with pytest.raises(AIAnalysisError, match="3 retries"):
+            with pytest.raises(AIAnalysisError, match="2 retries"):
                 await provider.chat_completion_json("sys", "usr")
 
-        assert create_mock.call_count == 3
+        assert create_mock.call_count == 2
 
     # ------------------------------------------------------------------
     # Backoff delay grows exponentially
@@ -731,11 +731,11 @@ class TestCallApiRetry:
 
     @pytest.mark.asyncio
     async def test_backoff_delays_grow_exponentially(self) -> None:
-        """Delays follow 2s, 4s pattern (base=2.0 * 2^(attempt-1))."""
+        """Delays follow 2s pattern (base=2.0 * 2^(attempt-1))."""
         provider, create_mock = _make_provider()
         timeout_exc = APITimeoutError(request=_fake_request())
-        # Fail twice then succeed — 2 sleeps with delays 2s and 4s
-        create_mock.side_effect = [timeout_exc, timeout_exc, _make_response('{"ok": true}')]
+        # Fail once then succeed — 1 sleep with delay 2s
+        create_mock.side_effect = [timeout_exc, _make_response('{"ok": true}')]
 
         sleep_calls: list[float] = []
 
@@ -746,18 +746,16 @@ class TestCallApiRetry:
              patch("random.uniform", return_value=0.0):
             await provider.chat_completion_json("sys", "usr")
 
-        assert len(sleep_calls) == 2
+        assert len(sleep_calls) == 1
         # First delay: 2.0 * 2^0 = 2.0, jitter=0 → 2.0
         assert sleep_calls[0] == pytest.approx(2.0)
-        # Second delay: 2.0 * 2^1 = 4.0, jitter=0 → 4.0
-        assert sleep_calls[1] == pytest.approx(4.0)
 
     @pytest.mark.asyncio
     async def test_no_sleep_after_last_failed_attempt(self) -> None:
-        """asyncio.sleep is NOT called after the third (final) failed attempt."""
+        """asyncio.sleep is NOT called after the second (final) failed attempt."""
         provider, create_mock = _make_provider()
         timeout_exc = APITimeoutError(request=_fake_request())
-        create_mock.side_effect = [timeout_exc] * 3
+        create_mock.side_effect = [timeout_exc] * 2
 
         sleep_calls: list[float] = []
 
@@ -769,8 +767,8 @@ class TestCallApiRetry:
             with pytest.raises(AIAnalysisError):
                 await provider.chat_completion_json("sys", "usr")
 
-        # 3 attempts → sleeps only between attempt 1→2 and 2→3
-        assert len(sleep_calls) == 2
+        # 2 attempts → sleep only between attempt 1→2
+        assert len(sleep_calls) == 1
 
     @pytest.mark.asyncio
     async def test_jitter_is_added_to_base_delay(self) -> None:
@@ -804,7 +802,7 @@ class TestCallApiRetry:
         # With base=2.0, attempt=3 → 2.0 * 4 = 8.0, still under 30 so test cap
         # by patching _API_RETRY_BASE_DELAY effectively via huge base: skip, just
         # verify the actual cap via the constant itself and that sleep <= 30
-        create_mock.side_effect = [timeout_exc, timeout_exc, _make_response('{"ok": true}')]
+        create_mock.side_effect = [timeout_exc, _make_response('{"ok": true}')]
 
         sleep_calls: list[float] = []
 

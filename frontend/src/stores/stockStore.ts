@@ -14,6 +14,7 @@ interface StockState {
   isRefreshing: boolean;
   lastFetchedAt: number | null;
   error: string | null;
+  refreshError: string | null;
   activeTab: AnalysisTab;
   fetchAnalysis: (ticker: string) => Promise<void>;
   silentRefresh: () => Promise<void>;
@@ -29,6 +30,7 @@ export const useStockStore = create<StockState>()(
       isRefreshing: false,
       lastFetchedAt: null,
       error: null,
+      refreshError: null,
       activeTab: 'invest',
 
       fetchAnalysis: async (ticker: string) => {
@@ -36,7 +38,7 @@ export const useStockStore = create<StockState>()(
           clearInterval(refreshTimer);
           refreshTimer = null;
         }
-        set({ currentTicker: ticker, isLoading: true, error: null, analysis: null, activeTab: 'invest' });
+        set({ currentTicker: ticker, isLoading: true, error: null, refreshError: null, analysis: null, activeTab: 'invest' });
         try {
           const analysis = await analyzeStock(ticker);
           set({ analysis, isLoading: false, currentTicker: analysis.ticker, lastFetchedAt: Date.now() });
@@ -55,9 +57,9 @@ export const useStockStore = create<StockState>()(
         set({ isRefreshing: true });
         try {
           const analysis = await analyzeStock(currentTicker);
-          set({ analysis, currentTicker: analysis.ticker, lastFetchedAt: Date.now(), isRefreshing: false });
+          set({ analysis, currentTicker: analysis.ticker, lastFetchedAt: Date.now(), isRefreshing: false, refreshError: null });
         } catch {
-          set({ isRefreshing: false });
+          set({ isRefreshing: false, refreshError: 'Refresh failed — showing last data' });
         }
       },
 

@@ -26,6 +26,8 @@ _RETRY_MAX_DELAY = 10.0  # seconds
 _RETRYABLE_STATUS_CODES = {500, 502, 503, 504}  # 429 = daily quota, not transient
 _SP500_CACHE_TTL = 86_400  # 24 hours in seconds
 _RESPONSE_CACHE_TTL = 300  # 5 minutes — reduces FMP API call volume
+_YFINANCE_TIMEOUT = 15.0  # seconds — cap yfinance thread calls
+_MAX_CACHE_SIZE = 500  # evict expired/oldest entries beyond this limit
 
 # In-memory response cache: cache_key → (expiry_timestamp, response_data)
 _response_cache: dict[str, tuple[float, Any]] = {}
@@ -174,6 +176,20 @@ class MarketDataService:
         raw = f"{url}|{json.dumps(filtered, sort_keys=True, default=str)}"
         return hashlib.sha256(raw.encode()).hexdigest()
 
+    @staticmethod
+    def _evict_cache() -> None:
+        """Remove expired entries; if still over limit, evict oldest."""
+        if len(_response_cache) <= _MAX_CACHE_SIZE:
+            return
+        now_ts = time.time()
+        expired = [k for k, (exp, _) in _response_cache.items() if now_ts >= exp]
+        for k in expired:
+            del _response_cache[k]
+        if len(_response_cache) > _MAX_CACHE_SIZE:
+            oldest = sorted(_response_cache, key=lambda k: _response_cache[k][0])
+            for k in oldest[: len(_response_cache) - _MAX_CACHE_SIZE]:
+                del _response_cache[k]
+
     async def _get_json(self, url: str, params: dict[str, object]) -> list | dict:
         """Make an authenticated GET request to FMP with caching + retry.
 
@@ -214,6 +230,7 @@ class MarketDataService:
                     resp.raise_for_status()
                     result = resp.json()
                     _response_cache[key] = (now + _RESPONSE_CACHE_TTL, result)
+                    self._evict_cache()
                     return result
                 except httpx.TimeoutException as exc:
                     last_exc = ExternalAPIError(
@@ -522,7 +539,9 @@ class MarketDataService:
                 "company_description": info.get("longBusinessSummary", ""),
             }
 
-        result = await asyncio.to_thread(_fetch)
+        result = await asyncio.wait_for(
+            asyncio.to_thread(_fetch), timeout=_YFINANCE_TIMEOUT
+        )
         logger.info("yfinance_quote_complete", ticker=ticker)
         return result
 
@@ -620,7 +639,9 @@ class MarketDataService:
                 )
             return rows
 
-        result = await asyncio.to_thread(_fetch)
+        result = await asyncio.wait_for(
+            asyncio.to_thread(_fetch), timeout=_YFINANCE_TIMEOUT
+        )
         logger.info("yfinance_history_complete", ticker=ticker, rows=len(result))
         return result
 
@@ -792,7 +813,9 @@ class MarketDataService:
 
             return result[:4]
 
-        result = await asyncio.to_thread(_fetch)
+        result = await asyncio.wait_for(
+            asyncio.to_thread(_fetch), timeout=_YFINANCE_TIMEOUT
+        )
         logger.info("yfinance_income_complete", ticker=ticker, quarters=len(result))
         return result
 
@@ -843,7 +866,9 @@ class MarketDataService:
                 })
             return result
 
-        result = await asyncio.to_thread(_fetch)
+        result = await asyncio.wait_for(
+            asyncio.to_thread(_fetch), timeout=_YFINANCE_TIMEOUT
+        )
         logger.info("yfinance_news_complete", ticker=ticker, articles=len(result))
         return result
 

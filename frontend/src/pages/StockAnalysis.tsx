@@ -39,6 +39,7 @@ export function StockAnalysis() {
   const isRefreshing = useStockStore((s) => s.isRefreshing);
   const lastFetchedAt = useStockStore((s) => s.lastFetchedAt);
   const error = useStockStore((s) => s.error);
+  const refreshError = useStockStore((s) => s.refreshError);
   const activeTab = useStockStore((s) => s.activeTab);
   const setActiveTab = useStockStore((s) => s.setActiveTab);
 
@@ -72,6 +73,16 @@ export function StockAnalysis() {
     return () => clearInterval(id);
   }, []);
 
+  // Auto-cancel before the hard 120s frontend abort
+  useEffect(() => {
+    if (loadingSeconds >= 110 && isLoading) {
+      useStockStore.setState({
+        isLoading: false,
+        error: 'Analysis timed out. Please try again.',
+      });
+    }
+  }, [loadingSeconds, isLoading]);
+
   // Wait for persist middleware to rehydrate before deciding what to show
   if (!hasHydrated) {
     return (
@@ -100,8 +111,15 @@ export function StockAnalysis() {
     'Analyzing insider trading patterns and institutional flows...',
     'Almost done — assembling the final report...',
   ];
-  const messageIndex = Math.floor(loadingSeconds / 5) % agentMessages.length;
-  const loadingMessage = agentMessages[messageIndex];
+  let loadingMessage: string;
+  if (loadingSeconds >= 90) {
+    loadingMessage = 'Almost at the limit — will cancel soon if no response...';
+  } else if (loadingSeconds >= 30) {
+    loadingMessage = 'Taking longer than usual — hang tight...';
+  } else {
+    const messageIndex = Math.floor(loadingSeconds / 5) % agentMessages.length;
+    loadingMessage = agentMessages[messageIndex];
+  }
 
   if (isLoading) {
     return (
@@ -141,6 +159,11 @@ export function StockAnalysis() {
           <span className="text-xs text-stone-400">
             Updated {formatTimeAgo(lastFetchedAt)}
           </span>
+          {refreshError && lastFetchedAt && Date.now() - lastFetchedAt > 15 * 60 * 1000 && (
+            <span className="text-xs text-amber-500 font-medium">
+              Data may be stale
+            </span>
+          )}
         </div>
       )}
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
