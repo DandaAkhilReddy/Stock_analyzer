@@ -564,3 +564,54 @@ describe('persist middleware', () => {
     expect(stored.state.lastFetchedAt).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Refresh timer — setInterval callback (line 44 coverage)
+// ---------------------------------------------------------------------------
+
+describe('refresh timer', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    useStockStore.setState({
+      currentTicker: null,
+      analysis: null,
+      isLoading: false,
+      isRefreshing: false,
+      lastFetchedAt: null,
+      error: null,
+      activeTab: 'invest',
+    });
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('triggers silentRefresh when the 10-minute interval fires', async () => {
+    vi.mocked(analyzeStock)
+      .mockResolvedValueOnce(mockAnalysis)           // fetchAnalysis call
+      .mockResolvedValueOnce({ ...mockAnalysis, current_price: 999 }); // silentRefresh call
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+
+    // Advance time by exactly 10 minutes to fire the setInterval callback
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+
+    // analyzeStock should have been called a second time by silentRefresh
+    expect(vi.mocked(analyzeStock)).toHaveBeenCalledTimes(2);
+  });
+
+  it('clears the previous timer when fetchAnalysis is called a second time', async () => {
+    vi.mocked(analyzeStock).mockResolvedValue(mockAnalysis);
+
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
+
+    await useStockStore.getState().fetchAnalysis('AAPL');
+    await useStockStore.getState().fetchAnalysis('TSLA');
+
+    // The second call must clear the timer set by the first call
+    expect(clearIntervalSpy).toHaveBeenCalled();
+    clearIntervalSpy.mockRestore();
+  });
+});
