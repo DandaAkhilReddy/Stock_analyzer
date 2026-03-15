@@ -195,10 +195,19 @@ class AIAnalysisService:
         if self._sharepoint:
             try:
                 research_context, research_sources = (
-                    await self._sharepoint.research_company(
-                        resolved_ticker,
-                        quote.get("company_name", resolved_ticker),
+                    await asyncio.wait_for(
+                        self._sharepoint.research_company(
+                            resolved_ticker,
+                            quote.get("company_name", resolved_ticker),
+                        ),
+                        timeout=15.0,
                     )
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "sharepoint_research_timeout",
+                    ticker=resolved_ticker,
+                    timeout=15.0,
                 )
             except Exception as exc:
                 logger.warning(

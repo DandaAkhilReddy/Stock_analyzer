@@ -19,7 +19,7 @@ _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*([\s\S]*?)```")
 _TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
 _JS_COMMENT_RE = re.compile(r"//[^\n]*")
 _MAX_RETRIES = 1
-_API_MAX_RETRIES = 3
+_API_MAX_RETRIES = 2
 _API_RETRY_BASE_DELAY = 2.0
 _API_RETRY_MAX_DELAY = 30.0
 _RETRYABLE_EXCEPTIONS = (APITimeoutError, APIConnectionError, OpenAIRateLimitError, InternalServerError)
@@ -147,7 +147,7 @@ class OpenAIProvider:
                     ],
                     response_format={"type": "json_object"},
                     max_completion_tokens=max_tokens,
-                    timeout=180.0,
+                    timeout=45.0,
                 )
 
                 content = response.choices[0].message.content

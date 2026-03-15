@@ -700,21 +700,19 @@ describe('StockAnalysis', () => {
       ).toBeInTheDocument();
     });
 
-    it('shows message index 12 at second 60 (wraps at 13 messages)', () => {
+    it('shows progressive "taking longer" message at second 30+', () => {
       render(<StockAnalysis />);
-      act(() => { vi.advanceTimersByTime(60000); });
-      // Math.floor(60/5) % 13 = 12 % 13 = 12
+      act(() => { vi.advanceTimersByTime(35000); });
       expect(
-        screen.getByText('Almost done — assembling the final report...'),
+        screen.getByText('Taking longer than usual — hang tight...'),
       ).toBeInTheDocument();
     });
 
-    it('wraps back to index 0 at second 65 (full cycle + 1)', () => {
+    it('shows progressive "almost at limit" message at second 90+', () => {
       render(<StockAnalysis />);
-      act(() => { vi.advanceTimersByTime(65000); });
-      // Math.floor(65/5) % 13 = 13 % 13 = 0
+      act(() => { vi.advanceTimersByTime(95000); });
       expect(
-        screen.getByText('Your AI agent is analyzing market data...'),
+        screen.getByText('Almost at the limit — will cancel soon if no response...'),
       ).toBeInTheDocument();
     });
   });
