@@ -335,17 +335,17 @@ class TestSearchSuggestions402Handling:
     @pytest.mark.asyncio
     async def test_fmp_402_raises_external_api_error_from_service(self) -> None:
         """When _search_ticker raises ExternalAPIError (e.g. FMP 402 payment
-        required), search_suggestions must propagate it — not swallow it."""
+        required), search_suggestions must return local fallback results instead
+        of propagating the error."""
         from app.core.exceptions import ExternalAPIError
 
         svc = MarketDataService()
         with patch.object(svc, "_search_ticker", new_callable=AsyncMock) as mock:
             mock.side_effect = ExternalAPIError("FMP API", "HTTP 402: Payment Required")
-            with pytest.raises(ExternalAPIError) as exc_info:
-                await svc.search_suggestions("apple")
+            results = await svc.search_suggestions("apple")
 
-        assert exc_info.value.service == "FMP API"
-        assert "402" in exc_info.value.message
+        assert isinstance(results, list)
+        assert all("symbol" in r and "name" in r for r in results)
 
     @pytest.mark.asyncio
     async def test_fmp_402_returns_502_at_endpoint(self) -> None:

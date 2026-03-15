@@ -243,6 +243,10 @@ class TestGetQuote:
             service,
             "_fetch_quote_and_profile",
             side_effect=ExternalAPIError("FMP API", "network down"),
+        ), patch.object(
+            service,
+            "_get_quote_yfinance",
+            side_effect=Exception("yfinance also failed"),
         ):
             with pytest.raises(ExternalAPIError):
                 await service.get_quote("AAPL")
@@ -347,6 +351,10 @@ class TestGetHistorical:
             service,
             "_get_json",
             side_effect=ExternalAPIError("FMP API", "timeout"),
+        ), patch.object(
+            service,
+            "_get_historical_yfinance",
+            side_effect=Exception("yfinance also failed"),
         ):
             with pytest.raises(ExternalAPIError):
                 await service.get_historical("AAPL")
@@ -1631,6 +1639,10 @@ class TestGetQuoteHttpErrorCodes:
             service,
             "_fetch_quote_and_profile",
             side_effect=ExternalAPIError("FMP API", "HTTP 403: Forbidden"),
+        ), patch.object(
+            service,
+            "_get_quote_yfinance",
+            side_effect=Exception("yfinance also failed"),
         ):
             with pytest.raises(ExternalAPIError, match="403"):
                 await service.get_quote("AAPL")
@@ -1643,6 +1655,10 @@ class TestGetQuoteHttpErrorCodes:
             service,
             "_fetch_quote_and_profile",
             side_effect=ExternalAPIError("FMP API", "HTTP 429: Too Many Requests"),
+        ), patch.object(
+            service,
+            "_get_quote_yfinance",
+            side_effect=Exception("yfinance also failed"),
         ):
             with pytest.raises(ExternalAPIError, match="429"):
                 await service.get_quote("TSLA")
@@ -1657,6 +1673,10 @@ class TestGetQuoteHttpErrorCodes:
             service,
             "_fetch_quote_and_profile",
             side_effect=ExternalAPIError("FMP API", "HTTP 500: Internal Server Error"),
+        ), patch.object(
+            service,
+            "_get_quote_yfinance",
+            side_effect=Exception("yfinance also failed"),
         ):
             with pytest.raises(ExternalAPIError, match="500"):
                 await service.get_quote("NVDA")
@@ -1670,6 +1690,10 @@ class TestGetQuoteHttpErrorCodes:
             service,
             "_fetch_quote_and_profile",
             side_effect=ExternalAPIError("FMP API", detail),
+        ), patch.object(
+            service,
+            "_get_quote_yfinance",
+            side_effect=Exception("yfinance also failed"),
         ):
             with pytest.raises(ExternalAPIError) as exc_info:
                 await service.get_quote("AAPL")
