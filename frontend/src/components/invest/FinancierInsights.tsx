@@ -22,6 +22,26 @@ const financierIcons: Record<string, typeof TrendingUp> = {
   'Cathie Wood': BookOpen,
 };
 
+const financierGradients: Record<string, string> = {
+  'Warren Buffett': 'from-emerald-500 to-emerald-600',
+  'Peter Lynch': 'from-blue-500 to-cyan-500',
+  'Benjamin Graham': 'from-slate-500 to-zinc-600',
+  'Ray Dalio': 'from-violet-500 to-purple-600',
+  'Cathie Wood': 'from-rose-500 to-pink-500',
+};
+
+const tagContainerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.03 },
+  },
+};
+
+const tagItemVariants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: { scale: 1, opacity: 1 },
+};
+
 function ConsensusBar({ perspectives }: { perspectives: FinancierPerspective[] }) {
   const total = perspectives.length;
   if (total === 0) return null;
@@ -29,26 +49,25 @@ function ConsensusBar({ perspectives }: { perspectives: FinancierPerspective[] }
   const holdCount = perspectives.filter((p) => p.verdict === 'hold').length;
   const sellCount = perspectives.filter((p) => p.verdict === 'sell').length;
 
+  const segments = [
+    { count: buyCount, color: 'bg-emerald-500' },
+    { count: holdCount, color: 'bg-amber-400' },
+    { count: sellCount, color: 'bg-red-500' },
+  ];
+
   return (
     <div className="flex items-center gap-3">
       <div className="flex-1 h-3 rounded-full overflow-hidden flex bg-stone-100">
-        {buyCount > 0 && (
-          <div
-            className="bg-emerald-500 transition-all duration-500"
-            style={{ width: `${(buyCount / total) * 100}%` }}
-          />
-        )}
-        {holdCount > 0 && (
-          <div
-            className="bg-amber-400 transition-all duration-500"
-            style={{ width: `${(holdCount / total) * 100}%` }}
-          />
-        )}
-        {sellCount > 0 && (
-          <div
-            className="bg-red-500 transition-all duration-500"
-            style={{ width: `${(sellCount / total) * 100}%` }}
-          />
+        {segments.map(({ count, color }, index) =>
+          count > 0 ? (
+            <motion.div
+              key={color}
+              className={color}
+              initial={{ width: 0 }}
+              animate={{ width: `${(count / total) * 100}%` }}
+              transition={{ duration: 0.8, delay: 0.2 * index, ease: 'easeOut' }}
+            />
+          ) : null
         )}
       </div>
       <div className="flex gap-3 text-xs text-stone-500 shrink-0">
@@ -60,20 +79,23 @@ function ConsensusBar({ perspectives }: { perspectives: FinancierPerspective[] }
   );
 }
 
-function PerspectiveCard({ perspective, delay }: { perspective: FinancierPerspective; delay: number }) {
+function PerspectiveCard({ perspective, index }: { perspective: FinancierPerspective; index: number }) {
   const style = verdictStyles[perspective.verdict] ?? verdictStyles.hold;
   const Icon = financierIcons[perspective.name] ?? Users;
+  const gradient = financierGradients[perspective.name] ?? 'from-indigo-500 to-violet-500';
+  const slideX = index % 2 === 0 ? -20 : 20;
 
   return (
     <motion.div
       className="bg-stone-50 border border-stone-100 rounded-xl p-4"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay }}
+      initial={{ opacity: 0, x: slideX }}
+      whileInView={{ opacity: 1, y: 0, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4, delay: index * 0.08 }}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center">
+          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
             <Icon size={16} className="text-white" />
           </div>
           <div>
@@ -91,16 +113,23 @@ function PerspectiveCard({ perspective, delay }: { perspective: FinancierPerspec
       </p>
 
       {perspective.key_metrics_evaluated.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <motion.div
+          className="flex flex-wrap gap-1.5"
+          variants={tagContainerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
           {perspective.key_metrics_evaluated.map((metric) => (
-            <span
+            <motion.span
               key={metric}
               className="text-[10px] font-medium px-2 py-0.5 bg-stone-100 text-stone-500 rounded-full"
+              variants={tagItemVariants}
             >
               {metric}
-            </span>
+            </motion.span>
           ))}
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );
@@ -128,20 +157,27 @@ export function FinancierInsights({ analysis, ticker }: FinancierInsightsProps) 
       {/* Perspective Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {analysis.perspectives.map((p, i) => (
-          <PerspectiveCard key={p.name} perspective={p} delay={i * 0.08} />
+          <PerspectiveCard key={p.name} perspective={p} index={i} />
         ))}
       </div>
 
       {/* Consensus Summary */}
       {analysis.consensus_reasoning && (
-        <Card>
-          <div className="text-center py-2">
-            <p className="text-sm text-stone-600">
-              <span className="font-bold text-stone-900">{ticker}</span> —{' '}
-              {analysis.consensus_reasoning}
-            </p>
-          </div>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card>
+            <div className="text-center py-2">
+              <p className="text-sm text-stone-600">
+                <span className="font-bold text-stone-900">{ticker}</span> —{' '}
+                {analysis.consensus_reasoning}
+              </p>
+            </div>
+          </Card>
+        </motion.div>
       )}
     </div>
   );

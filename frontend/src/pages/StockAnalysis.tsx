@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStockStore } from '../stores/stockStore';
 import { AgentLoadingAnimation } from '../components/loading/AgentLoadingAnimation';
@@ -14,6 +14,14 @@ import { CompanyAbout } from '../components/about/CompanyAbout';
 import { ResearchSources } from '../components/analysis/ResearchSources';
 import { InvestmentOutlook } from '../components/invest/InvestmentOutlook';
 import { FinancierInsights } from '../components/invest/FinancierInsights';
+import type { AnalysisTab } from '../types/analysis';
+
+const TAB_ORDER: Record<AnalysisTab, number> = {
+  chart: 0,
+  news: 1,
+  about: 2,
+  invest: 3,
+};
 
 function formatTimeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -37,6 +45,13 @@ export function StockAnalysis() {
   const [hasHydrated, setHasHydrated] = useState(useStockStore.persist.hasHydrated());
   const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [, setTick] = useState(0);
+
+  const prevTabRef = useRef<AnalysisTab>(activeTab);
+  const direction = TAB_ORDER[activeTab] > TAB_ORDER[prevTabRef.current] ? 1 : -1;
+
+  useEffect(() => {
+    prevTabRef.current = activeTab;
+  }, [activeTab]);
 
   useEffect(() => {
     const unsub = useStockStore.persist.onFinishHydration(() => setHasHydrated(true));
@@ -104,6 +119,8 @@ export function StockAnalysis() {
 
   if (!analysis) return <LandingHero />;
 
+  const slideX = direction * 40;
+
   return (
     <motion.div
       className="space-y-4 sm:space-y-6"
@@ -116,7 +133,7 @@ export function StockAnalysis() {
         <div className="flex items-center gap-2 px-1 -mt-1 mb-1">
           {isRefreshing && (
             <motion.div
-              className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full"
+              className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full shadow-[0_0_6px_2px_rgba(99,102,241,0.35)]"
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             />
@@ -128,13 +145,14 @@ export function StockAnalysis() {
       )}
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2 }}
+          custom={direction}
+          initial={{ opacity: 0, x: slideX }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -slideX }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         >
           {activeTab === 'chart' && (
             <PriceChart

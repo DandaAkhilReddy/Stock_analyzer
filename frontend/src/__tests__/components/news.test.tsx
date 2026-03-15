@@ -13,6 +13,12 @@ vi.mock('framer-motion', () => ({
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
       <div {...props}>{children}</div>
     ),
+    span: ({ children, ...props }: React.HTMLAttributes<HTMLSpanElement> & { children?: React.ReactNode }) => (
+      <span {...props}>{children}</span>
+    ),
+    p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => (
+      <p {...props}>{children}</p>
+    ),
   },
   useMotionValue: () => ({ set: vi.fn() }),
   useSpring: (v: unknown) => v,

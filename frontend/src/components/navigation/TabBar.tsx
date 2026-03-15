@@ -29,9 +29,11 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
           const isActive = activeTab === tab.id;
 
           return (
-            <button
+            <motion.button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
+              whileHover={!isActive ? { scale: 1.05 } : undefined}
+              whileTap={!isActive ? { scale: 0.97 } : undefined}
               className={`relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                 isActive
                   ? 'text-indigo-600'
@@ -39,17 +41,30 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
               }`}
             >
               {isActive && (
-                <motion.div
-                  layoutId="tab-active-pill"
-                  className="absolute inset-0 bg-white shadow-sm rounded-xl"
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
+                <>
+                  <motion.div
+                    layoutId="tab-active-pill"
+                    className="absolute inset-0 bg-white shadow-md shadow-indigo-500/10 rounded-xl"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                  <motion.div
+                    layoutId="tab-active-underline"
+                    className="absolute bottom-1 left-3 right-3 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                </>
               )}
               <span className="relative flex items-center gap-1.5 sm:gap-2">
-                <Icon size={16} />
+                <motion.span
+                  animate={isActive ? { scale: [1, 1.15, 1] } : {}}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="inline-flex"
+                >
+                  <Icon size={16} />
+                </motion.span>
                 <span className="hidden sm:inline">{tab.label}</span>
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>

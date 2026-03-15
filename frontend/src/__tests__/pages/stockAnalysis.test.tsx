@@ -38,6 +38,7 @@ vi.mock('framer-motion', () => {
     useMotionValue: () => ({ set: () => {} }),
     useSpring: (v: any) => v,
     useTransform: () => 0,
+    useScroll: () => ({ scrollYProgress: { get: () => 0 } }),
   };
 });
 
@@ -213,7 +214,11 @@ describe('StockAnalysis', () => {
 
     it('shows the "Reddy" heading from LandingHero', () => {
       render(<StockAnalysis />);
-      expect(screen.getByText(/Reddy/i)).toBeInTheDocument();
+      // "Reddy" is rendered as individual <motion.span> characters inside <motion.h1>.
+      // getByText won't find it via text-node matching; check via heading role instead.
+      const headings = screen.getAllByRole('heading', { level: 1 });
+      const reddyHeading = headings.find((h) => /Reddy/i.test(h.textContent ?? ''));
+      expect(reddyHeading).toBeDefined();
     });
 
     it('shows the "Stock Analyzer" text from LandingHero', () => {

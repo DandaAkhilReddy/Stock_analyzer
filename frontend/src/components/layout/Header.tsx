@@ -1,3 +1,4 @@
+import { motion, useScroll } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import { StockSearchBar } from '../search/StockSearchBar';
 import { useStockStore } from '../../stores/stockStore';
@@ -5,6 +6,8 @@ import { useStockStore } from '../../stores/stockStore';
 export function Header() {
   const currentTicker = useStockStore((s) => s.currentTicker);
   const isLanding = !currentTicker;
+
+  const { scrollYProgress } = useScroll();
 
   return (
     <header
@@ -14,9 +17,21 @@ export function Header() {
           : 'bg-white/80 backdrop-blur-xl border-b border-stone-200 shadow-sm'
       }`}
     >
+      {!isLanding && (
+        <motion.div
+          className="scroll-progress"
+          style={{ scaleX: scrollYProgress }}
+        />
+      )}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-6">
         <div className="flex items-center gap-2 shrink-0">
-          <TrendingUp className="text-indigo-600" size={28} />
+          <motion.div
+            whileHover={{ rotate: 15, scale: 1.1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            className="inline-flex"
+          >
+            <TrendingUp className="text-indigo-600" size={28} />
+          </motion.div>
           <div>
             <h1 className="text-lg font-bold text-stone-900 leading-tight">Stock Analyzer</h1>
             <p className="text-xs text-stone-400">AI-Powered Analysis</p>
