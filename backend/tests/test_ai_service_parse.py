@@ -176,11 +176,18 @@ class TestMergeResponseHappyPath:
             support_levels=[165.0, 160.0],
             resistance_levels=[180.0, 185.0],
             signal="buy",
-            news=[
+        )
+        return service._merge_response(
+            "AAPL",
+            _mock_quote(),
+            _mock_history(),
+            _mock_technicals(),
+            ai_data,
+            real_news=[
                 {"title": "Apple beats Q1 estimates", "source": "Reuters", "sentiment": "positive"},
                 {"title": "Vision Pro supply concerns", "source": "Bloomberg", "sentiment": "negative"},
             ],
-            quarterly_earnings=[
+            real_earnings=[
                 {
                     "quarter": "Q1 2025",
                     "revenue": 124_300.0,
@@ -196,13 +203,6 @@ class TestMergeResponseHappyPath:
                     "yoy_revenue_growth": 0.06,
                 },
             ],
-        )
-        return service._merge_response(
-            "AAPL",
-            _mock_quote(),
-            _mock_history(),
-            _mock_technicals(),
-            ai_data,
         )
 
     def test_returns_stock_analysis_response(self, result: StockAnalysisResponse) -> None:
@@ -531,9 +531,8 @@ class TestNewsField:
             _mock_quote(),
             [],
             TechnicalSnapshot(),
-            _minimal_valid_ai_data(
-                news=[{"title": "Headline A", "source": "WSJ", "sentiment": "neutral"}]
-            ),
+            _minimal_valid_ai_data(),
+            real_news=[{"title": "Headline A", "source": "WSJ", "sentiment": "neutral"}],
         )
         assert len(result.news) == 1
         assert result.news[0].title == "Headline A"
@@ -548,7 +547,8 @@ class TestNewsField:
             _mock_quote(),
             [],
             TechnicalSnapshot(),
-            _minimal_valid_ai_data(news=items),
+            _minimal_valid_ai_data(),
+            real_news=items,
         )
         assert len(result.news) == 5
         assert all(isinstance(n, NewsItem) for n in result.news)
@@ -560,7 +560,8 @@ class TestNewsField:
             _mock_quote(),
             [],
             TechnicalSnapshot(),
-            _minimal_valid_ai_data(news=[{"title": "Minimal headline"}]),
+            _minimal_valid_ai_data(),
+            real_news=[{"title": "Minimal headline"}],
         )
         item = result.news[0]
         assert item.title == "Minimal headline"
@@ -610,17 +611,16 @@ class TestQuarterlyEarningsField:
             _mock_quote(),
             [],
             TechnicalSnapshot(),
-            _minimal_valid_ai_data(
-                quarterly_earnings=[
-                    {
-                        "quarter": "Q2 2025",
-                        "revenue": 90_000.0,
-                        "net_income": 25_000.0,
-                        "eps": 1.55,
-                        "yoy_revenue_growth": 0.08,
-                    }
-                ]
-            ),
+            _minimal_valid_ai_data(),
+            real_earnings=[
+                {
+                    "quarter": "Q2 2025",
+                    "revenue": 90_000.0,
+                    "net_income": 25_000.0,
+                    "eps": 1.55,
+                    "yoy_revenue_growth": 0.08,
+                }
+            ],
         )
         assert len(result.quarterly_earnings) == 1
         q = result.quarterly_earnings[0]
@@ -638,7 +638,8 @@ class TestQuarterlyEarningsField:
             _mock_quote(),
             [],
             TechnicalSnapshot(),
-            _minimal_valid_ai_data(quarterly_earnings=quarters),
+            _minimal_valid_ai_data(),
+            real_earnings=quarters,
         )
         assert len(result.quarterly_earnings) == 4
         assert all(isinstance(q, QuarterlyEarning) for q in result.quarterly_earnings)
@@ -652,7 +653,8 @@ class TestQuarterlyEarningsField:
             _mock_quote(),
             [],
             TechnicalSnapshot(),
-            _minimal_valid_ai_data(quarterly_earnings=[{"quarter": "Q3 2025"}]),
+            _minimal_valid_ai_data(),
+            real_earnings=[{"quarter": "Q3 2025"}],
         )
         q = result.quarterly_earnings[0]
         assert q.quarter == "Q3 2025"
@@ -1248,22 +1250,28 @@ class TestMergeResponseNewsEdgeCases:
     def test_news_item_missing_required_title_raises(
         self, service: AIAnalysisService
     ) -> None:
-        """NewsItem requires 'title'; omitting it must raise AIAnalysisError."""
-        ai_data = _minimal_valid_ai_data(
-            news=[{"source": "Reuters", "sentiment": "positive"}]
-        )
+        """NewsItem requires 'title'; omitting it in real_news must raise AIAnalysisError."""
         with pytest.raises(AIAnalysisError, match="Failed to parse AI response"):
             service._merge_response(
-                "AAPL", _mock_quote(), [], TechnicalSnapshot(), ai_data
+                "AAPL",
+                _mock_quote(),
+                [],
+                TechnicalSnapshot(),
+                _minimal_valid_ai_data(),
+                real_news=[{"source": "Reuters", "sentiment": "positive"}],
             )
 
     def test_news_item_with_all_optional_fields_absent(
         self, service: AIAnalysisService
     ) -> None:
         """Only 'title' is required; source and sentiment default to None."""
-        ai_data = _minimal_valid_ai_data(news=[{"title": "Breaking news"}])
         result = service._merge_response(
-            "AAPL", _mock_quote(), [], TechnicalSnapshot(), ai_data
+            "AAPL",
+            _mock_quote(),
+            [],
+            TechnicalSnapshot(),
+            _minimal_valid_ai_data(),
+            real_news=[{"title": "Breaking news"}],
         )
         item = result.news[0]
         assert item.title == "Breaking news"
@@ -1277,7 +1285,12 @@ class TestMergeResponseNewsEdgeCases:
             for i in range(10)
         ]
         result = service._merge_response(
-            "AAPL", _mock_quote(), [], TechnicalSnapshot(), _minimal_valid_ai_data(news=items)
+            "AAPL",
+            _mock_quote(),
+            [],
+            TechnicalSnapshot(),
+            _minimal_valid_ai_data(),
+            real_news=items,
         )
         assert len(result.news) == 10
 
@@ -1297,38 +1310,47 @@ class TestMergeResponseMalformedQuarterlyEarnings:
     def test_earnings_entry_missing_required_quarter_raises(
         self, service: AIAnalysisService
     ) -> None:
-        """QuarterlyEarning requires 'quarter'; missing it must raise AIAnalysisError."""
-        ai_data = _minimal_valid_ai_data(
-            quarterly_earnings=[{"revenue": 90_000.0, "eps": 1.5}]
-        )
+        """QuarterlyEarning requires 'quarter'; missing it in real_earnings must raise AIAnalysisError."""
         with pytest.raises(AIAnalysisError, match="Failed to parse AI response"):
             service._merge_response(
-                "AAPL", _mock_quote(), [], TechnicalSnapshot(), ai_data
+                "AAPL",
+                _mock_quote(),
+                [],
+                TechnicalSnapshot(),
+                _minimal_valid_ai_data(),
+                real_earnings=[{"revenue": 90_000.0, "eps": 1.5}],
             )
 
     def test_earnings_entry_with_dict_value_for_revenue_raises(
         self, service: AIAnalysisService
     ) -> None:
         """A dict where a float is expected should raise AIAnalysisError."""
-        ai_data = _minimal_valid_ai_data(
-            quarterly_earnings=[
-                {
-                    "quarter": "Q1 2025",
-                    "revenue": {"amount": 90_000, "currency": "USD"},
-                }
-            ]
-        )
         with pytest.raises(AIAnalysisError, match="Failed to parse AI response"):
             service._merge_response(
-                "AAPL", _mock_quote(), [], TechnicalSnapshot(), ai_data
+                "AAPL",
+                _mock_quote(),
+                [],
+                TechnicalSnapshot(),
+                _minimal_valid_ai_data(),
+                real_earnings=[
+                    {
+                        "quarter": "Q1 2025",
+                        "revenue": {"amount": 90_000, "currency": "USD"},
+                    }
+                ],
             )
 
     def test_earnings_entry_with_null_numeric_fields_accepted(
         self, service: AIAnalysisService
     ) -> None:
         """All numeric earnings fields are Optional — explicit null is valid."""
-        ai_data = _minimal_valid_ai_data(
-            quarterly_earnings=[
+        result = service._merge_response(
+            "AAPL",
+            _mock_quote(),
+            [],
+            TechnicalSnapshot(),
+            _minimal_valid_ai_data(),
+            real_earnings=[
                 {
                     "quarter": "Q1 2025",
                     "revenue": None,
@@ -1336,10 +1358,7 @@ class TestMergeResponseMalformedQuarterlyEarnings:
                     "eps": None,
                     "yoy_revenue_growth": None,
                 }
-            ]
-        )
-        result = service._merge_response(
-            "AAPL", _mock_quote(), [], TechnicalSnapshot(), ai_data
+            ],
         )
         q = result.quarterly_earnings[0]
         assert q.quarter == "Q1 2025"
