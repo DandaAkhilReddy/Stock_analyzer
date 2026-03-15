@@ -109,6 +109,36 @@ def _date_to_quarter(date_str: str) -> str:
         return date_str
 
 
+_HIGH_PRIORITY_KEYWORDS = frozenset({
+    "acquisition", "acquire", "merger", "partnership", "invest",
+    "deal", "billion", "million", "contract", "ipo", "buyback",
+    "dividend", "earnings", "revenue", "profit", "guidance",
+    "fda", "approval", "launch", "restructur", "layoff", "sec",
+    "lawsuit", "settlement", "stake", "upgrade", "downgrade",
+})
+
+
+def _is_within_days(date_str: str | None, days: int = 7) -> bool:
+    """Return True if *date_str* falls within the last *days* days."""
+    if not date_str:
+        return True  # keep items without a date
+    from datetime import datetime, timedelta, timezone
+
+    for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            dt = datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
+            return dt >= datetime.now(timezone.utc) - timedelta(days=days)
+        except ValueError:
+            continue
+    return True  # keep if unparseable
+
+
+def _news_priority(item: dict) -> int:
+    """Score news by keyword relevance — higher = more impactful."""
+    title = (item.get("title") or "").lower()
+    return sum(1 for kw in _HIGH_PRIORITY_KEYWORDS if kw in title)
+
+
 def _classify_sentiment(raw: str) -> str:
     """Normalize FMP sentiment to our enum."""
     raw_lower = (raw or "").lower().strip()
@@ -841,29 +871,62 @@ class MarketDataService:
             raw = stock.news or []
             result: list[dict] = []
             for item in raw[:limit]:
-                title = item.get("title", "")
+                # yfinance v2+ nests data under "content"; fall back for old format
+                content = item.get("content", item)
+
+                title = content.get("title", "")
                 if not title:
                     continue
-                pub_ts = item.get("providerPublishTime")
-                pub_date: str | None = None
-                if pub_ts:
-                    pub_date = datetime.fromtimestamp(
-                        pub_ts, tz=timezone.utc
-                    ).strftime("%Y-%m-%d %H:%M:%S")
-                thumbnail = item.get("thumbnail")
+
+                # Publisher — new: provider.displayName, old: publisher
+                publisher: str | None = None
+                provider = content.get("provider")
+                if isinstance(provider, dict):
+                    publisher = provider.get("displayName")
+                if not publisher:
+                    publisher = content.get("publisher") or item.get("publisher")
+
+                # URL — new: canonicalUrl.url, old: link
+                news_url: str | None = None
+                canonical = content.get("canonicalUrl")
+                if isinstance(canonical, dict):
+                    news_url = canonical.get("url")
+                if not news_url:
+                    news_url = content.get("link") or item.get("link")
+
+                # Date — new: pubDate (ISO), old: providerPublishTime (Unix)
+                pub_date: str | None = content.get("pubDate")
+                if not pub_date:
+                    pub_ts = (
+                        content.get("providerPublishTime")
+                        or item.get("providerPublishTime")
+                    )
+                    if pub_ts:
+                        pub_date = datetime.fromtimestamp(
+                            pub_ts, tz=timezone.utc
+                        ).strftime("%Y-%m-%d %H:%M:%S")
+
+                # Thumbnail
+                thumb = content.get("thumbnail") or item.get("thumbnail")
                 image_url: str | None = None
-                if thumbnail:
-                    resolutions = (thumbnail or {}).get("resolutions", [])
-                    image_url = resolutions[0].get("url") if resolutions else None
+                if isinstance(thumb, dict):
+                    resolutions = thumb.get("resolutions") or []
+                    if resolutions and isinstance(resolutions[0], dict):
+                        image_url = resolutions[0].get("url")
+
                 result.append({
                     "title": title,
-                    "source": item.get("publisher"),
+                    "source": publisher,
                     "sentiment": None,
-                    "url": item.get("link"),
+                    "url": news_url,
                     "published_date": pub_date,
                     "image_url": image_url,
                     "data_source": "yfinance",
                 })
+
+            # Filter to last 7 days and sort by priority
+            result = [r for r in result if _is_within_days(r.get("published_date"))]
+            result.sort(key=_news_priority, reverse=True)
             return result
 
         result = await asyncio.wait_for(
@@ -917,6 +980,10 @@ class MarketDataService:
                 "image_url": item.get("image"),
                 "data_source": "FMP",
             })
+
+        # Filter to last 7 days and sort by priority
+        result = [r for r in result if _is_within_days(r.get("published_date"))]
+        result.sort(key=_news_priority, reverse=True)
 
         if not result:
             logger.info("fmp_news_empty_fallback_yfinance", ticker=ticker)
