@@ -633,4 +633,123 @@ describe('PriceChart', () => {
     });
   });
 
+  // -------------------------------------------------------------------------
+  // downsample — lines 12-23
+  //
+  // downsample is exercised when filtered data exceeds 2 000 points.
+  // Build a dataset with 2 001 entries so the sampling path runs.
+  // The component calls downsample(filterByRange(sorted, range), 2000).
+  // Under ALL range every point passes the filter, so setData receives the
+  // downsampled output instead of the raw 2 001 entries.
+  // -------------------------------------------------------------------------
+
+  describe('downsample', () => {
+    function buildDataset(count: number): HistoricalPrice[] {
+      // Generate `count` daily entries starting from a fixed origin so dates
+      // are well-formed ISO strings (YYYY-MM-DD).
+      const origin = new Date('2020-01-01T00:00:00.000Z');
+      return Array.from({ length: count }, (_, i) => {
+        const d = new Date(origin.getTime() + i * 24 * 60 * 60 * 1000);
+        return {
+          date: d.toISOString().split('T')[0],
+          open: 100,
+          high: 110,
+          low: 90,
+          close: 105 + i,
+          volume: 1_000,
+        };
+      });
+    }
+
+    it('does not downsample when data is exactly at the limit (2000 points)', () => {
+      const data = buildDataset(2000);
+      renderChart(data);
+      const [firstCall] = mockSetData.mock.calls;
+      expect((firstCall[0] as unknown[]).length).toBe(2000);
+    });
+
+    it('downsamples to at most 2001 points when input has 2001 entries', () => {
+      // step = ceil(2001/2000) = 2 → ~1001 sampled points (+1 last if not already included)
+      const data = buildDataset(2001);
+      renderChart(data);
+      const [firstCall] = mockSetData.mock.calls;
+      const resultLength = (firstCall[0] as unknown[]).length;
+      // Must be strictly less than 2001 (downsampling happened)
+      expect(resultLength).toBeLessThan(2001);
+      // Must be at least 1 (non-empty)
+      expect(resultLength).toBeGreaterThan(0);
+    });
+
+    it('always includes the last data point after downsampling', () => {
+      // 2001 entries: step=2 → indices 0,2,4,...,2000 → last index 2000 is
+      // the final element, so it IS naturally included.  Use 2003 entries to
+      // force a case where step=2, indices 0,2,...,2002 — last index 2002 is
+      // included naturally.  Instead use a count where the final index is NOT
+      // a multiple of step.
+      // count=2003, step=ceil(2003/2000)=2 → sampled indices: 0,2,...,2002
+      // (last data index is 2002 which IS reached).
+      // Use count=4001 instead: step=ceil(4001/2000)=3 → sampled indices:
+      // 0,3,6,...,3999,4000 is NOT reached (4000/3=1333.33) so last index 4000
+      // is appended explicitly.
+      const data = buildDataset(4001);
+      renderChart(data);
+      const [firstCall] = mockSetData.mock.calls;
+      const times = (firstCall[0] as Array<{ time: string; value: number }>).map(
+        (d) => d.time,
+      );
+      // The last entry in the original dataset
+      const expectedLastDate = data[data.length - 1].date;
+      expect(times[times.length - 1]).toBe(expectedLastDate);
+    });
+
+    it('sampled output uses every N-th point (step = ceil(count/2000))', () => {
+      // count=4001, step=3 → first 3 sampled times should be indices 0, 3, 6
+      const data = buildDataset(4001);
+      renderChart(data);
+      const [firstCall] = mockSetData.mock.calls;
+      const times = (firstCall[0] as Array<{ time: string; value: number }>).map(
+        (d) => d.time,
+      );
+      expect(times[0]).toBe(data[0].date);
+      expect(times[1]).toBe(data[3].date);
+      expect(times[2]).toBe(data[6].date);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // formatShortDate — lines 26-29
+  //
+  // The function is rendered into the caption paragraph whenever
+  // filtered.length > 0.  The existing withData tests already render with
+  // mockData (ALL range, 3 points), so the caption "Since <month> <year>"
+  // must appear.  These tests make the assertion explicit and also verify
+  // the non-ALL caption format (start – end).
+  // -------------------------------------------------------------------------
+
+  describe('formatShortDate rendering', () => {
+    it('renders a "Since …" caption in ALL range when data is present', () => {
+      renderChart(mockData);
+      // formatShortDate('2025-06-01') → "Jun 2025" (en-US locale)
+      expect(screen.getByText(/Since/)).toBeInTheDocument();
+    });
+
+    it('renders a "start – end" caption when a non-ALL range is selected and data is present', () => {
+      // Use data guaranteed to be within the 1Y window for frozen time.
+      // mockData has dates in 2025 which are within 1Y of 2026-03-14.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-03-14T00:00:00.000Z'));
+      renderChart(mockData);
+      fireEvent.click(screen.getByRole('button', { name: '1Y' }));
+      // Caption should include the "–" separator between start and end dates
+      expect(screen.getByText(/–/)).toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it('renders the point count in the caption', () => {
+      renderChart(mockData);
+      // mockData has 3 points → caption shows "3 pts"
+      expect(screen.getByText('3 pts')).toBeInTheDocument();
+    });
+  });
+
 });
