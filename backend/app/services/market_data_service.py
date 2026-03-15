@@ -654,9 +654,9 @@ class MarketDataService:
     async def get_income_statement(
         self, ticker: str, limit: int = 8
     ) -> list[dict]:
-        """Fetch quarterly income statement data from FMP.
+        """Fetch quarterly income statement data.
 
-        Returns empty list if FMP is rate-limited (AI will generate instead).
+        Tries FMP first; falls back to yfinance when FMP is rate-limited.
 
         Args:
             ticker: Stock ticker symbol (e.g. "AAPL").
@@ -675,9 +675,17 @@ class MarketDataService:
             data = await self._get_json(url, params)
         except ExternalAPIError as exc:
             logger.warning(
-                "fmp_income_fallback_empty", ticker=ticker, error=str(exc)
+                "fmp_income_fallback_to_yfinance", ticker=ticker, error=str(exc)
             )
-            return []
+            try:
+                return await self._get_income_yfinance(ticker)
+            except Exception as yf_exc:
+                logger.warning(
+                    "yfinance_income_also_failed",
+                    ticker=ticker,
+                    error=str(yf_exc),
+                )
+                return []
         rows: list[dict] = data if isinstance(data, list) else []
         logger.info(
             "fmp_income_raw",
@@ -716,6 +724,75 @@ class MarketDataService:
             "fmp_income_statement_complete", ticker=ticker, quarters=len(result[:4])
         )
         return result[:4]
+
+    async def _get_income_yfinance(self, ticker: str) -> list[dict]:
+        """Fetch quarterly income statement from yfinance as fallback."""
+        import yfinance as yf
+
+        logger.info("yfinance_income_start", ticker=ticker)
+
+        def _fetch() -> list[dict]:
+            t = yf.Ticker(ticker)
+            df = t.quarterly_income_stmt
+            if df is None or df.empty:
+                return []
+
+            # Columns are quarter-end dates (newest first), rows are line items
+            result: list[dict] = []
+            columns = list(df.columns[:8])  # up to 8 for YoY calc
+            for i, col in enumerate(columns):
+                date_str = col.strftime("%Y-%m-%d")
+                quarter_label = _date_to_quarter(date_str)
+
+                revenue = _safe_float(
+                    df.loc["Total Revenue", col]
+                    if "Total Revenue" in df.index
+                    else None
+                )
+                net_income = _safe_float(
+                    df.loc["Net Income", col]
+                    if "Net Income" in df.index
+                    else None
+                )
+                eps_val = _safe_float(
+                    df.loc["Diluted EPS", col]
+                    if "Diluted EPS" in df.index
+                    else (
+                        df.loc["Basic EPS", col]
+                        if "Basic EPS" in df.index
+                        else None
+                    )
+                )
+
+                # YoY: compare with same quarter last year (4 columns back)
+                yoy: float | None = None
+                if i + 4 < len(columns) and revenue:
+                    prev_col = columns[i + 4]
+                    prev_rev = _safe_float(
+                        df.loc["Total Revenue", prev_col]
+                        if "Total Revenue" in df.index
+                        else None
+                    )
+                    if prev_rev and prev_rev != 0:
+                        yoy = round((revenue - prev_rev) / abs(prev_rev), 4)
+
+                result.append({
+                    "quarter": quarter_label,
+                    "revenue": (
+                        round(revenue / 1_000_000, 1) if revenue else None
+                    ),
+                    "net_income": (
+                        round(net_income / 1_000_000, 1) if net_income else None
+                    ),
+                    "eps": round(eps_val, 2) if eps_val is not None else None,
+                    "yoy_revenue_growth": yoy,
+                })
+
+            return result[:4]
+
+        result = await asyncio.to_thread(_fetch)
+        logger.info("yfinance_income_complete", ticker=ticker, quarters=len(result))
+        return result
 
     async def get_stock_news(self, ticker: str, limit: int = 15) -> list[dict]:
         """Fetch real stock news from FMP.
