@@ -15,7 +15,7 @@ from app.models.analysis import HistoricalPrice, TechnicalSnapshot
 
 logger = get_logger(__name__)
 
-_FMP_BASE = "https://financialmodelingprep.com/stable"
+_FMP_BASE = "https://financialmodelingprep.com/api/v3"
 _TIMEOUT = 30.0
 _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 1.0  # seconds
@@ -51,6 +51,17 @@ _COMMON_TICKERS: dict[str, str] = {
     "CLOUDFLARE": "NET",
     "SQUARE": "SQ",
     "ROBINHOOD": "HOOD",
+    "APPLE": "AAPL",
+    "TESLA": "TSLA",
+    "INTEL": "INTC",
+    "AMD": "AMD",
+    "UBER": "UBER",
+    "LYFT": "LYFT",
+    "DISNEY": "DIS",
+    "PAYPAL": "PYPL",
+    "ORACLE": "ORCL",
+    "CISCO": "CSCO",
+    "IBM": "IBM",
 }
 
 
@@ -244,14 +255,16 @@ class MarketDataService:
             StockNotFoundError: If no matching symbol is found.
         """
         clean = query.upper().strip()
-        if len(clean) <= 5 and clean.isalpha():
-            return clean
 
-        # Check local mapping before hitting FMP search (avoids 402 on free tier)
+        # Check local mapping first — handles common names like APPLE → AAPL
         local_match = _COMMON_TICKERS.get(clean)
         if local_match:
             logger.info("ticker_local_resolved", query=clean, symbol=local_match)
             return local_match
+
+        # Short alpha strings assumed to be tickers (e.g. "AAPL", "MSFT")
+        if len(clean) <= 5 and clean.isalpha():
+            return clean
 
         logger.info("ticker_search_start", query=clean)
         try:
@@ -412,13 +425,18 @@ class MarketDataService:
         """
         logger.info("fmp_history_start", ticker=ticker, period=period)
 
-        url = f"{_FMP_BASE}/historical-price-eod/full"
+        url = f"{_FMP_BASE}/historical-price-full/{ticker}"
         data = await self._get_json(
-            url, self._params(symbol=ticker, **{"from": "1980-01-01"})
+            url, self._params(**{"from": "1980-01-01"})
         )
 
-        # FMP /stable/ returns a flat array (newest-first)
-        historical = data if isinstance(data, list) else []
+        # FMP v3 returns {"symbol": "...", "historical": [...]} (newest-first)
+        if isinstance(data, dict):
+            historical = data.get("historical", [])
+        elif isinstance(data, list):
+            historical = data
+        else:
+            historical = []
 
         # Reverse for oldest-first
         rows: list[HistoricalPrice] = []
@@ -483,39 +501,16 @@ class MarketDataService:
         """
         logger.info("fmp_income_statement_start", ticker=ticker)
 
-        # Try stable endpoint first, fall back to v3 if it fails or returns
-        # empty (some FMP plan tiers restrict the /stable/ path).
-        rows: list[dict] = []
-        for base, params in [
-            (
-                f"{_FMP_BASE}/income-statement",
-                self._params(symbol=ticker, period="quarter", limit=limit),
-            ),
-            (
-                f"https://financialmodelingprep.com/api/v3/income-statement/{ticker}",
-                self._params(period="quarter", limit=limit),
-            ),
-        ]:
-            try:
-                data = await self._get_json(base, params)
-                rows = data if isinstance(data, list) else []
-                logger.info(
-                    "fmp_income_raw",
-                    ticker=ticker,
-                    endpoint=base.split("financialmodelingprep.com")[1],
-                    raw_count=len(rows),
-                    dates=[r.get("date") for r in rows[:8]],
-                )
-                if rows:
-                    break
-            except ExternalAPIError as exc:
-                logger.warning(
-                    "fmp_income_endpoint_failed",
-                    ticker=ticker,
-                    endpoint=base.split("financialmodelingprep.com")[1],
-                    error=str(exc),
-                )
-                continue
+        url = f"{_FMP_BASE}/income-statement/{ticker}"
+        params = self._params(period="quarter", limit=limit)
+        data = await self._get_json(url, params)
+        rows: list[dict] = data if isinstance(data, list) else []
+        logger.info(
+            "fmp_income_raw",
+            ticker=ticker,
+            raw_count=len(rows),
+            dates=[r.get("date") for r in rows[:8]],
+        )
 
         result: list[dict] = []
         for i, item in enumerate(rows):
@@ -564,32 +559,10 @@ class MarketDataService:
         """
         logger.info("fmp_news_start", ticker=ticker)
 
-        # Try stable endpoint first, fall back to v3 if it fails or returns
-        # empty (some FMP plan tiers restrict the /stable/ path).
-        rows: list[dict] = []
-        for base, params in [
-            (
-                f"{_FMP_BASE}/stock_news",
-                self._params(tickers=ticker, limit=limit),
-            ),
-            (
-                "https://financialmodelingprep.com/api/v3/stock_news",
-                self._params(tickers=ticker, limit=limit),
-            ),
-        ]:
-            try:
-                data = await self._get_json(base, params)
-                rows = data if isinstance(data, list) else []
-                if rows:
-                    break
-            except ExternalAPIError as exc:
-                logger.warning(
-                    "fmp_news_endpoint_failed",
-                    ticker=ticker,
-                    endpoint=base.split("financialmodelingprep.com")[1],
-                    error=str(exc),
-                )
-                continue
+        url = f"{_FMP_BASE}/stock_news"
+        params = self._params(tickers=ticker, limit=limit)
+        data = await self._get_json(url, params)
+        rows: list[dict] = data if isinstance(data, list) else []
 
         result: list[dict] = []
         for item in rows:
@@ -618,7 +591,7 @@ class MarketDataService:
         Foreign listings (symbols containing dots like TSLA.NE, MSFT.DE)
         are filtered out so only US exchange results are returned.
         """
-        url = f"{_FMP_BASE}/search-name"
+        url = f"{_FMP_BASE}/search"
         data = await self._get_json(url, self._params(query=query, limit=15))
         results = data if isinstance(data, list) else []
         # US exchanges only — filter out foreign listings (symbols with dots)
@@ -628,8 +601,8 @@ class MarketDataService:
         self, ticker: str
     ) -> tuple[dict, dict]:
         """Fetch quote and profile data in parallel."""
-        quote_url = f"{_FMP_BASE}/quote"
-        profile_url = f"{_FMP_BASE}/profile"
+        quote_url = f"{_FMP_BASE}/quote/{ticker}"
+        profile_url = f"{_FMP_BASE}/profile/{ticker}"
 
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             try:
@@ -666,7 +639,7 @@ class MarketDataService:
         """Execute two GET requests in parallel."""
         import asyncio
 
-        params = self._params(symbol=ticker)
+        params = self._params()
         r1, r2 = await asyncio.gather(
             client.get(url1, params=params),
             client.get(url2, params=params),
@@ -679,9 +652,14 @@ class MarketDataService:
         """Fetch 1-year history from FMP and compute technical indicators."""
         import pandas as pd
 
-        url = f"{_FMP_BASE}/historical-price-eod/full"
-        data = await self._get_json(url, self._params(symbol=ticker))
-        historical = data if isinstance(data, list) else []
+        url = f"{_FMP_BASE}/historical-price-full/{ticker}"
+        data = await self._get_json(url, self._params())
+        if isinstance(data, dict):
+            historical = data.get("historical", [])
+        elif isinstance(data, list):
+            historical = data
+        else:
+            historical = []
 
         if len(historical) < 20:
             return TechnicalSnapshot()
