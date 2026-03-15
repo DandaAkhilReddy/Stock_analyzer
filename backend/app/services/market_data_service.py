@@ -1,4 +1,4 @@
-"""Market data service — fetches real prices from Financial Modeling Prep API."""
+"""Market data service — fetches real prices from FMP with yfinance fallback."""
 from __future__ import annotations
 
 import asyncio
@@ -318,14 +318,20 @@ class MarketDataService:
         S&P 500 stocks are boosted to the top, sorted by market cap
         descending.  Non-S&P 500 results follow in their original order.
 
+        Falls back to common tickers map when FMP is rate-limited.
+
         Args:
             query: User input to search for.
 
         Returns:
             List of dicts with ``symbol`` and ``name`` keys.
         """
-        await self._ensure_sp500_cache()
-        results = await self._search_ticker(query.upper().strip())
+        try:
+            await self._ensure_sp500_cache()
+            results = await self._search_ticker(query.upper().strip())
+        except ExternalAPIError:
+            logger.warning("search_fmp_failed_using_local", query=query)
+            return self._local_search_fallback(query)
 
         sp500_hits: list[tuple[float, dict[str, str]]] = []
         other_hits: list[dict[str, str]] = []
@@ -344,6 +350,18 @@ class MarketDataService:
         # S&P 500 first, sorted by market cap descending
         sp500_hits.sort(key=lambda x: x[0], reverse=True)
         return [e for _, e in sp500_hits] + other_hits
+
+    @staticmethod
+    def _local_search_fallback(query: str) -> list[dict[str, str]]:
+        """Return matches from _COMMON_TICKERS when FMP is unavailable."""
+        clean = query.upper().strip()
+        results: list[dict[str, str]] = []
+        for name, symbol in _COMMON_TICKERS.items():
+            if clean in name or clean in symbol:
+                results.append({"symbol": symbol, "name": name.title()})
+        if not results and len(clean) <= 5 and clean.isalpha():
+            results.append({"symbol": clean, "name": ""})
+        return results
 
     async def search_ticker(self, query: str) -> str:
         """Force an FMP search for the query (no fast-path skip).
@@ -377,6 +395,9 @@ class MarketDataService:
     async def get_quote(self, ticker: str) -> dict:
         """Fetch current quote and company info for a ticker.
 
+        Tries FMP first; falls back to yfinance when FMP is rate-limited
+        or unavailable.
+
         Args:
             ticker: Stock ticker symbol (e.g. "AAPL").
 
@@ -385,11 +406,30 @@ class MarketDataService:
 
         Raises:
             StockNotFoundError: If ticker is invalid or has no price data.
-            ExternalAPIError: If FMP API is unreachable.
+            ExternalAPIError: If both FMP and yfinance fail.
         """
+        try:
+            return await self._get_quote_fmp(ticker)
+        except (ExternalAPIError, StockNotFoundError) as fmp_exc:
+            logger.warning(
+                "fmp_quote_fallback_to_yfinance",
+                ticker=ticker,
+                fmp_error=str(fmp_exc),
+            )
+            try:
+                return await self._get_quote_yfinance(ticker)
+            except Exception as yf_exc:
+                logger.error(
+                    "yfinance_quote_also_failed",
+                    ticker=ticker,
+                    error=str(yf_exc),
+                )
+                raise fmp_exc from yf_exc
+
+    async def _get_quote_fmp(self, ticker: str) -> dict:
+        """Fetch quote from FMP API."""
         logger.info("fmp_quote_start", ticker=ticker)
 
-        # Fetch quote and profile in parallel
         quote_data, profile_data = await self._fetch_quote_and_profile(ticker)
 
         current_price = _safe_float(quote_data.get("price"))
@@ -438,10 +478,60 @@ class MarketDataService:
             "company_description": profile_data.get("description", ""),
         }
 
+    async def _get_quote_yfinance(self, ticker: str) -> dict:
+        """Fetch quote from yfinance as fallback (free, no API key)."""
+        import yfinance as yf
+
+        logger.info("yfinance_quote_start", ticker=ticker)
+
+        def _fetch() -> dict:
+            t = yf.Ticker(ticker)
+            info = t.info
+            price = info.get("currentPrice") or info.get("regularMarketPrice")
+            if not price:
+                raise StockNotFoundError(ticker)
+            return {
+                "ticker": ticker.upper(),
+                "company_name": info.get("longName") or info.get("shortName") or ticker,
+                "current_price": round(float(price), 2),
+                "previous_close": _safe_float(info.get("previousClose") or info.get("regularMarketPreviousClose")),
+                "open": _safe_float(info.get("open") or info.get("regularMarketOpen")),
+                "day_high": _safe_float(info.get("dayHigh") or info.get("regularMarketDayHigh")),
+                "day_low": _safe_float(info.get("dayLow") or info.get("regularMarketDayLow")),
+                "volume": _safe_int(info.get("volume") or info.get("regularMarketVolume")),
+                "market_cap": _format_market_cap(_safe_float(info.get("marketCap"))),
+                "pe_ratio": _safe_float(info.get("trailingPE")),
+                "eps": _safe_float(info.get("trailingEps")),
+                "week_52_high": _safe_float(info.get("fiftyTwoWeekHigh")),
+                "week_52_low": _safe_float(info.get("fiftyTwoWeekLow")),
+                "dividend_yield": _safe_float(info.get("dividendYield")),
+                "sector": info.get("sector", ""),
+                "industry": info.get("industry", ""),
+                "headquarters": (
+                    f"{info.get('city', '')}, "
+                    f"{info.get('state', '')}, "
+                    f"{info.get('country', '')}"
+                ).strip(", "),
+                "ceo": "",
+                "founded": "",
+                "employees": (
+                    f"{int(info['fullTimeEmployees']):,}"
+                    if info.get("fullTimeEmployees")
+                    else ""
+                ),
+                "company_description": info.get("longBusinessSummary", ""),
+            }
+
+        result = await asyncio.to_thread(_fetch)
+        logger.info("yfinance_quote_complete", ticker=ticker)
+        return result
+
     async def get_historical(
         self, ticker: str, period: str = "6mo"
     ) -> list[HistoricalPrice]:
         """Fetch historical OHLC data for charting.
+
+        Tries FMP first; falls back to yfinance on failure.
 
         Args:
             ticker: Stock ticker symbol.
@@ -451,8 +541,30 @@ class MarketDataService:
             List of HistoricalPrice sorted oldest-first.
 
         Raises:
-            ExternalAPIError: If FMP API is unreachable.
+            ExternalAPIError: If both FMP and yfinance fail.
         """
+        try:
+            return await self._get_historical_fmp(ticker, period)
+        except ExternalAPIError as fmp_exc:
+            logger.warning(
+                "fmp_history_fallback_to_yfinance",
+                ticker=ticker,
+                fmp_error=str(fmp_exc),
+            )
+            try:
+                return await self._get_historical_yfinance(ticker)
+            except Exception as yf_exc:
+                logger.error(
+                    "yfinance_history_also_failed",
+                    ticker=ticker,
+                    error=str(yf_exc),
+                )
+                raise fmp_exc from yf_exc
+
+    async def _get_historical_fmp(
+        self, ticker: str, period: str = "6mo"
+    ) -> list[HistoricalPrice]:
+        """Fetch historical OHLC from FMP."""
         logger.info("fmp_history_start", ticker=ticker, period=period)
 
         url = f"{_FMP_BASE}/historical-price-full/{ticker}"
@@ -484,6 +596,33 @@ class MarketDataService:
 
         logger.info("fmp_history_complete", ticker=ticker, rows=len(rows))
         return rows
+
+    async def _get_historical_yfinance(self, ticker: str) -> list[HistoricalPrice]:
+        """Fetch historical OHLC from yfinance as fallback."""
+        import yfinance as yf
+
+        logger.info("yfinance_history_start", ticker=ticker)
+
+        def _fetch() -> list[HistoricalPrice]:
+            t = yf.Ticker(ticker)
+            df = t.history(period="max")
+            rows: list[HistoricalPrice] = []
+            for date, row in df.iterrows():
+                rows.append(
+                    HistoricalPrice(
+                        date=date.strftime("%Y-%m-%d"),
+                        open=round(float(row["Open"]), 2),
+                        high=round(float(row["High"]), 2),
+                        low=round(float(row["Low"]), 2),
+                        close=round(float(row["Close"]), 2),
+                        volume=_safe_int(row.get("Volume")),
+                    )
+                )
+            return rows
+
+        result = await asyncio.to_thread(_fetch)
+        logger.info("yfinance_history_complete", ticker=ticker, rows=len(result))
+        return result
 
     async def get_technicals(
         self, ticker: str, period: str = "1y"
@@ -517,6 +656,8 @@ class MarketDataService:
     ) -> list[dict]:
         """Fetch quarterly income statement data from FMP.
 
+        Returns empty list if FMP is rate-limited (AI will generate instead).
+
         Args:
             ticker: Stock ticker symbol (e.g. "AAPL").
             limit: Number of quarters to fetch from FMP (default 8, to allow
@@ -525,15 +666,18 @@ class MarketDataService:
         Returns:
             List of dicts with: quarter, revenue, net_income, eps,
             yoy_revenue_growth — most recent first, capped to 4 entries.
-
-        Raises:
-            ExternalAPIError: If FMP API is unreachable.
         """
         logger.info("fmp_income_statement_start", ticker=ticker)
 
-        url = f"{_FMP_BASE}/income-statement/{ticker}"
-        params = self._params(period="quarter", limit=limit)
-        data = await self._get_json(url, params)
+        try:
+            url = f"{_FMP_BASE}/income-statement/{ticker}"
+            params = self._params(period="quarter", limit=limit)
+            data = await self._get_json(url, params)
+        except ExternalAPIError as exc:
+            logger.warning(
+                "fmp_income_fallback_empty", ticker=ticker, error=str(exc)
+            )
+            return []
         rows: list[dict] = data if isinstance(data, list) else []
         logger.info(
             "fmp_income_raw",
@@ -576,6 +720,8 @@ class MarketDataService:
     async def get_stock_news(self, ticker: str, limit: int = 15) -> list[dict]:
         """Fetch real stock news from FMP.
 
+        Returns empty list if FMP is rate-limited (AI will generate instead).
+
         Args:
             ticker: Stock ticker symbol (e.g. "AAPL").
             limit: Maximum number of articles to return.
@@ -583,15 +729,18 @@ class MarketDataService:
         Returns:
             List of dicts with: title, source, sentiment, url,
             published_date, image_url.
-
-        Raises:
-            ExternalAPIError: If FMP API is unreachable.
         """
         logger.info("fmp_news_start", ticker=ticker)
 
-        url = f"{_FMP_BASE}/stock_news"
-        params = self._params(tickers=ticker, limit=limit)
-        data = await self._get_json(url, params)
+        try:
+            url = f"{_FMP_BASE}/stock_news"
+            params = self._params(tickers=ticker, limit=limit)
+            data = await self._get_json(url, params)
+        except ExternalAPIError as exc:
+            logger.warning(
+                "fmp_news_fallback_empty", ticker=ticker, error=str(exc)
+            )
+            return []
         rows: list[dict] = data if isinstance(data, list) else []
 
         result: list[dict] = []
