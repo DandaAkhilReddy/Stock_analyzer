@@ -2446,12 +2446,18 @@ class TestGetIncomeStatementFallback:
 # Integration tests for get_stock_news() — fallback paths
 # ---------------------------------------------------------------------------
 
+def _recent_date(days_ago: int = 1) -> str:
+    """Return an ISO date string *days_ago* days before now (for test fixtures)."""
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+
+
 _NEWS_ITEM: dict = {
     "title": "News headline",
     "site": "Reuters",
     "sentiment": "Bearish",
     "url": "https://example.com",
-    "publishedDate": "2025-03-14",
+    "publishedDate": _recent_date(1),
     "image": "https://img.com/1.jpg",
 }
 
@@ -2544,13 +2550,38 @@ class TestGetStockNewsFallback:
 # Unit tests for _get_news_yfinance() and yfinance fallback in get_stock_news
 # ---------------------------------------------------------------------------
 
+def _recent_iso(days_ago: int = 1) -> str:
+    """Return an ISO datetime string for yfinance-style pubDate."""
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) - timedelta(days=days_ago)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+
+
+# New yfinance v2+ nested format (content wrapper)
 _YFINANCE_NEWS_ITEM: dict = {
-    "title": "yfinance headline",
-    "publisher": "Bloomberg",
-    "link": "https://bloomberg.com/news/1",
-    "providerPublishTime": 1741910400,  # 2025-03-14 00:00:00 UTC
+    "content": {
+        "title": "yfinance headline",
+        "provider": {"displayName": "Bloomberg"},
+        "canonicalUrl": {"url": "https://bloomberg.com/news/1"},
+        "pubDate": _recent_iso(1),
+        "thumbnail": {
+            "resolutions": [{"url": "https://img.bloomberg.com/thumb.jpg", "width": 320}]
+        },
+    },
+}
+
+# Old yfinance format (for backwards-compat test)
+_YFINANCE_NEWS_ITEM_OLD: dict = {
+    "title": "old-format headline",
+    "publisher": "Reuters",
+    "link": "https://reuters.com/news/1",
+    "providerPublishTime": int(
+        (__import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+         - __import__("datetime").timedelta(days=1)).timestamp()
+    ),
     "thumbnail": {
-        "resolutions": [{"url": "https://img.bloomberg.com/thumb.jpg", "width": 320}]
+        "resolutions": [{"url": "https://img.reuters.com/thumb.jpg", "width": 320}]
     },
 }
 
@@ -2643,7 +2674,7 @@ class TestGetNewsYfinance:
 
     @pytest.mark.asyncio
     async def test_yfinance_news_field_mapping(self) -> None:
-        """_get_news_yfinance maps yfinance dict fields to the expected schema."""
+        """_get_news_yfinance maps new nested yfinance v2 format to our schema."""
         service = MarketDataService()
 
         mock_ticker = MagicMock()
@@ -2658,8 +2689,28 @@ class TestGetNewsYfinance:
         assert item["source"] == "Bloomberg"
         assert item["sentiment"] is None
         assert item["url"] == "https://bloomberg.com/news/1"
-        assert item["published_date"] == "2025-03-14 00:00:00"
+        # pubDate is passed through as-is; just check it's an ISO string from today/yesterday
+        assert item["published_date"] is not None
+        assert item["published_date"].startswith(_recent_date(1))
         assert item["image_url"] == "https://img.bloomberg.com/thumb.jpg"
+        assert item["data_source"] == "yfinance"
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_old_format_compat(self) -> None:
+        """_get_news_yfinance still works with the old top-level field format."""
+        service = MarketDataService()
+
+        mock_ticker = MagicMock()
+        mock_ticker.news = [_YFINANCE_NEWS_ITEM_OLD.copy()]
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert len(result) == 1
+        item = result[0]
+        assert item["title"] == "old-format headline"
+        assert item["source"] == "Reuters"
+        assert item["url"] == "https://reuters.com/news/1"
         assert item["data_source"] == "yfinance"
 
     @pytest.mark.asyncio
@@ -2669,7 +2720,7 @@ class TestGetNewsYfinance:
 
         mock_ticker = MagicMock()
         mock_ticker.news = [
-            {"title": "", "publisher": "Reuters", "link": "https://reuters.com/1"},
+            {"content": {"title": "", "pubDate": _recent_iso(1)}},
             _YFINANCE_NEWS_ITEM.copy(),
         ]
 
@@ -2684,7 +2735,12 @@ class TestGetNewsYfinance:
         """Items without thumbnail set image_url to None."""
         service = MarketDataService()
 
-        item = {k: v for k, v in _YFINANCE_NEWS_ITEM.items() if k != "thumbnail"}
+        item = {"content": {
+            "title": "No thumb",
+            "pubDate": _recent_iso(1),
+            "provider": {"displayName": "Bloomberg"},
+            "canonicalUrl": {"url": "https://bloomberg.com/1"},
+        }}
         mock_ticker = MagicMock()
         mock_ticker.news = [item]
 
@@ -2694,11 +2750,15 @@ class TestGetNewsYfinance:
         assert result[0]["image_url"] is None
 
     @pytest.mark.asyncio
-    async def test_yfinance_news_no_publish_time(self) -> None:
-        """Items without providerPublishTime set published_date to None."""
+    async def test_yfinance_news_no_publish_date(self) -> None:
+        """Items without pubDate set published_date to None."""
         service = MarketDataService()
 
-        item = {k: v for k, v in _YFINANCE_NEWS_ITEM.items() if k != "providerPublishTime"}
+        item = {"content": {
+            "title": "No date",
+            "provider": {"displayName": "Bloomberg"},
+            "canonicalUrl": {"url": "https://bloomberg.com/1"},
+        }}
         mock_ticker = MagicMock()
         mock_ticker.news = [item]
 
@@ -2726,7 +2786,8 @@ class TestGetNewsYfinance:
         service = MarketDataService()
 
         items = [
-            {**_YFINANCE_NEWS_ITEM, "title": f"Article {i}"} for i in range(10)
+            {"content": {**_YFINANCE_NEWS_ITEM["content"], "title": f"Article {i}"}}
+            for i in range(10)
         ]
         mock_ticker = MagicMock()
         mock_ticker.news = items
@@ -2735,6 +2796,43 @@ class TestGetNewsYfinance:
             result = await service._get_news_yfinance("AAPL", limit=3)
 
         assert len(result) == 3
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_filters_old_articles(self) -> None:
+        """Articles older than 7 days are filtered out."""
+        service = MarketDataService()
+
+        mock_ticker = MagicMock()
+        mock_ticker.news = [
+            {"content": {"title": "Recent", "pubDate": _recent_iso(2)}},
+            {"content": {"title": "Old", "pubDate": "2020-01-01T00:00:00Z"}},
+        ]
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert len(result) == 1
+        assert result[0]["title"] == "Recent"
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_priority_sorting(self) -> None:
+        """High-priority news (acquisitions, earnings) sorts first."""
+        service = MarketDataService()
+
+        mock_ticker = MagicMock()
+        mock_ticker.news = [
+            {"content": {"title": "Stock price moves", "pubDate": _recent_iso(1)}},
+            {"content": {"title": "Major acquisition deal announced", "pubDate": _recent_iso(1)}},
+            {"content": {"title": "Earnings beat estimates", "pubDate": _recent_iso(1)}},
+        ]
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert len(result) == 3
+        # "acquisition deal" has 2 keywords, "earnings" has 1, plain has 0
+        assert "acquisition" in result[0]["title"].lower()
+        assert "earnings" in result[1]["title"].lower()
 
     @pytest.mark.asyncio
     async def test_fmp_success_does_not_call_yfinance(self) -> None:
