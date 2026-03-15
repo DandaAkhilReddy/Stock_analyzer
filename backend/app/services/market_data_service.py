@@ -718,6 +718,7 @@ class MarketDataService:
                 ),
                 "eps": round(eps_val, 2) if eps_val is not None else None,
                 "yoy_revenue_growth": yoy,
+                "data_source": "FMP",
             })
 
         logger.info(
@@ -786,6 +787,7 @@ class MarketDataService:
                     ),
                     "eps": round(eps_val, 2) if eps_val is not None else None,
                     "yoy_revenue_growth": yoy,
+                    "data_source": "yfinance",
                 })
 
             return result[:4]
@@ -797,7 +799,7 @@ class MarketDataService:
     async def get_stock_news(self, ticker: str, limit: int = 15) -> list[dict]:
         """Fetch real stock news from FMP.
 
-        Returns empty list if FMP is rate-limited (AI will generate instead).
+        Returns empty list if FMP is rate-limited.
 
         Args:
             ticker: Stock ticker symbol (e.g. "AAPL").
@@ -832,6 +834,7 @@ class MarketDataService:
                 "url": item.get("url"),
                 "published_date": item.get("publishedDate"),
                 "image_url": item.get("image"),
+                "data_source": "FMP",
             })
 
         logger.info("fmp_news_complete", ticker=ticker, articles=len(result))

@@ -79,14 +79,6 @@ Based on the above real data, provide your qualitative analysis as JSON:
     "one_month": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float>}},
     "three_months": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float>}}
   }},
-  "news": [
-    {{"title": "<headline>", "source": "<source name>", "sentiment": "positive" | "negative" | "neutral"}},
-    ... (5-10 recent headlines)
-  ],
-  "quarterly_earnings": [
-    {{"quarter": "<e.g. Q1 2025>", "revenue": <float in millions USD or null>, "net_income": <float in millions USD or null>, "eps": <float or null>, "yoy_revenue_growth": <float as decimal like 0.12 for 12% or null>}},
-    ... (last 4 reported quarters, most recent first)
-  ],
   "long_term_outlook": {{
     "one_year": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float 0-1>}},
     "five_year": {{"low": <float>, "mid": <float>, "high": <float>, "confidence": <float 0-1>}},
@@ -336,19 +328,14 @@ class AIAnalysisService:
                 signal=signal,
             )
 
-            # Prefer real FMP data; fall back to AI-generated when unavailable
-            if real_news:
-                news = [NewsItem(**n) for n in real_news]
-            else:
-                news = [NewsItem(**n) for n in ai_data.get("news", [])]
-
-            if real_earnings:
-                earnings = [QuarterlyEarning(**e) for e in real_earnings]
-            else:
-                earnings = [
-                    QuarterlyEarning(**e)
-                    for e in ai_data.get("quarterly_earnings", [])
-                ]
+            # ONLY use real data — never AI-generated earnings/news.
+            # People make financial decisions based on this data.
+            news = [NewsItem(**n) for n in real_news] if real_news else []
+            earnings = (
+                [QuarterlyEarning(**e) for e in real_earnings]
+                if real_earnings
+                else []
+            )
 
             predictions_data = ai_data.get("price_predictions", {})
             risk_data = ai_data.get("risk_assessment", {})

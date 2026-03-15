@@ -36,6 +36,7 @@ class NewsItem(BaseModel):
     url: str | None = None
     published_date: str | None = None
     image_url: str | None = None
+    data_source: str | None = None
 
 
 class QuarterlyEarning(BaseModel):
@@ -46,6 +47,7 @@ class QuarterlyEarning(BaseModel):
     net_income: float | None = None
     eps: float | None = None
     yoy_revenue_growth: float | None = None
+    data_source: str | None = None
 
 
 class PriceForecast(BaseModel):
@@ -169,6 +171,6 @@ class StockAnalysisResponse(BaseModel):
     analysis_timestamp: datetime
     model_used: str = "gpt-5.3"
     disclaimer: str = (
-        "Price data sourced from Financial Modeling Prep. "
+        "Price and earnings data sourced from Financial Modeling Prep and yfinance. "
         "Analysis and predictions are AI-generated — not financial advice."
     )

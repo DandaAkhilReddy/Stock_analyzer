@@ -33,6 +33,7 @@ export interface NewsItem {
   url: string | null;
   published_date: string | null;
   image_url: string | null;
+  data_source: string | null;
 }
 
 export interface QuarterlyEarning {
@@ -41,6 +42,7 @@ export interface QuarterlyEarning {
   net_income: number | null;
   eps: number | null;
   yoy_revenue_growth: number | null;
+  data_source: string | null;
 }
 
 export interface HistoricalPrice {

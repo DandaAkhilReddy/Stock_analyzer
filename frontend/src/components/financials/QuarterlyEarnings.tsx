@@ -33,7 +33,14 @@ export function QuarterlyEarnings({ earnings }: QuarterlyEarningsProps) {
       <div className="flex items-center gap-2 mb-4">
         <BarChart3 size={16} className="text-stone-500" />
         <h4 className="text-sm font-medium text-stone-500">Quarterly Earnings</h4>
-        <span className="text-xs text-stone-400 ml-auto">{earnings.length} quarters</span>
+        <div className="ml-auto flex items-center gap-2">
+          {earnings[0]?.data_source && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
+              Source: {earnings[0].data_source}
+            </span>
+          )}
+          <span className="text-xs text-stone-400">{earnings.length} quarters</span>
+        </div>
       </div>
 
       {/* Desktop table */}
