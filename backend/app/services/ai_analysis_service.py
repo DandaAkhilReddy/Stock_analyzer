@@ -27,14 +27,14 @@ logger = get_logger(__name__)
 
 _SYSTEM_PROMPT = (
     "You are a senior equity research analyst who analyzes stocks through "
-    "the lens of the world's greatest investors:\n"
-    "- Warren Buffett: value investing, economic moat, ROE, owner earnings\n"
-    "- Peter Lynch: PEG ratio, growth at a reasonable price, invest in what you know\n"
-    "- Benjamin Graham: margin of safety, intrinsic value, net-net analysis\n"
-    "- Ray Dalio: macro risk parity, all-weather positioning, debt cycles\n"
-    "- Cathie Wood: disruptive innovation, exponential growth, S-curves\n\n"
+    "multiple institutional investment frameworks:\n"
+    "- Value Analysis: economic moat, ROE, owner earnings, intrinsic value\n"
+    "- Growth Analysis: PEG ratio, earnings growth, revenue acceleration\n"
+    "- Safety Analysis: margin of safety, book value, current ratio, debt levels\n"
+    "- Macro Analysis: macroeconomic positioning, sector cycles, risk parity\n"
+    "- Innovation Analysis: disruptive potential, TAM expansion, technology S-curves\n\n"
     "You will be given REAL current market data for a stock. Your job is to "
-    "provide qualitative analysis applying each investor's framework.\n\n"
+    "provide qualitative analysis applying each investment framework.\n\n"
     "IMPORTANT: If the user provides a company name, misspelling, or "
     "informal name instead of a valid ticker symbol, you MUST identify "
     "the correct official ticker symbol (e.g., 'microsft' → 'MSFT', "
@@ -91,14 +91,14 @@ Based on the above real data, provide your qualitative analysis as JSON:
   }},
   "financier_analysis": {{
     "perspectives": [
-      {{"name": "Warren Buffett", "framework": "Value Investing", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Buffett's moat/ROE/owner-earnings framework>", "key_metrics_evaluated": ["P/E", "ROE", "Moat Strength", ...]}},
-      {{"name": "Peter Lynch", "framework": "Growth at Reasonable Price", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Lynch's PEG/growth framework>", "key_metrics_evaluated": ["PEG Ratio", "Earnings Growth", ...]}},
-      {{"name": "Benjamin Graham", "framework": "Margin of Safety", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Graham's intrinsic value framework>", "key_metrics_evaluated": ["P/E", "P/B", "Current Ratio", ...]}},
-      {{"name": "Ray Dalio", "framework": "Macro Risk Parity", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Dalio's macro/risk framework>", "key_metrics_evaluated": ["Debt/Equity", "Sector Cycle", ...]}},
-      {{"name": "Cathie Wood", "framework": "Disruptive Innovation", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences applying Wood's innovation/S-curve framework>", "key_metrics_evaluated": ["R&D Spend", "TAM", "Innovation Pipeline", ...]}}
+      {{"name": "Value Analysis", "framework": "Intrinsic Value & Moat Assessment", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences evaluating moat, ROE, owner earnings, and intrinsic value>", "key_metrics_evaluated": ["P/E", "ROE", "Moat Strength", ...]}},
+      {{"name": "Growth Analysis", "framework": "Growth at Reasonable Price", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences evaluating PEG ratio, earnings growth, and revenue trends>", "key_metrics_evaluated": ["PEG Ratio", "Earnings Growth", ...]}},
+      {{"name": "Safety Analysis", "framework": "Margin of Safety", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences evaluating intrinsic value, book value, and balance sheet strength>", "key_metrics_evaluated": ["P/E", "P/B", "Current Ratio", ...]}},
+      {{"name": "Macro Analysis", "framework": "Macroeconomic & Sector Positioning", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences evaluating macro risks, sector cycles, and portfolio fit>", "key_metrics_evaluated": ["Debt/Equity", "Sector Cycle", ...]}},
+      {{"name": "Innovation Analysis", "framework": "Disruptive Innovation Assessment", "verdict": "buy" | "hold" | "sell", "reasoning": "<2-3 sentences evaluating innovation pipeline, TAM, and technology adoption curves>", "key_metrics_evaluated": ["R&D Spend", "TAM", "Innovation Pipeline", ...]}}
     ],
     "consensus_verdict": "buy" | "hold" | "sell",
-    "consensus_reasoning": "<2-3 sentences synthesizing all five perspectives into a unified view>"
+    "consensus_reasoning": "<2-3 sentences synthesizing all five frameworks into a unified view>"
   }},
   "support_levels": [<float>, ...],
   "resistance_levels": [<float>, ...],

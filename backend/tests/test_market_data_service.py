@@ -2478,10 +2478,16 @@ class TestGetStockNewsFallback:
 
     @pytest.mark.asyncio
     async def test_news_empty_response(self) -> None:
+        """FMP returns empty list — yfinance fallback is invoked."""
         service = MarketDataService()
 
         with patch.object(
             service, "_get_json", new_callable=AsyncMock, return_value=[]
+        ), patch.object(
+            service,
+            "_get_news_yfinance",
+            new_callable=AsyncMock,
+            return_value=[],
         ):
             result = await service.get_stock_news("AAPL")
 
@@ -2518,12 +2524,234 @@ class TestGetStockNewsFallback:
 
     @pytest.mark.asyncio
     async def test_news_non_list_response(self) -> None:
-        """_get_json returns a dict — treated as empty."""
+        """_get_json returns a dict — treated as empty, yfinance fallback called."""
         service = MarketDataService()
 
         with patch.object(
             service, "_get_json", new_callable=AsyncMock, return_value={}
+        ), patch.object(
+            service,
+            "_get_news_yfinance",
+            new_callable=AsyncMock,
+            return_value=[],
         ):
             result = await service.get_stock_news("AAPL")
 
         assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Unit tests for _get_news_yfinance() and yfinance fallback in get_stock_news
+# ---------------------------------------------------------------------------
+
+_YFINANCE_NEWS_ITEM: dict = {
+    "title": "yfinance headline",
+    "publisher": "Bloomberg",
+    "link": "https://bloomberg.com/news/1",
+    "providerPublishTime": 1741910400,  # 2025-03-14 00:00:00 UTC
+    "thumbnail": {
+        "resolutions": [{"url": "https://img.bloomberg.com/thumb.jpg", "width": 320}]
+    },
+}
+
+
+class TestGetNewsYfinance:
+    """Tests for _get_news_yfinance() and get_stock_news() yfinance fallback."""
+
+    def setup_method(self) -> None:
+        MarketDataService._sp500_cache = {}
+        MarketDataService._sp500_loaded_at = 0.0
+
+    @pytest.mark.asyncio
+    async def test_fmp_error_triggers_yfinance_fallback(self) -> None:
+        """ExternalAPIError from FMP causes yfinance fallback to be called."""
+        service = MarketDataService()
+        yf_result = [{
+            "title": "yfinance headline",
+            "source": "Bloomberg",
+            "sentiment": None,
+            "url": "https://bloomberg.com/news/1",
+            "published_date": "2025-03-14 00:00:00",
+            "image_url": "https://img.bloomberg.com/thumb.jpg",
+            "data_source": "yfinance",
+        }]
+
+        with patch.object(
+            service,
+            "_get_json",
+            new_callable=AsyncMock,
+            side_effect=ExternalAPIError("FMP API", "HTTP 429: Too Many Requests"),
+        ), patch.object(
+            service,
+            "_get_news_yfinance",
+            new_callable=AsyncMock,
+            return_value=yf_result,
+        ) as mock_yf:
+            result = await service.get_stock_news("AAPL")
+
+        mock_yf.assert_awaited_once_with("AAPL", 15)
+        assert len(result) == 1
+        assert result[0]["data_source"] == "yfinance"
+        assert result[0]["title"] == "yfinance headline"
+
+    @pytest.mark.asyncio
+    async def test_fmp_empty_triggers_yfinance_fallback(self) -> None:
+        """Empty FMP list causes yfinance fallback to be called."""
+        service = MarketDataService()
+        yf_result = [{
+            "title": "yf article",
+            "source": "Reuters",
+            "sentiment": None,
+            "url": "https://reuters.com/1",
+            "published_date": "2025-03-14 00:00:00",
+            "image_url": None,
+            "data_source": "yfinance",
+        }]
+
+        with patch.object(
+            service, "_get_json", new_callable=AsyncMock, return_value=[]
+        ), patch.object(
+            service,
+            "_get_news_yfinance",
+            new_callable=AsyncMock,
+            return_value=yf_result,
+        ) as mock_yf:
+            result = await service.get_stock_news("TSLA")
+
+        mock_yf.assert_awaited_once_with("TSLA", 15)
+        assert result[0]["data_source"] == "yfinance"
+
+    @pytest.mark.asyncio
+    async def test_fmp_and_yfinance_both_fail_returns_empty(self) -> None:
+        """FMP fails and yfinance also fails — returns empty list."""
+        service = MarketDataService()
+
+        with patch.object(
+            service,
+            "_get_json",
+            new_callable=AsyncMock,
+            side_effect=ExternalAPIError("FMP API", "HTTP 429: Too Many Requests"),
+        ), patch.object(
+            service,
+            "_get_news_yfinance",
+            new_callable=AsyncMock,
+            side_effect=Exception("yfinance network error"),
+        ):
+            result = await service.get_stock_news("NVDA")
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_field_mapping(self) -> None:
+        """_get_news_yfinance maps yfinance dict fields to the expected schema."""
+        service = MarketDataService()
+
+        mock_ticker = MagicMock()
+        mock_ticker.news = [_YFINANCE_NEWS_ITEM.copy()]
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert len(result) == 1
+        item = result[0]
+        assert item["title"] == "yfinance headline"
+        assert item["source"] == "Bloomberg"
+        assert item["sentiment"] is None
+        assert item["url"] == "https://bloomberg.com/news/1"
+        assert item["published_date"] == "2025-03-14 00:00:00"
+        assert item["image_url"] == "https://img.bloomberg.com/thumb.jpg"
+        assert item["data_source"] == "yfinance"
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_skips_items_without_title(self) -> None:
+        """Items missing a title are excluded from the result."""
+        service = MarketDataService()
+
+        mock_ticker = MagicMock()
+        mock_ticker.news = [
+            {"title": "", "publisher": "Reuters", "link": "https://reuters.com/1"},
+            _YFINANCE_NEWS_ITEM.copy(),
+        ]
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert len(result) == 1
+        assert result[0]["title"] == "yfinance headline"
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_no_thumbnail(self) -> None:
+        """Items without thumbnail set image_url to None."""
+        service = MarketDataService()
+
+        item = {k: v for k, v in _YFINANCE_NEWS_ITEM.items() if k != "thumbnail"}
+        mock_ticker = MagicMock()
+        mock_ticker.news = [item]
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert result[0]["image_url"] is None
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_no_publish_time(self) -> None:
+        """Items without providerPublishTime set published_date to None."""
+        service = MarketDataService()
+
+        item = {k: v for k, v in _YFINANCE_NEWS_ITEM.items() if k != "providerPublishTime"}
+        mock_ticker = MagicMock()
+        mock_ticker.news = [item]
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert result[0]["published_date"] is None
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_empty_news_list(self) -> None:
+        """yfinance returns no news — empty list returned."""
+        service = MarketDataService()
+
+        mock_ticker = MagicMock()
+        mock_ticker.news = []
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=15)
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_yfinance_news_respects_limit(self) -> None:
+        """Only up to `limit` items are processed from yfinance."""
+        service = MarketDataService()
+
+        items = [
+            {**_YFINANCE_NEWS_ITEM, "title": f"Article {i}"} for i in range(10)
+        ]
+        mock_ticker = MagicMock()
+        mock_ticker.news = items
+
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = await service._get_news_yfinance("AAPL", limit=3)
+
+        assert len(result) == 3
+
+    @pytest.mark.asyncio
+    async def test_fmp_success_does_not_call_yfinance(self) -> None:
+        """When FMP returns data, yfinance fallback is never called."""
+        service = MarketDataService()
+
+        with patch.object(
+            service,
+            "_get_json",
+            new_callable=AsyncMock,
+            return_value=[_NEWS_ITEM.copy()],
+        ), patch.object(
+            service,
+            "_get_news_yfinance",
+            new_callable=AsyncMock,
+        ) as mock_yf:
+            result = await service.get_stock_news("AAPL")
+
+        mock_yf.assert_not_awaited()
+        assert result[0]["data_source"] == "FMP"

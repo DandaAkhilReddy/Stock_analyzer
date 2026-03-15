@@ -95,43 +95,43 @@ _MOCK_AI_RESPONSE: dict = {
     "financier_analysis": {
         "perspectives": [
             {
-                "name": "Warren Buffett",
-                "framework": "Value Investing",
+                "name": "Value Analysis",
+                "framework": "Intrinsic Value & Moat Assessment",
                 "verdict": "buy",
                 "reasoning": "Strong brand moat and consistent ROE above 30%.",
                 "key_metrics_evaluated": ["P/E", "ROE", "Moat"],
             },
             {
-                "name": "Peter Lynch",
+                "name": "Growth Analysis",
                 "framework": "Growth at Reasonable Price",
                 "verdict": "buy",
                 "reasoning": "PEG ratio under 2 with steady earnings growth.",
                 "key_metrics_evaluated": ["PEG Ratio", "Earnings Growth"],
             },
             {
-                "name": "Benjamin Graham",
+                "name": "Safety Analysis",
                 "framework": "Margin of Safety",
                 "verdict": "hold",
                 "reasoning": "Current price near intrinsic value, limited margin of safety.",
                 "key_metrics_evaluated": ["P/E", "P/B", "Current Ratio"],
             },
             {
-                "name": "Ray Dalio",
-                "framework": "Macro Risk Parity",
+                "name": "Macro Analysis",
+                "framework": "Macroeconomic & Sector Positioning",
                 "verdict": "buy",
                 "reasoning": "Well-positioned across economic cycles with strong cash flows.",
                 "key_metrics_evaluated": ["Debt/Equity", "Sector Cycle"],
             },
             {
-                "name": "Cathie Wood",
-                "framework": "Disruptive Innovation",
+                "name": "Innovation Analysis",
+                "framework": "Disruptive Innovation Assessment",
                 "verdict": "hold",
                 "reasoning": "Incremental innovation rather than disruptive; large TAM but mature.",
                 "key_metrics_evaluated": ["R&D Spend", "TAM", "Innovation Pipeline"],
             },
         ],
         "consensus_verdict": "buy",
-        "consensus_reasoning": "Three of five legendary investors favor buying, citing strong moat and growth.",
+        "consensus_reasoning": "Three of five frameworks favor buying, citing strong moat and growth.",
     },
 }
 

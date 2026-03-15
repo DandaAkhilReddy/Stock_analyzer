@@ -1487,8 +1487,8 @@ class TestParseLongTermEdgeCases:
 
 
 def _financier_verdict_dict(
-    name: str = "Warren Buffett",
-    framework: str = "Value Investing",
+    name: str = "Value Analysis",
+    framework: str = "Intrinsic Value & Moat Assessment",
     verdict: str = "buy",
     reasoning: str = "Strong competitive moat and consistent earnings growth.",
     key_metrics_evaluated: list[str] | None = None,
@@ -1543,16 +1543,16 @@ class TestParseFinancierAnalysisExceptionPaths:
         result = AIAnalysisService._parse_financier_analysis(data)
         assert result is not None
         assert len(result.perspectives) == 1
-        assert result.perspectives[0].name == "Warren Buffett"
+        assert result.perspectives[0].name == "Value Analysis"
         assert result.consensus_verdict == "buy"
         assert result.consensus_reasoning == "Majority consensus points to a strong buy."
 
     def test_valid_input_multiple_perspectives(self) -> None:
         """Multiple perspectives are all parsed and stored in order."""
         perspectives = [
-            _financier_verdict_dict(name="Warren Buffett", verdict="buy"),
-            _financier_verdict_dict(name="Peter Lynch", framework="GARP", verdict="hold"),
-            _financier_verdict_dict(name="Benjamin Graham", framework="Deep Value", verdict="sell"),
+            _financier_verdict_dict(name="Value Analysis", verdict="buy"),
+            _financier_verdict_dict(name="Growth Analysis", framework="GARP", verdict="hold"),
+            _financier_verdict_dict(name="Safety Analysis", framework="Deep Value", verdict="sell"),
         ]
         data = _financier_analysis_dict(perspectives=perspectives, consensus_verdict="hold")
         result = AIAnalysisService._parse_financier_analysis(data)
@@ -1691,7 +1691,7 @@ class TestParseFinancierAnalysisExceptionPaths:
     def test_string_input_returns_none(self) -> None:
         """A plain string fails the `isinstance(data, dict)` guard → None returned."""
         result = AIAnalysisService._parse_financier_analysis(  # type: ignore[arg-type]
-            "Warren Buffett: buy"
+            "Value Analysis: buy"
         )
         assert result is None
 

@@ -796,10 +796,8 @@ class MarketDataService:
         logger.info("yfinance_income_complete", ticker=ticker, quarters=len(result))
         return result
 
-    async def get_stock_news(self, ticker: str, limit: int = 15) -> list[dict]:
-        """Fetch real stock news from FMP.
-
-        Returns empty list if FMP is rate-limited.
+    async def _get_news_yfinance(self, ticker: str, limit: int = 15) -> list[dict]:
+        """Fetch news from yfinance as fallback.
 
         Args:
             ticker: Stock ticker symbol (e.g. "AAPL").
@@ -807,7 +805,58 @@ class MarketDataService:
 
         Returns:
             List of dicts with: title, source, sentiment, url,
-            published_date, image_url.
+            published_date, image_url, data_source.
+        """
+        import yfinance as yf
+
+        logger.info("yfinance_news_start", ticker=ticker)
+
+        def _fetch() -> list[dict]:
+            from datetime import datetime, timezone
+
+            stock = yf.Ticker(ticker)
+            raw = stock.news or []
+            result: list[dict] = []
+            for item in raw[:limit]:
+                title = item.get("title", "")
+                if not title:
+                    continue
+                pub_ts = item.get("providerPublishTime")
+                pub_date: str | None = None
+                if pub_ts:
+                    pub_date = datetime.fromtimestamp(
+                        pub_ts, tz=timezone.utc
+                    ).strftime("%Y-%m-%d %H:%M:%S")
+                thumbnail = item.get("thumbnail")
+                image_url: str | None = None
+                if thumbnail:
+                    resolutions = (thumbnail or {}).get("resolutions", [])
+                    image_url = resolutions[0].get("url") if resolutions else None
+                result.append({
+                    "title": title,
+                    "source": item.get("publisher"),
+                    "sentiment": None,
+                    "url": item.get("link"),
+                    "published_date": pub_date,
+                    "image_url": image_url,
+                    "data_source": "yfinance",
+                })
+            return result
+
+        result = await asyncio.to_thread(_fetch)
+        logger.info("yfinance_news_complete", ticker=ticker, articles=len(result))
+        return result
+
+    async def get_stock_news(self, ticker: str, limit: int = 15) -> list[dict]:
+        """Fetch real stock news from FMP, falling back to yfinance.
+
+        Args:
+            ticker: Stock ticker symbol (e.g. "AAPL").
+            limit: Maximum number of articles to return.
+
+        Returns:
+            List of dicts with: title, source, sentiment, url,
+            published_date, image_url, data_source.
         """
         logger.info("fmp_news_start", ticker=ticker)
 
@@ -817,9 +866,16 @@ class MarketDataService:
             data = await self._get_json(url, params)
         except ExternalAPIError as exc:
             logger.warning(
-                "fmp_news_fallback_empty", ticker=ticker, error=str(exc)
+                "fmp_news_fallback_yfinance", ticker=ticker, error=str(exc)
             )
-            return []
+            try:
+                return await self._get_news_yfinance(ticker, limit)
+            except Exception as yf_exc:
+                logger.warning(
+                    "yfinance_news_failed", ticker=ticker, error=str(yf_exc)
+                )
+                return []
+
         rows: list[dict] = data if isinstance(data, list) else []
 
         result: list[dict] = []
@@ -836,6 +892,16 @@ class MarketDataService:
                 "image_url": item.get("image"),
                 "data_source": "FMP",
             })
+
+        if not result:
+            logger.info("fmp_news_empty_fallback_yfinance", ticker=ticker)
+            try:
+                return await self._get_news_yfinance(ticker, limit)
+            except Exception as yf_exc:
+                logger.warning(
+                    "yfinance_news_failed", ticker=ticker, error=str(yf_exc)
+                )
+                return []
 
         logger.info("fmp_news_complete", ticker=ticker, articles=len(result))
         return result
