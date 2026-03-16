@@ -3050,3 +3050,123 @@ class TestSearchSuggestionsYfinanceFallback:
         # RIVIAN is in _COMMON_TICKERS → returns RIVN
         symbols = [r["symbol"] for r in result]
         assert "RIVN" in symbols
+
+
+# ---------------------------------------------------------------------------
+# Comprehensive stock resolution — 50+ parametrized cases
+# ---------------------------------------------------------------------------
+
+
+class TestStockResolutionComprehensive:
+    """Verify resolve_ticker works for 20+ stocks across all resolution paths."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "input_name,expected_ticker",
+        [
+            # Big tech (7)
+            ("GOOGLE", "GOOGL"),
+            ("ALPHABET", "GOOGL"),
+            ("APPLE", "AAPL"),
+            ("MICROSOFT", "MSFT"),
+            ("NVIDIA", "NVDA"),
+            ("AMAZON", "AMZN"),
+            ("FACEBOOK", "META"),
+            # Semiconductors (4)
+            ("BROADCOM", "AVGO"),
+            ("QUALCOMM", "QCOM"),
+            ("MICRON", "MU"),
+            ("SUPERMICRO", "SMCI"),
+            # Finance (7)
+            ("BERKSHIRE", "BRK-B"),
+            ("JPMORGAN", "JPM"),
+            ("VISA", "V"),
+            ("MASTERCARD", "MA"),
+            ("GOLDMAN SACHS", "GS"),
+            ("BANK OF AMERICA", "BAC"),
+            ("WELLS FARGO", "WFC"),
+            # EV / auto (4)
+            ("TESLA", "TSLA"),
+            ("RIVIAN", "RIVN"),
+            ("LUCID", "LCID"),
+            ("GENERAL MOTORS", "GM"),
+            # Quantum (4)
+            ("DWAVE", "QBTS"),
+            ("D-WAVE", "QBTS"),
+            ("D WAVE", "QBTS"),
+            ("RIGETTI", "RGTI"),
+            # Consumer / social (8)
+            ("DISNEY", "DIS"),
+            ("COSTCO", "COST"),
+            ("STARBUCKS", "SBUX"),
+            ("NIKE", "NKE"),
+            ("COCA COLA", "KO"),
+            ("PEPSI", "PEP"),
+            ("GAMESTOP", "GME"),
+            ("TWITTER", "X"),
+            # Cloud / SaaS (4)
+            ("SALESFORCE", "CRM"),
+            ("SNOWFLAKE", "SNOW"),
+            ("CLOUDFLARE", "NET"),
+            ("CROWDSTRIKE", "CRWD"),
+            # Healthcare (4)
+            ("PFIZER", "PFE"),
+            ("MODERNA", "MRNA"),
+            ("UNITEDHEALTH", "UNH"),
+            ("JOHNSON AND JOHNSON", "JNJ"),
+            # Industrial / energy (5)
+            ("BOEING", "BA"),
+            ("CATERPILLAR", "CAT"),
+            ("CHEVRON", "CVX"),
+            ("EXXON", "XOM"),
+            ("JOHN DEERE", "DE"),
+        ],
+        ids=lambda val: val if isinstance(val, str) and len(val) > 2 else "",
+    )
+    async def test_common_ticker_mapping(
+        self, input_name: str, expected_ticker: str
+    ) -> None:
+        """Each company name resolves to its correct ticker via _COMMON_TICKERS."""
+        service = MarketDataService()
+        result = await service.resolve_ticker(input_name)
+        assert result == expected_ticker
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "ticker",
+        [
+            "AAPL", "MSFT", "NVDA", "AMZN", "TSLA", "META",
+            "GOOGL", "JPM", "V", "DIS", "BA", "PFE",
+            "COST", "NKE", "RIVN", "QBTS", "LCID", "GME",
+            "PLTR", "COIN",
+        ],
+    )
+    async def test_direct_ticker_passthrough(self, ticker: str) -> None:
+        """Short alpha tickers pass through the fast-path unchanged."""
+        service = MarketDataService()
+        result = await service.resolve_ticker(ticker)
+        assert result == ticker
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "input_name,expected_ticker",
+        [
+            ("google", "GOOGL"),
+            ("apple", "AAPL"),
+            ("rivian", "RIVN"),
+            ("dwave", "QBTS"),
+            ("Boeing", "BA"),
+            ("moderna", "MRNA"),
+            ("Nike", "NKE"),
+            ("pepsi", "PEP"),
+            ("disney", "DIS"),
+            ("Tesla", "TSLA"),
+        ],
+    )
+    async def test_case_insensitive_resolution(
+        self, input_name: str, expected_ticker: str
+    ) -> None:
+        """Company names resolve correctly regardless of case."""
+        service = MarketDataService()
+        result = await service.resolve_ticker(input_name)
+        assert result == expected_ticker
