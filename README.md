@@ -30,7 +30,7 @@
 
 <!-- Status Badges -->
 <p>
-<img src="https://img.shields.io/badge/tests-1%2C571_passing-22c55e?style=for-the-badge&labelColor=1a1a2e" />
+<img src="https://img.shields.io/badge/tests-2%2C365_passing-22c55e?style=for-the-badge&labelColor=1a1a2e" />
 <img src="https://img.shields.io/badge/coverage-97%25+-22c55e?style=for-the-badge&labelColor=1a1a2e" />
 <img src="https://img.shields.io/badge/license-MIT-eab308?style=for-the-badge&labelColor=1a1a2e" />
 </p>
@@ -72,6 +72,8 @@ Stock Analyzer combines **real-time market data** from Yahoo Finance with **AI-p
 - Technical indicators: SMA, EMA, RSI, MACD, Bollinger
 - Support & resistance levels
 - Autocomplete stock search (US market)
+- yfinance fallback: resolves any public US stock even when FMP is rate-limited
+- 85+ pre-mapped common tickers for instant resolution
 
 </td>
 <td width="50%">
@@ -192,7 +194,7 @@ Stock Analyzer combines **real-time market data** from Yahoo Finance with **AI-p
 | **Icons** | Lucide React |
 | **Backend** | Python 3.13, FastAPI 0.115, Pydantic v2, httpx |
 | **AI** | Azure OpenAI SDK (Kimi K2.5 model) |
-| **Market Data** | Yahoo Finance (yfinance) |
+| **Market Data** | Yahoo Finance (yfinance) + FMP (Financial Modeling Prep) with automatic fallback |
 | **Logging** | structlog (JSON in production, console in dev) |
 | **Testing** | Vitest + React Testing Library + jsdom, pytest |
 | **Deployment** | Docker multi-stage build, Render.com |
@@ -249,6 +251,10 @@ Stock Analyzer combines **real-time market data** from Yahoo Finance with **AI-p
 > **Phase 2** &mdash; AI Analysis: Structured prompt &rarr; Azure OpenAI &rarr; JSON with recommendations, predictions, sentiment
 >
 > **Phase 3** &mdash; Merge: Real market data + AI insights = unified response
+
+**Ticker resolution cascade:**
+
+> `_COMMON_TICKERS` (85+ mappings) &rarr; fast-path (valid ticker symbol) &rarr; FMP search &rarr; yfinance search &rarr; error
 
 <br/>
 
@@ -417,17 +423,17 @@ Stock_analyzer/
 
 | | Tests | Line Coverage |
 |:--|:-----:|:------------:|
-| **Frontend** (Vitest + RTL) | 826+ | 97.85% |
-| **Backend** (pytest) | 745+ | 99% |
-| **Total** | **1,571+** | **97%+** |
+| **Frontend** (Vitest + RTL) | 1,084+ | 97.85% |
+| **Backend** (pytest) | 1,281+ | 99% |
+| **Total** | **2,365+** | **97%+** |
 
 </div>
 
 ```bash
-# Backend — 745+ tests in ~1 second
+# Backend — 1,281+ tests in ~1 second
 cd backend && python -m pytest tests/ -v
 
-# Frontend — 826+ tests in ~6 seconds
+# Frontend — 1,084+ tests in ~6 seconds
 cd frontend && npx vitest run
 
 # Coverage report
@@ -446,6 +452,8 @@ cd frontend && npx vitest run --coverage
 - Pydantic model validation boundaries
 - Error propagation through all layers
 - Component rendering for all 14 feature areas
+- 77 parametrized stock ticker resolution tests (company names, direct tickers, case-insensitivity)
+- yfinance search fallback when FMP is unavailable
 
 </details>
 
