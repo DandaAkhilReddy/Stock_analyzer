@@ -485,7 +485,8 @@ class TestResolveTicker:
     @pytest.mark.asyncio
     async def test_no_results_raises_stock_not_found(self) -> None:
         service = MarketDataService()
-        with patch.object(service, "_search_ticker", return_value=[]):
+        with patch.object(service, "_search_ticker", return_value=[]), \
+             patch.object(service, "_search_ticker_yfinance", return_value=[]):
             with pytest.raises(StockNotFoundError):
                 await service.resolve_ticker("XYZNONEXIST")
 
@@ -500,14 +501,14 @@ class TestResolveTicker:
         assert result == "BRK.A"
 
     @pytest.mark.asyncio
-    async def test_search_api_error_raises_stock_not_found(self) -> None:
-        """FMP 402/5xx errors are caught and converted to StockNotFoundError."""
+    async def test_search_api_error_falls_back_to_yfinance(self) -> None:
+        """FMP errors trigger yfinance fallback; empty yfinance → StockNotFoundError."""
         service = MarketDataService()
         with patch.object(
             service,
             "_search_ticker",
             side_effect=ExternalAPIError("FMP API", "HTTP 402"),
-        ):
+        ), patch.object(service, "_search_ticker_yfinance", return_value=[]):
             with pytest.raises(StockNotFoundError):
                 await service.resolve_ticker("XYZUNKNOWNCORP")
 
@@ -517,7 +518,7 @@ class TestResolveTicker:
         mock_results = [{"symbol": "", "name": "Unknown"}]
         with patch.object(
             service, "_search_ticker", return_value=mock_results
-        ):
+        ), patch.object(service, "_search_ticker_yfinance", return_value=[]):
             with pytest.raises(StockNotFoundError):
                 await service.resolve_ticker("XYZUNKNOWNCORP")
 
@@ -558,7 +559,8 @@ class TestSearchTicker:
     @pytest.mark.asyncio
     async def test_raises_stock_not_found_when_no_results(self) -> None:
         service = MarketDataService()
-        with patch.object(service, "_search_ticker", return_value=[]):
+        with patch.object(service, "_search_ticker", return_value=[]), \
+             patch.object(service, "_search_ticker_yfinance", return_value=[]):
             with pytest.raises(StockNotFoundError):
                 await service.search_ticker("XYZNONEXIST")
 
@@ -567,7 +569,7 @@ class TestSearchTicker:
         service = MarketDataService()
         with patch.object(
             service, "_search_ticker", return_value=[{"symbol": ""}]
-        ):
+        ), patch.object(service, "_search_ticker_yfinance", return_value=[]):
             with pytest.raises(StockNotFoundError):
                 await service.search_ticker("something")
 
@@ -580,15 +582,29 @@ class TestSearchTicker:
         mock.assert_called_once_with("MICROSOFT")
 
     @pytest.mark.asyncio
-    async def test_raises_external_api_error_on_network_failure(self) -> None:
+    async def test_fmp_error_falls_back_to_yfinance(self) -> None:
+        """FMP error triggers yfinance fallback; empty yfinance → StockNotFoundError."""
         service = MarketDataService()
         with patch.object(
             service,
             "_search_ticker",
             side_effect=ExternalAPIError("FMP API", "timeout"),
-        ):
-            with pytest.raises(ExternalAPIError):
+        ), patch.object(service, "_search_ticker_yfinance", return_value=[]):
+            with pytest.raises(StockNotFoundError):
                 await service.search_ticker("apple")
+
+    @pytest.mark.asyncio
+    async def test_fmp_error_yfinance_resolves(self) -> None:
+        """FMP fails but yfinance finds the ticker."""
+        service = MarketDataService()
+        yf_results = [{"symbol": "AAPL", "name": "Apple Inc."}]
+        with patch.object(
+            service,
+            "_search_ticker",
+            side_effect=ExternalAPIError("FMP API", "timeout"),
+        ), patch.object(service, "_search_ticker_yfinance", return_value=yf_results):
+            result = await service.search_ticker("apple")
+        assert result == "AAPL"
 
 
 # ---------------------------------------------------------------------------
@@ -2853,3 +2869,184 @@ class TestGetNewsYfinance:
 
         mock_yf.assert_not_awaited()
         assert result[0]["data_source"] == "FMP"
+
+
+# ---------------------------------------------------------------------------
+# MarketDataService._search_ticker_yfinance
+# ---------------------------------------------------------------------------
+
+
+class TestSearchTickerYfinance:
+    """Tests for the yfinance-based ticker search fallback."""
+
+    @pytest.mark.asyncio
+    async def test_returns_matching_results(self) -> None:
+        service = MarketDataService()
+        mock_search = MagicMock()
+        mock_search.quotes = [
+            {"symbol": "RIVN", "shortname": "Rivian Automotive, Inc."},
+            {"symbol": "RIVN.MI", "shortname": "Rivian (Milan)"},
+        ]
+        with patch("yfinance.Search", return_value=mock_search):
+            result = await service._search_ticker_yfinance("RIVIAN")
+
+        assert len(result) == 1
+        assert result[0]["symbol"] == "RIVN"
+        assert result[0]["name"] == "Rivian Automotive, Inc."
+
+    @pytest.mark.asyncio
+    async def test_filters_foreign_symbols(self) -> None:
+        service = MarketDataService()
+        mock_search = MagicMock()
+        mock_search.quotes = [
+            {"symbol": "TSLA.NE", "shortname": "Tesla (NEO)"},
+            {"symbol": "TSLA.DE", "shortname": "Tesla (Frankfurt)"},
+        ]
+        with patch("yfinance.Search", return_value=mock_search):
+            result = await service._search_ticker_yfinance("TESLA")
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_on_exception(self) -> None:
+        service = MarketDataService()
+        with patch("yfinance.Search", side_effect=Exception("network error")):
+            result = await service._search_ticker_yfinance("ANYTHING")
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_limits_results_to_10(self) -> None:
+        service = MarketDataService()
+        mock_search = MagicMock()
+        mock_search.quotes = [
+            {"symbol": f"SYM{i}", "shortname": f"Company {i}"}
+            for i in range(20)
+        ]
+        with patch("yfinance.Search", return_value=mock_search):
+            result = await service._search_ticker_yfinance("SYM")
+
+        assert len(result) == 10
+
+    @pytest.mark.asyncio
+    async def test_uses_longname_fallback(self) -> None:
+        service = MarketDataService()
+        mock_search = MagicMock()
+        mock_search.quotes = [
+            {"symbol": "QBTS", "longname": "D-Wave Quantum Inc."},
+        ]
+        with patch("yfinance.Search", return_value=mock_search):
+            result = await service._search_ticker_yfinance("D-WAVE")
+
+        assert result[0]["name"] == "D-Wave Quantum Inc."
+
+    @pytest.mark.asyncio
+    async def test_empty_quotes_returns_empty(self) -> None:
+        service = MarketDataService()
+        mock_search = MagicMock()
+        mock_search.quotes = []
+        with patch("yfinance.Search", return_value=mock_search):
+            result = await service._search_ticker_yfinance("NORESULTS")
+
+        assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Resolve/search ticker yfinance fallback integration
+# ---------------------------------------------------------------------------
+
+
+class TestResolveTickerYfinanceFallback:
+    """Tests for resolve_ticker falling back to yfinance when FMP fails."""
+
+    @pytest.mark.asyncio
+    async def test_fmp_empty_yfinance_resolves(self) -> None:
+        service = MarketDataService()
+        yf_results = [{"symbol": "RIVN", "name": "Rivian Automotive"}]
+        with patch.object(service, "_search_ticker", return_value=[]), \
+             patch.object(service, "_search_ticker_yfinance", return_value=yf_results):
+            result = await service.resolve_ticker("RIVIAN")
+        assert result == "RIVN"
+
+    @pytest.mark.asyncio
+    async def test_fmp_error_yfinance_resolves(self) -> None:
+        service = MarketDataService()
+        yf_results = [{"symbol": "RIVN", "name": "Rivian Automotive"}]
+        with patch.object(
+            service, "_search_ticker",
+            side_effect=ExternalAPIError("FMP API", "HTTP 429"),
+        ), patch.object(service, "_search_ticker_yfinance", return_value=yf_results):
+            result = await service.resolve_ticker("RIVIAN")
+        assert result == "RIVN"
+
+    @pytest.mark.asyncio
+    async def test_both_fail_raises_stock_not_found(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service, "_search_ticker",
+            side_effect=ExternalAPIError("FMP API", "HTTP 429"),
+        ), patch.object(service, "_search_ticker_yfinance", return_value=[]):
+            with pytest.raises(StockNotFoundError):
+                await service.resolve_ticker("TOTALLYUNKNOWN123")
+
+    @pytest.mark.asyncio
+    async def test_common_ticker_rivian(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("RIVIAN")
+        assert result == "RIVN"
+
+    @pytest.mark.asyncio
+    async def test_common_ticker_dwave(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("DWAVE")
+        assert result == "QBTS"
+
+    @pytest.mark.asyncio
+    async def test_common_ticker_d_wave(self) -> None:
+        service = MarketDataService()
+        result = await service.resolve_ticker("D-WAVE")
+        assert result == "QBTS"
+
+
+class TestSearchSuggestionsYfinanceFallback:
+    """Tests for search_suggestions yfinance fallback when FMP fails."""
+
+    def setup_method(self) -> None:
+        MarketDataService._sp500_cache = {}
+        MarketDataService._sp500_loaded_at = 0.0
+
+    @pytest.mark.asyncio
+    async def test_fmp_fails_yfinance_provides_suggestions(self) -> None:
+        service = MarketDataService()
+        yf_results = [
+            {"symbol": "RIVN", "name": "Rivian Automotive, Inc."},
+        ]
+        with patch.object(
+            service, "_search_ticker",
+            side_effect=ExternalAPIError("FMP API", "rate limit"),
+        ), patch.object(
+            service, "_ensure_sp500_cache", new_callable=AsyncMock,
+        ), patch.object(
+            service, "_search_ticker_yfinance", return_value=yf_results,
+        ):
+            result = await service.search_suggestions("RIVIAN")
+
+        assert len(result) == 1
+        assert result[0]["symbol"] == "RIVN"
+
+    @pytest.mark.asyncio
+    async def test_fmp_and_yfinance_fail_falls_to_local(self) -> None:
+        service = MarketDataService()
+        with patch.object(
+            service, "_search_ticker",
+            side_effect=ExternalAPIError("FMP API", "rate limit"),
+        ), patch.object(
+            service, "_ensure_sp500_cache", new_callable=AsyncMock,
+        ), patch.object(
+            service, "_search_ticker_yfinance", return_value=[],
+        ):
+            result = await service.search_suggestions("RIVIAN")
+
+        # RIVIAN is in _COMMON_TICKERS → returns RIVN
+        symbols = [r["symbol"] for r in result]
+        assert "RIVN" in symbols
