@@ -35,6 +35,7 @@ _response_cache: dict[str, tuple[float, Any]] = {}
 # Local mapping for common company names → ticker symbols.
 # Avoids hitting FMP's premium /search-name endpoint for well-known names.
 _COMMON_TICKERS: dict[str, str] = {
+    # Big tech
     "GOOGLE": "GOOGL",
     "ALPHABET": "GOOGL",
     "AMAZON": "AMZN",
@@ -42,35 +43,88 @@ _COMMON_TICKERS: dict[str, str] = {
     "MICROSOFT": "MSFT",
     "NVIDIA": "NVDA",
     "NETFLIX": "NFLX",
-    "BERKSHIRE": "BRK-B",
-    "JPMORGAN": "JPM",
-    "WALMART": "WMT",
-    "MASTERCARD": "MA",
-    "SALESFORCE": "CRM",
-    "COINBASE": "COIN",
-    "PALANTIR": "PLTR",
-    "SNOWFLAKE": "SNOW",
-    "SPOTIFY": "SPOT",
-    "PINTEREST": "PINS",
-    "SNAPCHAT": "SNAP",
-    "AIRBNB": "ABNB",
-    "CROWDSTRIKE": "CRWD",
-    "DATADOG": "DDOG",
-    "SHOPIFY": "SHOP",
-    "CLOUDFLARE": "NET",
-    "SQUARE": "SQ",
-    "ROBINHOOD": "HOOD",
     "APPLE": "AAPL",
     "TESLA": "TSLA",
     "INTEL": "INTC",
     "AMD": "AMD",
-    "UBER": "UBER",
-    "LYFT": "LYFT",
-    "DISNEY": "DIS",
-    "PAYPAL": "PYPL",
     "ORACLE": "ORCL",
     "CISCO": "CSCO",
     "IBM": "IBM",
+    "BROADCOM": "AVGO",
+    "QUALCOMM": "QCOM",
+    "MICRON": "MU",
+    "SUPERMICRO": "SMCI",
+    # Finance
+    "BERKSHIRE": "BRK-B",
+    "JPMORGAN": "JPM",
+    "MASTERCARD": "MA",
+    "VISA": "V",
+    "BLACKROCK": "BLK",
+    "GOLDMAN": "GS",
+    "GOLDMAN SACHS": "GS",
+    "MORGAN STANLEY": "MS",
+    "BANK OF AMERICA": "BAC",
+    "WELLS FARGO": "WFC",
+    "PAYPAL": "PYPL",
+    # Cloud / SaaS
+    "SALESFORCE": "CRM",
+    "SNOWFLAKE": "SNOW",
+    "DATADOG": "DDOG",
+    "CLOUDFLARE": "NET",
+    "SHOPIFY": "SHOP",
+    "CROWDSTRIKE": "CRWD",
+    # Consumer / social
+    "WALMART": "WMT",
+    "COINBASE": "COIN",
+    "PALANTIR": "PLTR",
+    "SPOTIFY": "SPOT",
+    "PINTEREST": "PINS",
+    "SNAPCHAT": "SNAP",
+    "AIRBNB": "ABNB",
+    "SQUARE": "SQ",
+    "ROBINHOOD": "HOOD",
+    "UBER": "UBER",
+    "LYFT": "LYFT",
+    "DISNEY": "DIS",
+    "COSTCO": "COST",
+    "STARBUCKS": "SBUX",
+    "NIKE": "NKE",
+    "TARGET": "TGT",
+    "COCA COLA": "KO",
+    "PEPSI": "PEP",
+    "PEPSICO": "PEP",
+    "TWITTER": "X",
+    "GAMESTOP": "GME",
+    # EV / auto
+    "RIVIAN": "RIVN",
+    "LUCID": "LCID",
+    "GENERAL MOTORS": "GM",
+    "FORD": "F",
+    # Quantum / emerging
+    "DWAVE": "QBTS",
+    "D-WAVE": "QBTS",
+    "D WAVE": "QBTS",
+    "IONQ": "IONQ",
+    "RIGETTI": "RGTI",
+    # Healthcare / pharma
+    "MODERNA": "MRNA",
+    "PFIZER": "PFE",
+    "UNITEDHEALTH": "UNH",
+    "JOHNSON": "JNJ",
+    "JOHNSON AND JOHNSON": "JNJ",
+    # Industrial / energy
+    "BOEING": "BA",
+    "LOCKHEED": "LMT",
+    "RAYTHEON": "RTX",
+    "CATERPILLAR": "CAT",
+    "HONEYWELL": "HON",
+    "3M": "MMM",
+    "DEERE": "DE",
+    "JOHN DEERE": "DE",
+    "CHEVRON": "CVX",
+    "EXXON": "XOM",
+    "PROCTER": "PG",
+    "SOFI": "SOFI",
 }
 
 
@@ -343,11 +397,16 @@ class MarketDataService:
         if len(clean) <= 5 and clean.isalpha():
             return clean
 
+        # Try FMP search first, fallback to yfinance search
         logger.info("ticker_search_start", query=clean)
         try:
             results = await self._search_ticker(clean)
         except ExternalAPIError:
-            raise StockNotFoundError(query)
+            results = []
+
+        if not results:
+            logger.info("ticker_search_fmp_empty_trying_yfinance", query=clean)
+            results = await self._search_ticker_yfinance(clean)
 
         if not results:
             raise StockNotFoundError(query)
@@ -377,7 +436,12 @@ class MarketDataService:
             await self._ensure_sp500_cache()
             results = await self._search_ticker(query.upper().strip())
         except ExternalAPIError:
-            logger.warning("search_fmp_failed_using_local", query=query)
+            logger.warning("search_fmp_failed_trying_yfinance", query=query)
+            yf_results = await self._search_ticker_yfinance(
+                query.upper().strip()
+            )
+            if yf_results:
+                return yf_results
             return self._local_search_fallback(query)
 
         sp500_hits: list[tuple[float, dict[str, str]]] = []
@@ -414,7 +478,8 @@ class MarketDataService:
         """Force an FMP search for the query (no fast-path skip).
 
         Used as a fallback when resolve_ticker's fast-path guess
-        fails at the get_quote stage.
+        fails at the get_quote stage.  Falls back to yfinance search
+        when FMP is unavailable or returns no results.
 
         Args:
             query: User input to search for.
@@ -427,7 +492,15 @@ class MarketDataService:
         """
         clean = query.upper().strip()
         logger.info("ticker_fallback_search_start", query=clean)
-        results = await self._search_ticker(clean)
+
+        try:
+            results = await self._search_ticker(clean)
+        except ExternalAPIError:
+            results = []
+
+        if not results:
+            logger.info("ticker_fallback_fmp_empty_trying_yfinance", query=clean)
+            results = await self._search_ticker_yfinance(clean)
 
         if not results:
             raise StockNotFoundError(query)
@@ -1013,6 +1086,46 @@ class MarketDataService:
         results = data if isinstance(data, list) else []
         # US exchanges only — filter out foreign listings (symbols with dots)
         return [r for r in results if "." not in r.get("symbol", "")]
+
+    async def _search_ticker_yfinance(self, query: str) -> list[dict[str, str]]:
+        """Search for ticker symbols using yfinance when FMP is unavailable.
+
+        Args:
+            query: Company name or partial ticker to search for.
+
+        Returns:
+            List of dicts with ``symbol`` and ``name`` keys (US only).
+        """
+        import yfinance as yf
+
+        def _search() -> list[dict[str, str]]:
+            try:
+                search = yf.Search(query)
+                quotes: list[dict] = getattr(search, "quotes", []) or []
+                results: list[dict[str, str]] = []
+                for q in quotes:
+                    symbol = q.get("symbol", "")
+                    if not symbol or "." in symbol:
+                        continue
+                    results.append({
+                        "symbol": symbol,
+                        "name": q.get("shortname") or q.get("longname", ""),
+                    })
+                return results[:10]
+            except Exception:
+                logger.warning(
+                    "yfinance_search_failed", query=query, exc_info=True
+                )
+                return []
+
+        try:
+            return await asyncio.wait_for(
+                asyncio.to_thread(_search),
+                timeout=_YFINANCE_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("yfinance_search_timeout", query=query)
+            return []
 
     async def _fetch_quote_and_profile(
         self, ticker: str
