@@ -40,3 +40,13 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Startup validation — warn about missing keys that will cause runtime errors
+import logging as _logging
+
+_boot_logger = _logging.getLogger("app.core.config")
+if not settings.fmp_api_key:
+    _boot_logger.critical(
+        "FMP_API_KEY is not set — stock analysis will fail. "
+        "Set it in the Render dashboard environment variables."
+    )

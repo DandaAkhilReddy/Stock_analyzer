@@ -1,4 +1,7 @@
-const CACHE_NAME = 'stock-analyzer-v1';
+/* Cache version — changes on each deploy via Vite rebuild.
+   The activate handler deletes all caches whose name doesn't match,
+   so bumping this string forces a full cache purge. */
+const CACHE_NAME = 'stock-analyzer-v2';
 const SHELL_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {
@@ -28,16 +31,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  // Network-first for static assets (hashed filenames change on rebuild)
   if (url.pathname.startsWith('/assets/')) {
     event.respondWith(
-      caches.match(event.request).then((cached) =>
-        cached || fetch(event.request).then((response) => {
+      fetch(event.request)
+        .then((response) => {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           return response;
         })
-      )
+        .catch(() => caches.match(event.request))
     );
     return;
   }
