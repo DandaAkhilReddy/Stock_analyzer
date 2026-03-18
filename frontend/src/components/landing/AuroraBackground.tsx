@@ -21,7 +21,7 @@ export function AuroraBackground() {
         }}
       />
       <div
-        className="absolute w-[550px] h-[550px] rounded-full blur-3xl will-change-transform"
+        className="absolute w-[550px] h-[550px] rounded-full blur-3xl will-change-transform hidden md:block"
         style={{
           bottom: '0%',
           left: '30%',
@@ -30,7 +30,7 @@ export function AuroraBackground() {
         }}
       />
       <div
-        className="absolute w-[400px] h-[400px] rounded-full blur-3xl will-change-transform"
+        className="absolute w-[400px] h-[400px] rounded-full blur-3xl will-change-transform hidden md:block"
         style={{
           top: '20%',
           left: '50%',

@@ -34,7 +34,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
               onClick={() => onTabChange(tab.id)}
               whileHover={!isActive ? { scale: 1.05 } : undefined}
               whileTap={!isActive ? { scale: 0.97 } : undefined}
-              className={`relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] ${
                 isActive
                   ? 'text-indigo-600'
                   : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'

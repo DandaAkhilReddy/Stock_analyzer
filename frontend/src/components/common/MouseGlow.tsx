@@ -3,6 +3,11 @@ import { useEffect, useRef } from 'react';
 export function MouseGlow() {
   const ref = useRef<HTMLDivElement>(null);
 
+  // Skip rendering entirely on touch devices
+  if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
+    return null;
+  }
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;

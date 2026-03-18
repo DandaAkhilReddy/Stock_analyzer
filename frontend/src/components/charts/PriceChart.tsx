@@ -53,7 +53,7 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
 
     const chart = createChart(containerRef.current, {
       width: containerRef.current.clientWidth,
-      height: 400,
+      height: Math.max(220, Math.min(400, window.innerHeight * 0.4)),
       layout: {
         background: { type: ColorType.Solid, color: '#ffffff' },
         textColor: '#78716c',
@@ -89,7 +89,10 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        chart.applyOptions({ width: entry.contentRect.width });
+        chart.applyOptions({
+          width: entry.contentRect.width,
+          height: Math.max(220, Math.min(400, window.innerHeight * 0.4)),
+        });
       }
     });
     observer.observe(containerRef.current);
@@ -115,13 +118,13 @@ export function PriceChart({ data, currentPrice: _currentPrice }: PriceChartProp
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="text-lg font-semibold text-stone-900">Price Chart</div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex gap-1">
+        <div className="flex flex-col items-end gap-1 min-w-0">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             {ranges.map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                className={`px-2.5 py-1.5 text-sm rounded-lg transition-colors min-h-[36px] sm:min-h-0 ${
                   range === r
                     ? 'bg-indigo-600 text-white'
                     : 'text-stone-500 hover:bg-stone-100'

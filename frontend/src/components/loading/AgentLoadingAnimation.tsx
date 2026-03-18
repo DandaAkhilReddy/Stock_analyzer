@@ -190,6 +190,13 @@ export function AgentLoadingAnimation({ ticker, message, elapsedSeconds }: Agent
           </AnimatePresence>
         </div>
 
+        {/* Progress bar */}
+        <div className="w-48 h-1.5 bg-stone-200 rounded-full overflow-hidden mt-2">
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${Math.max(elapsedSeconds > 0 ? 5 : 0, (elapsedSeconds / 90) * 100)}%` }}
+          />
+        </div>
         <p className="text-stone-300 text-xs tabular-nums">{elapsedSeconds}s</p>
       </div>
     </div>
