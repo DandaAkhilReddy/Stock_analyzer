@@ -19,7 +19,7 @@ interface FloatingItem {
   duration: number;
 }
 
-const items: FloatingItem[] = [
+const allItems: FloatingItem[] = [
   { icon: CandlestickChart, x: 8, y: 15, size: 32, delay: 0, duration: 6 },
   { icon: TrendingUp, x: 85, y: 20, size: 28, delay: 0.5, duration: 7 },
   { icon: BarChart2, x: 15, y: 70, size: 36, delay: 1, duration: 5.5 },
@@ -29,6 +29,9 @@ const items: FloatingItem[] = [
   { icon: LineChart, x: 5, y: 45, size: 26, delay: 1.2, duration: 6 },
   { icon: PieChart, x: 65, y: 85, size: 22, delay: 1.8, duration: 5.5 },
 ];
+
+const isMobile = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+const items = isMobile ? allItems.slice(0, 4) : allItems;
 
 export function FloatingElements(): React.ReactElement {
   return (
@@ -45,15 +48,12 @@ export function FloatingElements(): React.ReactElement {
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
-              transformStyle: 'preserve-3d',
+              ...(!isMobile && { transformStyle: 'preserve-3d' as const }),
             }}
-            animate={{
-              y: [0, -(15 + index * 2), 0],
-              rotateX: [0, 15, 0],
-              rotateY: [0, -10, 0],
-              scale: [1, 1.15, 1],
-              opacity: [0.4, 0.6, 0.4],
-            }}
+            animate={isMobile
+              ? { y: [0, -(10 + index * 2), 0], opacity: [0.4, 0.6, 0.4] }
+              : { y: [0, -(15 + index * 2), 0], rotateX: [0, 15, 0], rotateY: [0, -10, 0], scale: [1, 1.15, 1], opacity: [0.4, 0.6, 0.4] }
+            }
             transition={{
               duration: item.duration,
               repeat: Infinity,

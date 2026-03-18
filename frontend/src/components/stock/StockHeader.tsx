@@ -57,7 +57,7 @@ export function StockHeader({ analysis }: StockHeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
         <div className="text-right">
           <div className="text-3xl font-bold text-stone-900">
             <AnimatedCounter

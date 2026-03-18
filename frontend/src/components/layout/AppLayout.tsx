@@ -13,7 +13,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 flex flex-col">
       <Header />
-      <main className={`flex-1 ${currentTicker ? 'max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full' : ''}`}>
+      <main className={`flex-1 ${currentTicker ? 'max-w-5xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 w-full' : ''}`}>
         {children}
       </main>
       <Footer />

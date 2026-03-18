@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStockStore } from '../stores/stockStore';
 import { AgentLoadingAnimation } from '../components/loading/AgentLoadingAnimation';
@@ -7,14 +7,16 @@ import { AnalysisError } from '../components/error/AnalysisError';
 import { LandingHero } from '../components/landing/LandingHero';
 import { StockHeader } from '../components/stock/StockHeader';
 import { TabBar } from '../components/navigation/TabBar';
-import { PriceChart } from '../components/charts/PriceChart';
-import { NewsFeed } from '../components/news/NewsFeed';
-import { QuarterlyEarnings } from '../components/financials/QuarterlyEarnings';
-import { CompanyAbout } from '../components/about/CompanyAbout';
-import { ResearchSources } from '../components/analysis/ResearchSources';
-import { InvestmentOutlook } from '../components/invest/InvestmentOutlook';
-import { FinancierInsights } from '../components/invest/FinancierInsights';
 import type { AnalysisTab } from '../types/analysis';
+
+// Lazy-loaded tab content — only fetched when the user navigates to the tab
+const PriceChart = lazy(() => import('../components/charts/PriceChart').then(m => ({ default: m.PriceChart })));
+const NewsFeed = lazy(() => import('../components/news/NewsFeed').then(m => ({ default: m.NewsFeed })));
+const QuarterlyEarnings = lazy(() => import('../components/financials/QuarterlyEarnings').then(m => ({ default: m.QuarterlyEarnings })));
+const CompanyAbout = lazy(() => import('../components/about/CompanyAbout').then(m => ({ default: m.CompanyAbout })));
+const ResearchSources = lazy(() => import('../components/analysis/ResearchSources').then(m => ({ default: m.ResearchSources })));
+const InvestmentOutlook = lazy(() => import('../components/invest/InvestmentOutlook').then(m => ({ default: m.InvestmentOutlook })));
+const FinancierInsights = lazy(() => import('../components/invest/FinancierInsights').then(m => ({ default: m.FinancierInsights })));
 
 const TAB_ORDER: Record<AnalysisTab, number> = {
   chart: 0,
@@ -42,6 +44,7 @@ export function StockAnalysis() {
   const refreshError = useStockStore((s) => s.refreshError);
   const activeTab = useStockStore((s) => s.activeTab);
   const setActiveTab = useStockStore((s) => s.setActiveTab);
+  const streamingMessage = useStockStore((s) => s.streamingMessage);
 
   const [hasHydrated, setHasHydrated] = useState(useStockStore.persist.hasHydrated());
   const [loadingSeconds, setLoadingSeconds] = useState(0);
@@ -112,7 +115,9 @@ export function StockAnalysis() {
     'Almost done — assembling the final report...',
   ];
   let loadingMessage: string;
-  if (loadingSeconds >= 90) {
+  if (streamingMessage) {
+    loadingMessage = streamingMessage;
+  } else if (loadingSeconds >= 90) {
     loadingMessage = 'Almost at the limit — will cancel soon if no response...';
   } else if (loadingSeconds >= 30) {
     loadingMessage = 'Taking longer than usual — hang tight...';
@@ -168,6 +173,11 @@ export function StockAnalysis() {
       )}
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-16">
+          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={activeTab}
@@ -221,6 +231,7 @@ export function StockAnalysis() {
           )}
         </motion.div>
       </AnimatePresence>
+      </Suspense>
     </motion.div>
   );
 }

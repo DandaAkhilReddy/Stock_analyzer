@@ -113,7 +113,7 @@ export function HeroSearchBar() {
             <motion.button
               key={item.symbol}
               type="button"
-              className={`w-full text-left px-5 py-3 flex items-center justify-between transition-colors ${
+              className={`w-full text-left px-5 py-3 min-h-[44px] flex items-center justify-between transition-colors ${
                 i === selectedIndex
                   ? 'bg-indigo-50 text-indigo-700'
                   : 'hover:bg-stone-50 text-stone-700'

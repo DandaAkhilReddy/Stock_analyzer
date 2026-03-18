@@ -4,7 +4,9 @@ services:
     runtime: docker
     repo: https://github.com/DandaAkhilReddy/Stock_analyzer
     branch: main
-    plan: free
+    plan: starter
+    autoDeploy: true
+    numInstances: 1
     envVars:
       - key: AZURE_OPENAI_ENDPOINT
         sync: false

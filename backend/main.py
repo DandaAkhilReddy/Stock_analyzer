@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 
 from app.core.config import settings
 from app.core.exceptions import (
@@ -49,6 +50,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.include_router(analysis.router)
 
@@ -80,6 +82,12 @@ async def health() -> dict[str, str]:
 async def ready() -> dict[str, Any]:
     """Readiness probe."""
     return {"status": "ready"}
+
+
+@app.get("/ping", status_code=204)
+async def ping() -> None:
+    """Keep-alive endpoint for external cron services."""
+    return None
 
 
 # ---------------------------------------------------------------------------

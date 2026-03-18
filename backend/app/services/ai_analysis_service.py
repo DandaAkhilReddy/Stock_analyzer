@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import datetime, timezone
 
 from app.core.exceptions import AIAnalysisError, ExternalAPIError, StockNotFoundError
@@ -24,6 +25,11 @@ from app.providers.sharepoint_agent import SharePointAgentProvider
 from app.services.market_data_service import MarketDataService
 
 logger = get_logger(__name__)
+
+# In-memory analysis cache: ticker → (expiry_timestamp, response)
+_analysis_cache: dict[str, tuple[float, StockAnalysisResponse]] = {}
+_ANALYSIS_CACHE_TTL = 600  # 10 minutes
+_MAX_ANALYSIS_CACHE_SIZE = 100
 
 _SYSTEM_PROMPT = (
     "You are a senior equity research analyst who analyzes stocks through "
@@ -141,6 +147,16 @@ class AIAnalysisService:
             AIAnalysisError: If the AI call or data fetch fails.
         """
         ticker = ticker.upper().strip()
+
+        # Check cache first
+        cached = _analysis_cache.get(ticker)
+        if cached is not None:
+            expiry, response = cached
+            if time.time() < expiry:
+                logger.info("analysis_cache_hit", ticker=ticker)
+                return response
+            del _analysis_cache[ticker]
+
         logger.info("analysis_starting", ticker=ticker)
 
         # Phase 0: Resolve company name → ticker symbol
@@ -200,14 +216,14 @@ class AIAnalysisService:
                             resolved_ticker,
                             quote.get("company_name", resolved_ticker),
                         ),
-                        timeout=15.0,
+                        timeout=8.0,
                     )
                 )
             except asyncio.TimeoutError:
                 logger.warning(
                     "sharepoint_research_timeout",
                     ticker=resolved_ticker,
-                    timeout=15.0,
+                    timeout=8.0,
                 )
             except Exception as exc:
                 logger.warning(
@@ -277,6 +293,14 @@ class AIAnalysisService:
             ticker=resolved_ticker,
             recommendation=response.recommendation,
         )
+
+        # Store in cache
+        if len(_analysis_cache) >= _MAX_ANALYSIS_CACHE_SIZE:
+            # Evict oldest entry
+            oldest_key = min(_analysis_cache, key=lambda k: _analysis_cache[k][0])
+            del _analysis_cache[oldest_key]
+        _analysis_cache[ticker] = (time.time() + _ANALYSIS_CACHE_TTL, response)
+
         return response
 
     def _merge_response(
