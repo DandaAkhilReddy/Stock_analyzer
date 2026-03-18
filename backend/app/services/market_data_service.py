@@ -926,7 +926,7 @@ class MarketDataService:
         logger.info("yfinance_income_complete", ticker=ticker, quarters=len(result))
         return result
 
-    async def _get_news_yfinance(self, ticker: str, limit: int = 15) -> list[dict]:
+    async def _get_news_yfinance(self, ticker: str, limit: int = 8) -> list[dict]:
         """Fetch news from yfinance as fallback.
 
         Args:
@@ -945,9 +945,18 @@ class MarketDataService:
             from datetime import datetime, timezone
 
             stock = yf.Ticker(ticker)
+            # Get company name for relevance filtering
+            company_name = (stock.info or {}).get("shortName", "") or ""
+            # Build keywords: ticker + major words from company name
+            keywords = {ticker.upper()}
+            for word in company_name.split():
+                clean = word.strip(".,()").upper()
+                if len(clean) >= 3 and clean not in {"INC", "LTD", "LLC", "THE", "AND", "CORP", "CO."}:
+                    keywords.add(clean)
+
             raw = stock.news or []
             result: list[dict] = []
-            for item in raw[:limit]:
+            for item in raw:
                 # yfinance v2+ nests data under "content"; fall back for old format
                 content = item.get("content", item)
 
@@ -991,6 +1000,11 @@ class MarketDataService:
                     if resolutions and isinstance(resolutions[0], dict):
                         image_url = resolutions[0].get("url")
 
+                # Only include articles relevant to the target stock
+                title_upper = title.upper()
+                if not any(kw in title_upper for kw in keywords):
+                    continue
+
                 result.append({
                     "title": title,
                     "source": publisher,
@@ -1001,10 +1015,10 @@ class MarketDataService:
                     "data_source": "yfinance",
                 })
 
-            # Filter to last 7 days and sort by priority
+            # Filter to last 7 days, sort by priority, enforce limit
             result = [r for r in result if _is_within_days(r.get("published_date"))]
             result.sort(key=_news_priority, reverse=True)
-            return result
+            return result[:limit]
 
         result = await asyncio.wait_for(
             asyncio.to_thread(_fetch), timeout=_YFINANCE_TIMEOUT
@@ -1012,7 +1026,7 @@ class MarketDataService:
         logger.info("yfinance_news_complete", ticker=ticker, articles=len(result))
         return result
 
-    async def get_stock_news(self, ticker: str, limit: int = 15) -> list[dict]:
+    async def get_stock_news(self, ticker: str, limit: int = 8) -> list[dict]:
         """Fetch real stock news from FMP, falling back to yfinance.
 
         Args:
@@ -1042,11 +1056,15 @@ class MarketDataService:
                 return []
 
         rows: list[dict] = data if isinstance(data, list) else []
+        ticker_upper = ticker.upper()
 
         result: list[dict] = []
         for item in rows:
             title = item.get("title", "")
             if not title:
+                continue
+            # Only include articles that mention the target stock
+            if ticker_upper not in title.upper():
                 continue
             result.append({
                 "title": title,
@@ -1058,9 +1076,10 @@ class MarketDataService:
                 "data_source": "FMP",
             })
 
-        # Filter to last 7 days and sort by priority
+        # Filter to last 7 days, sort by priority, enforce limit
         result = [r for r in result if _is_within_days(r.get("published_date"))]
         result.sort(key=_news_priority, reverse=True)
+        result = result[:limit]
 
         if not result:
             logger.info("fmp_news_empty_fallback_yfinance", ticker=ticker)
