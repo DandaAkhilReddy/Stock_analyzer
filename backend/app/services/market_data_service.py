@@ -224,6 +224,14 @@ class MarketDataService:
     def __init__(self) -> None:
         self._api_key = settings.fmp_api_key
 
+    def _require_api_key(self) -> None:
+        """Raise immediately if FMP API key is not configured."""
+        if not self._api_key:
+            raise ExternalAPIError(
+                "FMP_API_KEY is not configured. "
+                "Set the FMP_API_KEY environment variable in Render dashboard."
+            )
+
     async def _ensure_sp500_cache(self) -> None:
         """Load S&P 500 constituents from FMP (lazy, refreshes every 24h)."""
         now = time.monotonic()
@@ -528,6 +536,7 @@ class MarketDataService:
             StockNotFoundError: If ticker is invalid or has no price data.
             ExternalAPIError: If both FMP and yfinance fail.
         """
+        self._require_api_key()
         try:
             return await self._get_quote_fmp(ticker)
         except (ExternalAPIError, StockNotFoundError) as fmp_exc:
@@ -665,6 +674,7 @@ class MarketDataService:
         Raises:
             ExternalAPIError: If both FMP and yfinance fail.
         """
+        self._require_api_key()
         try:
             return await self._get_historical_fmp(ticker, period)
         except ExternalAPIError as fmp_exc:
@@ -763,6 +773,7 @@ class MarketDataService:
         Returns:
             TechnicalSnapshot with computed indicator values.
         """
+        self._require_api_key()
         logger.info("fmp_technicals_start", ticker=ticker)
         try:
             snapshot = await self._compute_technicals(ticker)
