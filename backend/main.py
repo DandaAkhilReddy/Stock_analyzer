@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -84,10 +84,10 @@ async def ready() -> dict[str, Any]:
     return {"status": "ready"}
 
 
-@app.get("/ping", status_code=204)
-async def ping() -> None:
+@app.get("/ping")
+async def ping() -> Response:
     """Keep-alive endpoint for external cron services."""
-    return None
+    return Response(status_code=204)
 
 
 # ---------------------------------------------------------------------------
